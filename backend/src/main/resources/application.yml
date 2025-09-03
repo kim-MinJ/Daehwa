@@ -3,9 +3,9 @@ spring:
     name: backend
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@//localhost:1521/xe
-    username: c##idev
-    password: 1234
+    url: jdbc:oracle:thin:@//localhost:1521/xepdb1
+    username: test
+    password: 1122
   jpa:
     hibernate:
       ddl-auto: update
@@ -17,3 +17,7 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+tmdb:
+  api:
+    key: 302b783e860b19b6822ef0a445e7ae53
