@@ -4,9 +4,16 @@
   "settings": {
     "width": 2000,
     "height": 2000,
+<<<<<<< HEAD
     "scrollTop": -548.8055,
     "scrollLeft": -392.2653,
     "zoomLevel": 0.76,
+=======
+
+    "scrollTop": -793.5869,
+    "scrollLeft": -287.0695,
+    "zoomLevel": 0.79,
+>>>>>>> ea44f3e77977a2868551a8ebb0d3c5096775f53d
     "show": 495,
     "database": 8,
     "databaseName": "movieProject",
