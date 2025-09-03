@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -435.9682,
-    "scrollLeft": 0,
-    "zoomLevel": 1,
+    "scrollTop": -793.5869,
+    "scrollLeft": -287.0695,
+    "zoomLevel": 0.79,
     "show": 495,
     "database": 8,
     "databaseName": "movieProject",
@@ -2857,7 +2857,13 @@
         "startRelationshipType": 2,
         "start": {
           "tableId": "Q9KmmRebfT-VCFkhs1D7O",
+<<<<<<< HEAD
           "columnIds": ["8oft47YPf98c8qGDp62o-"],
+=======
+          "columnIds": [
+            "8oft47YPf98c8qGDp62o-"
+          ],
+>>>>>>> 0e8e57c (add_soundtrack)
           "x": 103.9096,
           "y": 1099.8827999999999,
           "direction": 8
@@ -3049,14 +3055,26 @@
         "startRelationshipType": 2,
         "start": {
           "tableId": "Q9KmmRebfT-VCFkhs1D7O",
+<<<<<<< HEAD
           "columnIds": ["8oft47YPf98c8qGDp62o-"],
+=======
+          "columnIds": [
+            "8oft47YPf98c8qGDp62o-"
+          ],
+>>>>>>> 0e8e57c (add_soundtrack)
           "x": 378.4096,
           "y": 1099.8827999999999,
           "direction": 8
         },
         "end": {
           "tableId": "1iM1wdsIHEoDZ89m2RRmh",
+<<<<<<< HEAD
           "columnIds": ["908kKRFFwrP8gbHVSmo9c"],
+=======
+          "columnIds": [
+            "908kKRFFwrP8gbHVSmo9c"
+          ],
+>>>>>>> 0e8e57c (add_soundtrack)
           "x": 568.989,
           "y": 1535.197,
           "direction": 1
@@ -3080,7 +3098,13 @@
         },
         "end": {
           "tableId": "1iM1wdsIHEoDZ89m2RRmh",
+<<<<<<< HEAD
           "columnIds": ["h-AgADyvXX7yRPAN3gINg"],
+=======
+          "columnIds": [
+            "h-AgADyvXX7yRPAN3gINg"
+          ],
+>>>>>>> 0e8e57c (add_soundtrack)
           "x": 1043.989,
           "y": 1535.197,
           "direction": 2
@@ -3104,7 +3128,13 @@
         },
         "end": {
           "tableId": "9WWuxpDkxmllhTpYQqd22",
+<<<<<<< HEAD
           "columnIds": ["JjmfCq6gplYRzleFaelxh"],
+=======
+          "columnIds": [
+            "JjmfCq6gplYRzleFaelxh"
+          ],
+>>>>>>> 0e8e57c (add_soundtrack)
           "x": 1438.9646,
           "y": 1315.2789,
           "direction": 1
@@ -3169,7 +3199,13 @@
         "startRelationshipType": 2,
         "start": {
           "tableId": "Q9KmmRebfT-VCFkhs1D7O",
+<<<<<<< HEAD
           "columnIds": ["8oft47YPf98c8qGDp62o-"],
+=======
+          "columnIds": [
+            "8oft47YPf98c8qGDp62o-"
+          ],
+>>>>>>> 0e8e57c (add_soundtrack)
           "x": 241.1596,
           "y": 1099.8827999999999,
           "direction": 8
@@ -3193,14 +3229,26 @@
         "startRelationshipType": 2,
         "start": {
           "tableId": "Q9KmmRebfT-VCFkhs1D7O",
+<<<<<<< HEAD
           "columnIds": ["8oft47YPf98c8qGDp62o-"],
+=======
+          "columnIds": [
+            "8oft47YPf98c8qGDp62o-"
+          ],
+>>>>>>> 0e8e57c (add_soundtrack)
           "x": 515.6596,
           "y": 1099.8827999999999,
           "direction": 8
         },
         "end": {
           "tableId": "x7j2pRXcusuh31D6xWvg7",
+<<<<<<< HEAD
           "columnIds": ["y9kr8GgF1Rngvhckw_VEv"],
+=======
+          "columnIds": [
+            "y9kr8GgF1Rngvhckw_VEv"
+          ],
+>>>>>>> 0e8e57c (add_soundtrack)
           "x": 573.2954,
           "y": 1302.529,
           "direction": 1
