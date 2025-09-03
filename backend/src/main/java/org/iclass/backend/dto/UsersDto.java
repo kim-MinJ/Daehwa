@@ -1,39 +1,41 @@
 package org.iclass.backend.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
+import java.time.LocalDateTime;
+
+import org.iclass.backend.Entity.UsersEntity;
+
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
+@ToString
+@Builder
+@Table(name = "users")
 public class UsersDto {
   private String userId;
   private String username;
   private String password;
   private String role;
-}
+  private LocalDateTime regDate;
+  private Integer status;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class LoginDto {
-  private String userId;
-  private String password;
-}
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UpdateUserDto {
-  private String username;
-  private String password;
-}
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class BookmarkDto {
-  private Long movieIdx;
+  public static UsersDto of(UsersEntity entity) {
+    return UsersDto.builder()
+        .userId(entity.getUserId())
+        .username(entity.getUsername())
+        .password(entity.getPassword())
+        .role(entity.getRole())
+        .regDate(entity.getRegDate())
+        .status(entity.getStatus())
+        .build();
+  }
 }
