@@ -175,6 +175,17 @@ CREATE TABLE Videos (
     CONSTRAINT FK_Movie_Info_TO_Videos FOREIGN KEY (movie_idx) REFERENCES Movie_Info(movie_idx)
 );
 
+-- 1-16. SoundTrack
+CREATE TABLE SoundTrack (
+    soundtrack_id NUMBER NOT NULL,   -- ost 인덱스
+    movie_idx     NUMBER NOT NULL,   -- 영화 인덱스 (FK)
+    title         VARCHAR2(255),     -- ost 제목
+    artist        VARCHAR2(255),     -- 작곡가
+    playback_url  VARCHAR2(500),     -- ost 링크
+    CONSTRAINT PK_SoundTrack PRIMARY KEY (soundtrack_id),
+    CONSTRAINT FK_Movie_Info_TO_SoundTrack FOREIGN KEY (movie_idx) REFERENCES Movie_Info(movie_idx)
+);
+
 -- ===========================
 -- 2. 시퀀스 생성
 -- ===========================
@@ -193,6 +204,7 @@ CREATE SEQUENCE SEQ_People START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE SEQ_Ranking START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE SEQ_Review START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE SEQ_Videos START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE SEQ_SoundTrack START WITH 1 INCREMENT BY 1;
 
 -- ===========================
 -- 3. 트리거 생성 (PK 자동 증가)
@@ -351,3 +363,14 @@ BEGIN
     END IF;
 END;
 /
+
+CREATE OR REPLACE TRIGGER TRG_SoundTrack
+BEFORE INSERT ON SoundTrack
+FOR EACH ROW
+BEGIN
+    IF :NEW.soundtrack_id IS NULL THEN
+        SELECT SEQ_SoundTrack.NEXTVAL 
+        INTO :NEW.soundtrack_id 
+        FROM dual;
+    END IF;
+END;

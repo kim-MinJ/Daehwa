@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -147.93,
-    "scrollLeft": -347.8139,
-    "zoomLevel": 0.76,
+    "scrollTop": -793.5869,
+    "scrollLeft": -287.0695,
+    "zoomLevel": 0.79,
     "show": 495,
     "database": 8,
     "databaseName": "movieProject",
@@ -45,7 +45,8 @@
       "9WWuxpDkxmllhTpYQqd22",
       "TM0GBOe5MYdPApN3ySDGM",
       "ITajp1HMntivEw7JKRPS5",
-      "sBqdDhRE4lyyeCEHzzE4W"
+      "sBqdDhRE4lyyeCEHzzE4W",
+      "x7j2pRXcusuh31D6xWvg7"
     ],
     "relationshipIds": [
       "yDAeT7Twetsbw0WfpJ9ul",
@@ -64,7 +65,8 @@
       "WXLkmzGtgUSRg1h4KkbkW",
       "9T7l3mJR29poxHDgvTfFB",
       "GLz6GCfv7ttrnfzzH-614",
-      "bHGiz4RPmUnYN4v-AWSEm"
+      "bHGiz4RPmUnYN4v-AWSEm",
+      "eM69ZI20d1wCqXk-LmBOJ"
     ],
     "indexIds": [
       "VkrFKkv2oVwnUTSzKkvdS",
@@ -453,15 +455,15 @@
           "W0nCUxiPbd7NSietNuY7G"
         ],
         "ui": {
-          "x": 568.9889,
-          "y": 1401.8948,
+          "x": 568.989,
+          "y": 1411.197,
           "zIndex": 1087,
           "widthName": 77,
           "widthComment": 81,
           "color": ""
         },
         "meta": {
-          "updateAt": 1756777343771,
+          "updateAt": 1756865339157,
           "createAt": 1756775916153
         }
       },
@@ -486,15 +488,15 @@
           "qcyswRZDdOIG7HsMeLjB0"
         ],
         "ui": {
-          "x": 1453.6706,
-          "y": 1235.8673,
+          "x": 1438.9646,
+          "y": 1215.2789,
           "zIndex": 1113,
           "widthName": 60,
           "widthComment": 65,
           "color": ""
         },
         "meta": {
-          "updateAt": 1756777343771,
+          "updateAt": 1756865356727,
           "createAt": 1756776287945
         }
       },
@@ -584,6 +586,39 @@
         "meta": {
           "updateAt": 1756777343771,
           "createAt": 1756776833858
+        }
+      },
+      "x7j2pRXcusuh31D6xWvg7": {
+        "id": "x7j2pRXcusuh31D6xWvg7",
+        "name": "Sound_Track",
+        "comment": "OST정보",
+        "columnIds": [
+          "EvLYadYCBqOIM5zXu_wp_",
+          "5mTr7PlOJuX53LofMQMy3",
+          "RmCNmcYPyWrjGiETCPF12",
+          "NfpzthryYs8zVF0OLAW_C",
+          "xYNCm4dhyQSzkC4EuckEE",
+          "y9kr8GgF1Rngvhckw_VEv"
+        ],
+        "seqColumnIds": [
+          "EvLYadYCBqOIM5zXu_wp_",
+          "5mTr7PlOJuX53LofMQMy3",
+          "RmCNmcYPyWrjGiETCPF12",
+          "NfpzthryYs8zVF0OLAW_C",
+          "xYNCm4dhyQSzkC4EuckEE",
+          "y9kr8GgF1Rngvhckw_VEv"
+        ],
+        "ui": {
+          "x": 573.2954,
+          "y": 1202.529,
+          "zIndex": 1170,
+          "widthName": 68,
+          "widthComment": 60,
+          "color": ""
+        },
+        "meta": {
+          "updateAt": 1756865351260,
+          "createAt": 1756863679508
         }
       }
     },
@@ -2487,6 +2522,126 @@
           "updateAt": 1756777219582,
           "createAt": 1756777187161
         }
+      },
+      "EvLYadYCBqOIM5zXu_wp_": {
+        "id": "EvLYadYCBqOIM5zXu_wp_",
+        "tableId": "x7j2pRXcusuh31D6xWvg7",
+        "name": "soundtrack_id",
+        "comment": "ost 인덱스",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 76,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1756865235440,
+          "createAt": 1756865009436
+        }
+      },
+      "5mTr7PlOJuX53LofMQMy3": {
+        "id": "5mTr7PlOJuX53LofMQMy3",
+        "tableId": "x7j2pRXcusuh31D6xWvg7",
+        "name": "movie_idx",
+        "comment": "영화 인덱스",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 12,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 65,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1756865217155,
+          "createAt": 1756865009611
+        }
+      },
+      "RmCNmcYPyWrjGiETCPF12": {
+        "id": "RmCNmcYPyWrjGiETCPF12",
+        "tableId": "x7j2pRXcusuh31D6xWvg7",
+        "name": "title",
+        "comment": "ost제목",
+        "dataType": "VARCHAR2(100)",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 87,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1756865165031,
+          "createAt": 1756865010547
+        }
+      },
+      "NfpzthryYs8zVF0OLAW_C": {
+        "id": "NfpzthryYs8zVF0OLAW_C",
+        "tableId": "x7j2pRXcusuh31D6xWvg7",
+        "name": "artist",
+        "comment": "작곡가",
+        "dataType": "VARCHAR2(255)",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 87,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1756865168027,
+          "createAt": 1756865010683
+        }
+      },
+      "xYNCm4dhyQSzkC4EuckEE": {
+        "id": "xYNCm4dhyQSzkC4EuckEE",
+        "tableId": "x7j2pRXcusuh31D6xWvg7",
+        "name": "playback_url",
+        "comment": "ost 링크",
+        "dataType": "VARCHAR2(255)",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 67,
+          "widthComment": 60,
+          "widthDataType": 87,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1756865174280,
+          "createAt": 1756865015555
+        }
+      },
+      "y9kr8GgF1Rngvhckw_VEv": {
+        "id": "y9kr8GgF1Rngvhckw_VEv",
+        "tableId": "x7j2pRXcusuh31D6xWvg7",
+        "name": "movie_idx",
+        "comment": "영화 인덱스",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 2,
+          "widthName": 60,
+          "widthComment": 65,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1756865311510,
+          "createAt": 1756865311510
+        }
       }
     },
     "relationshipEntities": {
@@ -2752,7 +2907,7 @@
           "columnIds": [
             "8oft47YPf98c8qGDp62o-"
           ],
-          "x": 126.7846,
+          "x": 103.9096,
           "y": 1099.8827999999999,
           "direction": 8
         },
@@ -2976,7 +3131,7 @@
           "columnIds": [
             "8oft47YPf98c8qGDp62o-"
           ],
-          "x": 492.7846,
+          "x": 378.4096,
           "y": 1099.8827999999999,
           "direction": 8
         },
@@ -2985,8 +3140,8 @@
           "columnIds": [
             "908kKRFFwrP8gbHVSmo9c"
           ],
-          "x": 568.9889,
-          "y": 1525.8948,
+          "x": 568.989,
+          "y": 1535.197,
           "direction": 1
         },
         "meta": {
@@ -3013,8 +3168,8 @@
           "columnIds": [
             "h-AgADyvXX7yRPAN3gINg"
           ],
-          "x": 1043.9888999999998,
-          "y": 1525.8948,
+          "x": 1043.989,
+          "y": 1535.197,
           "direction": 2
         },
         "meta": {
@@ -3041,8 +3196,8 @@
           "columnIds": [
             "JjmfCq6gplYRzleFaelxh"
           ],
-          "x": 1453.6706,
-          "y": 1335.8673,
+          "x": 1438.9646,
+          "y": 1315.2789,
           "direction": 1
         },
         "meta": {
@@ -3116,7 +3271,7 @@
           "columnIds": [
             "8oft47YPf98c8qGDp62o-"
           ],
-          "x": 309.7846,
+          "x": 241.1596,
           "y": 1099.8827999999999,
           "direction": 8
         },
@@ -3132,6 +3287,34 @@
         "meta": {
           "updateAt": 1756776925505,
           "createAt": 1756776925505
+        }
+      },
+      "eM69ZI20d1wCqXk-LmBOJ": {
+        "id": "eM69ZI20d1wCqXk-LmBOJ",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 2,
+        "start": {
+          "tableId": "Q9KmmRebfT-VCFkhs1D7O",
+          "columnIds": [
+            "8oft47YPf98c8qGDp62o-"
+          ],
+          "x": 515.6596,
+          "y": 1099.8827999999999,
+          "direction": 8
+        },
+        "end": {
+          "tableId": "x7j2pRXcusuh31D6xWvg7",
+          "columnIds": [
+            "y9kr8GgF1Rngvhckw_VEv"
+          ],
+          "x": 573.2954,
+          "y": 1302.529,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1756865311510,
+          "createAt": 1756865311510
         }
       }
     },
