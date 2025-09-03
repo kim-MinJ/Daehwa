@@ -11,9 +11,14 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        format_sql: true
-        show_sql: true
+        format-sql: true
+        show-sql: true
   h2:
     console:
       enabled: true
       path: /h2-console
+tmdb:
+  api:
+    key: 302b783e860b19b6822ef0a445e7ae53
+server:
+  port: 8088

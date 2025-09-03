@@ -4,6 +4,6 @@ import org.iclass.backend.Entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
-public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
-  List<CommentEntity> findByReview(ReviewEntity review);
+public interface CommentRepository extends JpaRepository<CommentsEntity, Long> {
+  List<CommentsEntity> findByReview(ReviewEntity review);
 }
