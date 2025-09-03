@@ -6,12 +6,14 @@
 CREATE TABLE Users (
     user_id  VARCHAR2(100) NOT NULL,
     username VARCHAR2(50 CHAR) NOT NULL,
-    password VARCHAR2(16 CHAR) NOT NULL,
+    password VARCHAR2(100 CHAR) NOT NULL,
     role     VARCHAR2(20) DEFAULT 'user',
     reg_date DATE DEFAULT sysdate,
     status   NUMBER(1) DEFAULT 0,
     CONSTRAINT PK_Users PRIMARY KEY (user_id)
 );
+
+ALTER TABLE Users MODIFY (password VARCHAR2(100));
 
 -- 1-2. People
 CREATE TABLE People (

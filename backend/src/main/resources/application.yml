@@ -17,3 +17,6 @@ spring:
     console:
       enabled: true
       path: /h2-console
+jwt:
+  secret: nR8vP6uQx2sLz9F1tYhJkVm3bCeGdHwR
+  expiration: 3600000
