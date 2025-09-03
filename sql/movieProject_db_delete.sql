@@ -18,7 +18,7 @@ BEGIN
         WHERE table_name IN (
             'ARTICLES','BOOKMARK','COMMENT','GENRES','MOVIE_GENRES',
             'MOVIE_CREDITS','MOVIE_INFO','MOVIE_VOTE','MOVIE_VS','NOTICE',
-            'PEOPLE','RANKING','REVIEW','USERS','VIDEOS'
+            'PEOPLE','RANKING','REVIEW','USERS','VIDEOS', 'SOUNDTRACK'
         )
     )
     LOOP
