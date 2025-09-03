@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long> {
   List<MovieVoteEntity> findByMovieVS(MovieVsEntity movieVS);
+
+    Long countByMovie(MovieInfoEntity movie);
 }
