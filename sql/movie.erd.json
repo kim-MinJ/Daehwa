@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -316,
-    "scrollLeft": -279,
-    "zoomLevel": 0.76,
+    "scrollTop": -435.9682,
+    "scrollLeft": 0,
+    "zoomLevel": 1,
     "show": 495,
     "database": 8,
     "databaseName": "movieProject",
@@ -201,7 +201,7 @@
       },
       "IDdARGJQrp28WuOj_0_sX": {
         "id": "IDdARGJQrp28WuOj_0_sX",
-        "name": "Comment",
+        "name": "Comments",
         "comment": "댓글",
         "columnIds": [
           "Fr1BEMrU2hqQmIGZeoGMU",
@@ -228,7 +228,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1756795399680,
+          "updateAt": 1756880404827,
           "createAt": 1756714660363
         }
       },
