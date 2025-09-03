@@ -1,75 +1,77 @@
 package org.iclass.backend.service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import org.iclass.backend.Entity.*;
-import org.iclass.backend.repository.*;
+import org.iclass.backend.Entity.MovieInfoEntity;
+import org.iclass.backend.Entity.MovieVoteEntity;
+import org.iclass.backend.Entity.MovieVsEntity;
+import org.iclass.backend.Entity.UsersEntity;
+import org.iclass.backend.dto.MovieVoteDto;
+import org.iclass.backend.repository.MovieInfoRepository;
+import org.iclass.backend.repository.MovieVoteRepository;
+import org.iclass.backend.repository.MovieVSRepository;
+import org.iclass.backend.repository.UsersRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class MovieVoteService {
-        private final MovieVoteRepository voteRepository;
-        private final MovieVSRepository vsRepository;
-        private final MovieInfoRepository movieRepository;
 
-        // 투표
-        public MovieVoteEntity vote(Long vsIdx, Long movieIdx, UsersEntity user) {
-                MovieVsEntity vs = vsRepository.findById(vsIdx)
-                                .orElseThrow(() -> new RuntimeException("VS not found"));
-                MovieInfoEntity movie = movieRepository.findById(movieIdx)
-                                .orElseThrow(() -> new RuntimeException("Movie not found"));
+    private final MovieVoteRepository movieVoteRepository;
+    private final MovieInfoRepository movieInfoRepository;
+    private final MovieVSRepository movieVSRepository;
+    private final UsersRepository usersRepository;
 
-                MovieVoteEntity vote = MovieVoteEntity.builder()
-                                .movieVS(vs)
-                                .movie(movie)
-                                .user(user)
-                                .build();
+    // 투표하기
+    public MovieVoteDto vote(Long vsId, Long movieId, String userId) {
+    MovieVsEntity vs = movieVSRepository.findById(vsId)
+            .orElseThrow(() -> new IllegalArgumentException("VS 없음: " + vsId));
 
-                return voteRepository.save(vote);
-        }
+    MovieInfoEntity movie = movieInfoRepository.findById(movieId)
+            .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
 
-        public Map<Long, Long> getBattleResult(Long vsIdx) {
-                MovieVsEntity vs = vsRepository.findById(vsIdx)
-                                .orElseThrow(() -> new RuntimeException("VS not found"));
+    UsersEntity user = usersRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
 
-                List<MovieVoteEntity> votes = voteRepository.findByMovieVS(vs);
+    // 🔒 중복 투표 방지 로직
+    movieVoteRepository.findByMovieVSAndUser(vs, user).ifPresent(v -> {
+        throw new IllegalStateException("이미 투표한 유저입니다.");
+    });
 
-                long votes1 = votes.stream()
-                                .filter(v -> v.getMovie().getMovieIdx().equals(vs.getMovieVs1().getMovieIdx()))
-                                .count();
+    MovieVoteEntity vote = new MovieVoteEntity();
+    vote.setMovie(movie);
+    vote.setMovieVS(vs);
+    vote.setUser(user);
 
-                long votes2 = votes.stream()
-                                .filter(v -> v.getMovie().getMovieIdx().equals(vs.getMovieVs2().getMovieIdx()))
-                                .count();
+    MovieVoteEntity saved = movieVoteRepository.save(vote);
 
-                Map<Long, Long> result = new HashMap<>();
-                result.put(vs.getMovieVs1().getMovieIdx(), votes1);
-                result.put(vs.getMovieVs2().getMovieIdx(), votes2);
+    return toDto(saved);
+}
 
-                return result;
-        }
+    // 특정 VS의 투표 결과 조회
+    public Map<Long, Long> getVoteResult(Long vsId) {
+        MovieVsEntity vs = movieVSRepository.findById(vsId)
+                .orElseThrow(() -> new IllegalArgumentException("VS 없음: " + vsId));
 
-        public List<Map<String, Object>> getMovieRanking() {
-                List<MovieInfoEntity> movies = movieRepository.findAll();
+        List<MovieVoteEntity> votes = movieVoteRepository.findByMovieVS(vs);
 
-                return movies.stream()
-                                .map(movie -> {
-                                        Long voteCount = voteRepository.countByMovie(movie);
-                                        Map<String, Object> map = new HashMap<>();
-                                        map.put("movieId", movie.getMovieIdx());
-                                        map.put("title", movie.getTitle());
-                                        map.put("posterPath", movie.getPosterPath());
-                                        map.put("voteCount", voteCount);
-                                        return map;
-                                })
-                                .sorted((m1, m2) -> Long.compare((Long) m2.get("voteCount"),
-                                                (Long) m1.get("voteCount")))
-                                .toList();
-        }
+        // 영화별 투표 수 집계
+        return votes.stream()
+                .collect(Collectors.groupingBy(v -> v.getMovie().getMovieIdx(), Collectors.counting()));
+    }
 
+    private MovieVoteDto toDto(MovieVoteEntity entity) {
+        return MovieVoteDto.builder()
+                .voteIdx(entity.getVoteIdx())
+                .movieId(entity.getMovie().getMovieIdx())
+                .vsId(entity.getMovieVS().getVsIdx())
+                .userId(entity.getUser().getUserId()) // String 타입
+                .build();
+    }
 }
