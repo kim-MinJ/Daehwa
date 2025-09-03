@@ -4,6 +4,7 @@
   "settings": {
     "width": 2000,
     "height": 2000,
+
     "scrollTop": -793.5869,
     "scrollLeft": -287.0695,
     "zoomLevel": 0.79,
@@ -203,7 +204,7 @@
       },
       "IDdARGJQrp28WuOj_0_sX": {
         "id": "IDdARGJQrp28WuOj_0_sX",
-        "name": "Comment",
+        "name": "Comments",
         "comment": "댓글",
         "columnIds": [
           "Fr1BEMrU2hqQmIGZeoGMU",
@@ -230,7 +231,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1756795399680,
+          "updateAt": 1756880404827,
           "createAt": 1756714660363
         }
       },
