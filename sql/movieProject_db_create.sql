@@ -744,16 +744,11 @@ CREATE OR REPLACE TRIGGER trg_update_ranking
 AFTER UPDATE OF popularity ON Movie_Info
 FOR EACH ROW
 BEGIN
-  -- 해당 영화가 이미 Ranking 테이블에 있으면 업데이트
-  UPDATE Ranking
-     SET ranking_count = :NEW.popularity,
-         created_date  = SYSDATE
-   WHERE movie_idx = :NEW.movie_idx;
-
-  -- 없으면 새로 INSERT
-  IF SQL%ROWCOUNT = 0 THEN
-    INSERT INTO Ranking (ranking_idx, movie_idx, ranking_count, created_date)
-    VALUES (ranking_seq.NEXTVAL, :NEW.movie_idx, :NEW.popularity, SYSDATE);
-  END IF;
+    -- Ranking 테이블에 해당 movie_idx가 있으면 업데이트
+    UPDATE Ranking
+       SET ranking_count = :NEW.popularity,
+           created_date  = SYSDATE
+     WHERE movie_idx = :NEW.movie_idx;
+    -- 없으면 아무것도 하지 않음 (0행이면 그냥 넘어감)
 END;
 /

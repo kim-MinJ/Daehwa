@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,6 +21,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Entity
+@Builder
 @Table(name = "MOVIE_INFO")
 public class MovieInfoEntity {
 
@@ -35,15 +37,19 @@ public class MovieInfoEntity {
     private String title;
 
     @Column
+    @Builder.Default
     private Double popularity = 0.0;
 
     @Column(name = "vote_count")
+    @Builder.Default
     private Integer voteCount = 0;
 
     @Column(name = "vote_average")
+    @Builder.Default
     private Double voteAverage = 0.0;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer adult = 0; // 0: false, 1: true
 
     @Column(length = 2000, nullable = false)
