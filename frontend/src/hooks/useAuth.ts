@@ -1,8 +1,8 @@
-import { useState } from "react";
-
-const API_URL = import.meta.env.VITE_BACKEND_URL + "/api/auth";
+// src/hooks/useAuth.ts
+import { useState, useEffect } from "react";
 
 export function useAuth() {
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -10,7 +10,7 @@ export function useAuth() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/login`, {
+      const res = await fetch("http://localhost:8080/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, password }),
@@ -21,6 +21,7 @@ export function useAuth() {
       }
       const data = await res.json();
       localStorage.setItem("token", data.token);
+      setToken(data.token);
     } catch (e: any) {
       setError(e.message);
       throw e;
@@ -33,7 +34,7 @@ export function useAuth() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/register`, {
+      const res = await fetch("http://localhost:8080/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, password, username }),
@@ -44,6 +45,7 @@ export function useAuth() {
       }
       const data = await res.json();
       localStorage.setItem("token", data.token);
+      setToken(data.token);
     } catch (e: any) {
       setError(e.message);
       throw e;
@@ -54,7 +56,10 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem("token");
+    setToken(null);
   };
 
-  return { login, register, logout, loading, error };
+  const isLoggedIn = !!token;
+
+  return { token, isLoggedIn, login, register, logout, loading, error };
 }

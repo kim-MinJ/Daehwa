@@ -1,20 +1,22 @@
-import { useState } from "react";
+// src/App.tsx
+import { useState, useEffect } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { MainPage } from "./pages/MainPage";
-import { MyPage } from "./pages/MyPage";
+import { useAuth } from "./hooks/useAuth";
 
 export function App() {
-  const [page, setPage] = useState("login"); // login | main | mypage
+  const { isLoggedIn } = useAuth();
+  const [page, setPage] = useState("login");
 
-  const handleNavigate = (target: string) => {
-    setPage(target);
-  };
+  useEffect(() => {
+    if (isLoggedIn) setPage("main");
+    else setPage("login");
+  }, [isLoggedIn]);
 
   return (
     <>
-      {page === "login" && <LoginPage onNavigate={handleNavigate} />}
-      {page === "main" && <MainPage onNavigate={handleNavigate} />}
-      {page === "mypage" && <MyPage onNavigate={handleNavigate} />}
+      {page === "login" && <LoginPage onNavigate={setPage} />}
+      {page === "main" && <MainPage onNavigate={setPage} />}
     </>
   );
 }
