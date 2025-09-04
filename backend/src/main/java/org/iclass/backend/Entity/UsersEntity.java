@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,26 +17,27 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder // ← 이거 추가
 @ToString
 @Table(name = "Users")
 @Entity
 public class UsersEntity {
-  @Id
-  @Column(name = "user_id", length = 100)
-  private String userId;
+    @Id
+    @Column(name = "user_id", length = 100)
+    private String userId;
 
-  @Column(nullable = false, length = 50)
-  private String username;
+    @Column(nullable = false, length = 50)
+    private String username;
 
-  @Column(nullable = false, length = 16)
-  private String password;
+    @Column(nullable = false, length = 100)
+    private String password;
 
-  @Column(length = 20)
-  private String role = "user";
+    @Column(length = 20)
+    private String role = "user";
 
-  @Column(name = "reg_date")
-  private LocalDateTime regDate = LocalDateTime.now();
+    @Column(name = "reg_date")
+    private LocalDateTime regDate = LocalDateTime.now();
 
-  @Column
-  private Integer status = 0;
+    @Column
+    private Integer status = 0;
 }
