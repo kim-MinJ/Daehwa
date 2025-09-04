@@ -20,7 +20,7 @@ export default function MoviePage({ defaultId }: Props) {
   const movieId = idFromRoute ?? defaultId;
   const ratings = useRatings(); // ✅ 추가
 
-  if (!movieId) return <Navigate to="/movie/299534" replace />; // 기본: 엔드게임
+  if (!movieId) return <Navigate to="/movies/299534" replace />; // 기본: 엔드게임
 
   const { loading, error, movie, credits, similar, trailers } = useMoviePage(movieId);
 

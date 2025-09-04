@@ -22,7 +22,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "COMMENT")
+@Table(name = "comments")
 public class CommentEntity {
 
     @Id
@@ -31,7 +31,7 @@ public class CommentEntity {
     private Long commentIdx;
 
     @ManyToOne
-    @JoinColumn(name = "userid", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     private UsersEntity user;
 
     @ManyToOne

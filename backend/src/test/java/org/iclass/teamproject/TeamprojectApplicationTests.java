@@ -1,4 +1,4 @@
-package org.iclass.backend;
+package org.iclass.teamproject;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
