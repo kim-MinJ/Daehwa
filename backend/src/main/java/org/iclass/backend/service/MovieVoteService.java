@@ -69,8 +69,8 @@ public class MovieVoteService {
     private MovieVoteDto toDto(MovieVoteEntity entity) {
         return MovieVoteDto.builder()
                 .voteIdx(entity.getVoteIdx())
-                .movieId(entity.getMovie().getMovieIdx())
-                .vsId(entity.getMovieVS().getVsIdx())
+                .movieIdx(entity.getMovie().getMovieIdx())
+                .vsIdx(entity.getMovieVS().getVsIdx())
                 .userId(entity.getUser().getUserId()) // String 타입
                 .build();
     }

@@ -1,6 +1,6 @@
 package org.iclass.backend.Entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,5 +45,5 @@ public class ArticlesEntity {
   private String articleUrl;
 
   @Column(name = "published_at")
-  private LocalDateTime publishedAt;
+  private LocalDate publishedAt;
 }

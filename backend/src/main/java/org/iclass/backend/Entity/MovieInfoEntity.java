@@ -1,6 +1,6 @@
 package org.iclass.backend.Entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,29 +23,38 @@ import lombok.ToString;
 @Table(name = "MOVIE_INFO")
 public class MovieInfoEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "movie_idx")
-  private Long movieIdx;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "movie_idx")
+    private Long movieIdx;
 
-  @Column(name = "tmdb_movie_id")
-  private Long tmdbMovieId;
+    @Column(name = "tmdb_movie_id")
+    private Long tmdbMovieId;
 
-  private String title;
-  private Double popularity = 0.0;
-  private Integer voteCount = 0;
-  private Double voteAverage = 0.0;
-  private Integer adult = 0;
+    @Column(length = 100)
+    private String title;
 
-  @Column(nullable = false, length = 500)
-  private String overview;
+    @Column
+    private Double popularity = 0.0;
 
-  @Column(name = "backdrop_path")
-  private String backdropPath;
+    @Column(name = "vote_count")
+    private Integer voteCount = 0;
 
-  @Column(name = "poster_path")
-  private String posterPath;
+    @Column(name = "vote_average")
+    private Double voteAverage = 0.0;
 
-  @Column(name = "release_date")
-  private LocalDateTime releaseDate;
+    @Column(nullable = false)
+    private Integer adult = 0; // 0: false, 1: true
+
+    @Column(length = 2000, nullable = false)
+    private String overview;
+
+    @Column(name = "backdrop_path")
+    private String backdropPath;
+
+    @Column(name = "poster_path")
+    private String posterPath;
+
+    @Column(name = "release_date")
+    private LocalDate releaseDate; // 시간 정보는 필요 없으므로 LocalDate 사용
 }

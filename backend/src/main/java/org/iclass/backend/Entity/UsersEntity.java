@@ -37,5 +37,5 @@ public class UsersEntity {
   private LocalDateTime regDate = LocalDateTime.now();
 
   @Column
-  private Integer status = 0;
+  private Integer status = 0; // 로그인 상태 0:로그인 1:로그아웃
 }

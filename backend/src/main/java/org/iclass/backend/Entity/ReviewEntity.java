@@ -31,14 +31,14 @@ public class ReviewEntity {
   private Long reviewIdx;
 
   @ManyToOne
-  @JoinColumn(name = "userid", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 
-  @Column(nullable = false, length = 255)
+  @Column(nullable = false, length = 2000)
   private String content;
 
-  @Column(name = "rationg") // 오타 주의: DB에 맞춤
-  private Integer rationg = 10;
+  @Column(name = "rating")
+  private Integer rating = 10;
 
   @Column(name = "created_at")
   private LocalDateTime createdAt = LocalDateTime.now();
@@ -46,5 +46,5 @@ public class ReviewEntity {
   @Column(name = "update_at")
   private LocalDateTime updateAt = LocalDateTime.now();
 
-  private Integer isBlind = 0;
+  private Integer isBlind = 0;  // 0: off, 1: on
 }
