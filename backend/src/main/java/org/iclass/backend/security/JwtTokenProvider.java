@@ -1,68 +1,70 @@
 package org.iclass.backend.security;
-import java.util.Date;
 
-import javax.crypto.SecretKey;
-
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
+import java.security.Key;
+import java.util.Date;
 
 @Component
 @Slf4j
 public class JwtTokenProvider {
-    // 토큰 만드는 비밀키
-    private static final String SECRET_KEY = "756be4cf9581add13ddb3ab3e2f1e75f27a0661af1c1225a89ef9a1d44d3f03b";
-    // 유효시간
-    private int jwtExpirationInMs = 24 * 60 * 60 * 1000; // 1일을 ms 단위로 계산
+
+    private static final String SECRET_KEY = "nR8vP6uQx2sLz9F1tYhJkVm3bCeGdHwR"; // 최소 256비트
+    private static final long JWT_EXPIRATION = 24 * 60 * 60 * 1000; // 1일
+
+    private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
     public String createToken(Authentication authentication) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
-        Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + JWT_EXPIRATION);
 
-        SecretKey secretKey = Keys.hmacShaKeyFor(SECRET_KEY.getBytes()); // 전자서명에 사용할 해시값 생성
         return Jwts.builder()
-                .signWith(secretKey) // 아래의 정보들을 개인키로 암호화한 전자서명 생성
-                .subject(userPrincipal.getUsername()) // 여기서부터 토큰과 관련된 정보 저장
-                .issuer("org.iclass") // 발급자:서비스이름
-                .issuedAt(new Date()) // 발급날짜
-                .expiration(expiryDate) // 만료날짜
+                .setSubject(userPrincipal.getUsername())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // 클라이언트가 보낸 토큰(메소드 인자 String token)을 검증하는 메소드
-    public String getUsernameFromToken(String token) {
+    public String createTokenWithUserId(String userId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + JWT_EXPIRATION);
 
-        SecretKey secretKey = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
-
-        // subject 는 username를 저장했으므로 토큰 값을 분해해서 얻은 subject 는 username 이다.
-        return claims.getSubject();
+        return Jwts.builder()
+                .setSubject(userId)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    public boolean validateToken(String authToken) {
+    public String getUsernameFromToken(String token) {
         try {
-            SecretKey secretKey = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(authToken);
-            return true;
-        } catch (MalformedJwtException ex) {
-            log.error("Invalid JWT token");
-        } catch (ExpiredJwtException ex) {
-            log.error("Expired JWT token");
-        } catch (UnsupportedJwtException ex) {
-            log.error("Unsupported JWT token");
-        } catch (IllegalArgumentException ex) {
-            log.error("JWT claims string is empty");
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (JwtException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
+            return null;
         }
-        return false;
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (JwtException e) {
+            log.error("JWT token invalid: {}", e.getMessage());
+            return false;
+        }
     }
 }
