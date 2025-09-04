@@ -2,7 +2,7 @@ package org.iclass.backend.controller;
 
 import java.util.Map;
 
-import org.iclass.backend.dto.MovieVoteDto;
+
 import org.iclass.backend.service.MovieVoteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/vote")
+@RequestMapping("/api/vote")
 @RequiredArgsConstructor
 public class MovieVoteController {
 
