@@ -22,8 +22,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "COMMENT")
-public class CommentEntity {
+@Table(name = "COMMENTS")
+public class CommentsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

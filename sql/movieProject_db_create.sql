@@ -74,7 +74,7 @@ CREATE TABLE Bookmark (
 );
 
 -- 1-7. Comment
-CREATE TABLE Comment (
+CREATE TABLE Comments (
     comment_idx NUMBER NOT NULL,
     userid      VARCHAR2(100) NOT NULL,
     review_idx  NUMBER NOT NULL,
@@ -364,6 +364,7 @@ BEGIN
 END;
 /
 
+-- SoundTrack
 CREATE OR REPLACE TRIGGER TRG_SoundTrack
 BEFORE INSERT ON SoundTrack
 FOR EACH ROW
