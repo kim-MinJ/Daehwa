@@ -33,7 +33,7 @@ public class MovieInfoEntity {
     @Column(name = "tmdb_movie_id")
     private Long tmdbMovieId;
 
-    @Column(length = 100)
+    @Column(length = 500)
     private String title;
 
     @Column
@@ -48,11 +48,11 @@ public class MovieInfoEntity {
     @Builder.Default
     private Double voteAverage = 0.0;
 
-    @Column(nullable = false)
+    @Column(name = "ADULT", nullable = false)
     @Builder.Default
-    private Integer adult = 0; // 0: false, 1: true
+    private Boolean adult = false; // 0: false, 1: true
 
-    @Column(length = 2000, nullable = false)
+    @Column(length = 2000)
     private String overview;
 
     @Column(name = "backdrop_path")

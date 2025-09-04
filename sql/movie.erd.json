@@ -4,13 +4,13 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -749,
-    "scrollLeft": -57,
+    "scrollTop": -617,
+    "scrollLeft": 0,
     "zoomLevel": 0.85,
     "show": 495,
     "database": 8,
     "databaseName": "movieProject",
-    "canvasType": "ERD",
+    "canvasType": "@dineug/erd-editor/builtin-schema-sql",
     "language": 1,
     "tableNameCase": 4,
     "columnNameCase": 2,
@@ -1629,7 +1629,7 @@
         "tableId": "Q9KmmRebfT-VCFkhs1D7O",
         "name": "title",
         "comment": "영화 제목",
-        "dataType": "VARCHAR2(100 CHAR)",
+        "dataType": "VARCHAR2(500 CHAR)",
         "default": "",
         "options": 0,
         "ui": {
@@ -1640,7 +1640,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1756949413545,
+          "updateAt": 1756985737679,
           "createAt": 1756773193033
         }
       },
@@ -1731,7 +1731,7 @@
         "comment": "tmdb_movie_id",
         "dataType": "NUMBER",
         "default": "",
-        "options": 4,
+        "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 83,
@@ -1740,7 +1740,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1756775571990,
+          "updateAt": 1756985495444,
           "createAt": 1756774165920
         }
       },
@@ -1771,7 +1771,7 @@
         "comment": "영화 설명",
         "dataType": "VARCHAR2(2000 CHAR)",
         "default": "",
-        "options": 8,
+        "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 60,
@@ -1780,7 +1780,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1756948626133,
+          "updateAt": 1756985123021,
           "createAt": 1756774393768
         }
       },

@@ -26,7 +26,7 @@ public class MovieInfoDto {
     private Double popularity;
     private Integer voteCount;
     private Double voteAverage;
-    private Integer adult; // 0: false, 1: true
+    private Boolean adult; // 0: false, 1: true
     private String overview;
     private String backdropPath;
     private String posterPath;

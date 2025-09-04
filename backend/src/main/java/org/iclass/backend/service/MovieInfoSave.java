@@ -32,11 +32,11 @@ public class MovieInfoSave {
 
     private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4";
 
-    private final int TOTAL_PAGE = 224; 
+    private final int TOTAL_PAGE = 224;
 
     public MovieInfoSave(MovieInfoRepository movieInfoRepository,
-                         MovieGenresRepository movieGenresRepository,
-                         GenresRepository genresRepository) {
+            MovieGenresRepository movieGenresRepository,
+            GenresRepository genresRepository) {
         this.movieInfoRepository = movieInfoRepository;
         this.movieGenresRepository = movieGenresRepository;
         this.genresRepository = genresRepository;
@@ -77,17 +77,23 @@ public class MovieInfoSave {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         for (MovieInfoResponse.MovieInfoApiDto dto : movies) {
+            String releaseDateStr = dto.getRelease_date();
+            LocalDate releaseDate = null;
+            if (releaseDateStr != null && !releaseDateStr.isBlank()) {
+                releaseDate = LocalDate.parse(releaseDateStr, formatter);
+            }
+
             MovieInfoEntity movie = MovieInfoEntity.builder()
                     .tmdbMovieId(dto.getTmdb_movie_id())
                     .title(dto.getTitle())
                     .popularity(dto.getPopularity() != null ? dto.getPopularity() : 0.0)
                     .voteCount(dto.getVote_count() != null ? dto.getVote_count() : 0)
                     .voteAverage(dto.getVote_average() != null ? dto.getVote_average() : 0.0)
-                    .adult(dto.getAdult() != null ? dto.getAdult() : 0)
+                    .adult(dto.getAdult() != null ? dto.getAdult() : false)
                     .overview(dto.getOverview())
                     .backdropPath(dto.getBackdrop_path())
                     .posterPath(dto.getPoster_path())
-                    .releaseDate(dto.getRelease_date() != null ? LocalDate.parse(dto.getRelease_date(), formatter) : null)
+                    .releaseDate(releaseDate)
                     .build();
 
             movieInfoRepository.save(movie);

@@ -2,6 +2,9 @@ package org.iclass.backend.response;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,24 +14,26 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MovieInfoResponse {
-    private int page;                       // 현재 페이지
-    private int total_pages;                // 전체 페이지 수
-    private int total_results;              // 전체 데이터 수
     private List<MovieInfoApiDto> results;  // 실제 영화 데이터
 
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class MovieInfoApiDto {
         private Long movie_idx;
+
+        @JsonProperty("id")
         private Long tmdb_movie_id;
+        
         private String title;
         private Double popularity;
         private Integer vote_count;
         private Double vote_average;
-        private Integer adult;
+        private Boolean adult;
         private String overview;
         private String backdrop_path;
         private String poster_path;

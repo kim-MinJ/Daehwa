@@ -67,13 +67,13 @@ COMMENT ON COLUMN People.popularity IS '인물 인기도';
 CREATE TABLE Movie_Info
 (
   movie_idx     NUMBER              NOT NULL,
-  tmdb_movie_id NUMBER             ,
-  title         VARCHAR2(100 CHAR) ,
+  tmdb_movie_id NUMBER              NOT NULL,
+  title         VARCHAR2(500 CHAR) ,
   popularity    NUMBER              DEFAULT 0,
   vote_count    NUMBER              DEFAULT 0,
   vote_average  NUMBER              DEFAULT 0,
   adult         NUMBER(1)           DEFAULT 0 NOT NULL,
-  overview      VARCHAR2(2000 CHAR) NOT NULL,
+  overview      VARCHAR2(2000 CHAR),
   backdrop_path VARCHAR2(255)      ,
   poster_path   VARCHAR2(255)      ,
   release_date  DATE               ,
@@ -82,9 +82,6 @@ CREATE TABLE Movie_Info
 
 ALTER TABLE Movie_Info
   ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
-
-ALTER TABLE Movie_Info
-  ADD CONSTRAINT UQ_tmdb_movie_id UNIQUE (tmdb_movie_id);
 
 COMMENT ON TABLE Movie_Info IS '영화 정보';
 
