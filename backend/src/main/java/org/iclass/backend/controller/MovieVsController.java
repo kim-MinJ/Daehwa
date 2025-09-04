@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/vs")
+@RequestMapping("/api/vs")
 @RequiredArgsConstructor
 public class MovieVsController {
 
