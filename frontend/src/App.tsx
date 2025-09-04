@@ -1,14 +1,20 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useState } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { MainPage } from "./pages/MainPage";
+import { MyPage } from "./pages/MyPage";
 
-export default function App() {
+export function App() {
+  const [page, setPage] = useState("login"); // login | main | mypage
+
+  const handleNavigate = (target: string) => {
+    setPage(target);
+  };
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/main" element={<MainPage />} />
-      </Routes>
-    </Router>
+    <>
+      {page === "login" && <LoginPage onNavigate={handleNavigate} />}
+      {page === "main" && <MainPage onNavigate={handleNavigate} />}
+      {page === "mypage" && <MyPage onNavigate={handleNavigate} />}
+    </>
   );
 }

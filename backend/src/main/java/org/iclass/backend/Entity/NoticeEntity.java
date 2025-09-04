@@ -31,7 +31,7 @@ public class NoticeEntity {
   private Long noticeIdx;
 
   @ManyToOne
-  @JoinColumn(name = "userid", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 
   @Column(nullable = false, length = 255)

@@ -31,6 +31,6 @@ public class BookMarkEntity {
   private Long bookmarkIdx;
 
   @ManyToOne
-  @JoinColumn(name = "userid", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 }

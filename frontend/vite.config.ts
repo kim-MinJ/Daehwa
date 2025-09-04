@@ -14,8 +14,14 @@ export default defineConfig({
     target: 'esnext',
     outDir: 'build',
   },
-  server: {
-    port: 5173,
-    open: true, // 서버 시작 시 브라우저 자동 열기
+ server: {
+    // ✅ 추가: /api 를 백엔드로 프록시
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+    },
+    fs: { strict: true }, // 기존 코드 유지
   },
 });

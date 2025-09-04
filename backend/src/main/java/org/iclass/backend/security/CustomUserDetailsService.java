@@ -6,8 +6,8 @@ import org.iclass.backend.repository.UsersRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
   private final UsersRepository usersRepository;

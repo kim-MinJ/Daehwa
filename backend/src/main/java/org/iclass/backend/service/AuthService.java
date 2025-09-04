@@ -1,7 +1,9 @@
 package org.iclass.backend.service;
 
-
 import org.iclass.backend.dto.UsersDto;
+
+import java.time.LocalDateTime;
+
 import org.iclass.backend.Entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtTokenProvider;
@@ -23,11 +25,16 @@ public class AuthService {
     if (usersRepository.existsById(userId)) {
       throw new RuntimeException("이미 존재하는 아이디입니다.");
     }
-    UsersEntity entity = new UsersEntity();
-    entity.setUserId(userId);
-    entity.setUsername(username);
-    entity.setPassword(passwordEncoder.encode(password));
-    entity.setRole("user");
+
+    UsersEntity entity = UsersEntity.builder()
+        .userId(userId)
+        .username(username)
+        .password(passwordEncoder.encode(password))
+        .role("user")
+        .regDate(LocalDateTime.now()) // 가입일 추가
+        .status(0) // 초기 상태
+        .build();
+
     usersRepository.save(entity);
 
     String token = jwtTokenProvider.createTokenWithUserId(userId);

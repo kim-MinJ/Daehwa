@@ -1,89 +1,116 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Card, CardContent } from "../components/ui/card";
-import { Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import "./LoginPage.css";
 
-export function LoginPage() {
-  const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+export function LoginPage({ onNavigate }: { onNavigate: (page: string) => void }) {
   const [showPassword, setShowPassword] = useState(false);
-  const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
-  const [message, setMessage] = useState(""); // 성공 메시지 표시
+  const [name, setName] = useState("");
+  const [isLogin, setIsLogin] = useState(true);
+  const [message, setMessage] = useState("");
+  const [posters, setPosters] = useState<string[]>([]);
+  const [slideIndex, setSlideIndex] = useState(0);
 
-  const { login, register, loading, error } = useAuth();
+  const { login, register, logout, loading, error } = useAuth();
+
+  // TMDB API 백엔드 호출
+  useEffect(() => {
+    const fetchPosters = async () => {
+      try {
+        const res = await fetch("/api/movies");
+        const data = await res.json();
+        const urls = data.results.map((movie: any) => `https://image.tmdb.org/t/p/original${movie.poster_path}`);
+        setPosters(urls);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchPosters();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % posters.length);
+    }, 150000);
+    return () => clearInterval(interval);
+  }, [posters]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setMessage("");
     try {
       if (isLogin) {
-        await login(userId, password);
+        await login(email, password);
         setMessage("로그인 성공!");
       } else {
-        await register(userId, password, username);
+        await register(email, password, name);
         setMessage("회원가입 성공!");
-        setIsLogin(true); // 회원가입 후 로그인 모드로 전환
+        setIsLogin(true);
       }
-    } catch (err) {
-      console.error(err);
+      setEmail("");
+      setPassword("");
+      setName("");
+    } catch (err: any) {
+      if (!isLogin && err.message.includes("exists")) {
+        setMessage("이미 존재하는 ID입니다.");
+      } else {
+        setMessage(error || "실패했습니다.");
+      }
     }
   };
 
-  const handleMyPage = () => {
-    navigate("/mypage"); // 임시 마이페이지 이동
+  const handleLogout = () => {
+    logout();
+    setMessage("로그아웃 되었습니다.");
+    setEmail("");
+    setPassword("");
+    setName("");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card>
-        <CardContent>
-          <h1>{isLogin ? "로그인" : "회원가입"}</h1>
-          {message && (
-            <Input value={message} readOnly className="mb-4 text-center" />
-          )}
-          <form onSubmit={handleSubmit}>
-            {!isLogin && (
-              <>
-                <Label>이름</Label>
-                <Input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </>
-            )}
-            <Label>아이디</Label>
-            <Input value={userId} onChange={(e) => setUserId(e.target.value)} />
-            <Label>비밀번호</Label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <Button type="button" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <EyeOff /> : <Eye />}
-              </Button>
-            </div>
-            {error && <p className="text-red-500">{error}</p>}
-            <Button type="submit" disabled={loading}>
-              {isLogin ? "로그인" : "회원가입"}
-            </Button>
-          </form>
-          {message === "로그인 성공!" && (
-            <Button type="button" onClick={handleMyPage} className="mt-2">
-              마이페이지 이동
-            </Button>
-          )}
-          <Button type="button" onClick={() => setIsLogin(!isLogin)} className="mt-2">
-            {isLogin ? "회원가입으로" : "로그인으로"}
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="login-page">
+      <h1>MOVIE SSG</h1>
+      <div>
+        <button onClick={() => setIsLogin(true)}>로그인</button>
+        <button onClick={() => setIsLogin(false)}>회원가입</button>
+      </div>
+      <form onSubmit={handleSubmit}>
+        {!isLogin && (
+          <input
+            type="text"
+            placeholder="이름"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        )}
+        <input
+          type="email"
+          placeholder="이메일"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <div>
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="비밀번호"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="button" onClick={() => setShowPassword(!showPassword)}>
+            {showPassword ? <EyeOff /> : <Eye />}
+          </button>
+        </div>
+        <button type="submit" disabled={loading}>
+          {isLogin ? "로그인" : "계정 만들기"}
+        </button>
+      </form>
+      {isLogin && <button onClick={handleLogout}>로그아웃</button>}
+      {message && <p>{message}</p>}
     </div>
   );
 }
