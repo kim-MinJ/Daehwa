@@ -11,12 +11,12 @@ public class FilterConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/movies").permitAll()
-                        .anyRequest().authenticated())
-                .cors();
+            .csrf(csrf -> csrf.disable())       // CSRF 보호 비활성화
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()       // 모든 요청 허용
+            )
+            .cors();                            // CORS 설정 사용 (필요 시)
+
         return http.build();
     }
-    
 }

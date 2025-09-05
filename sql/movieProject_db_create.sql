@@ -14,9 +14,6 @@ CREATE TABLE Users
   CONSTRAINT PK_Users PRIMARY KEY (user_id)
 );
 
-ALTER TABLE Users
-  ADD CONSTRAINT UQ_user_id UNIQUE (user_id);
-
 COMMENT ON TABLE Users IS '회원관리';
 
 COMMENT ON COLUMN Users.user_id IS '이메일주소';
@@ -31,39 +28,7 @@ COMMENT ON COLUMN Users.reg_date IS '회원가입 날짜';
 
 COMMENT ON COLUMN Users.status IS '로그인(0: off, 1: on)';
 
--- 1-2. People
-CREATE TABLE People
-(
-  person_idx     NUMBER        NOT NULL,
-  tmdb_person_id NUMBER       ,
-  name           VARCHAR2(100) NOT NULL,
-  gender         NUMBER(1)     NOT NULL,
-  profile_path   VARCHAR2(255),
-  popularity     NUMBER       ,
-  CONSTRAINT PK_People PRIMARY KEY (person_idx)
-);
-
-ALTER TABLE People
-  ADD CONSTRAINT UQ_person_idx UNIQUE (person_idx);
-
-ALTER TABLE People
-  ADD CONSTRAINT UQ_tmdb_person_id UNIQUE (tmdb_person_id);
-
-COMMENT ON TABLE People IS '인물 정보';
-
-COMMENT ON COLUMN People.person_idx IS '인물정보 인덱스';
-
-COMMENT ON COLUMN People.tmdb_person_id IS 'tmdb_person_id';
-
-COMMENT ON COLUMN People.name IS '인물 이름';
-
-COMMENT ON COLUMN People.gender IS '성별 (0: 남, 1: 여)';
-
-COMMENT ON COLUMN People.profile_path IS '프로필 이미지 경로';
-
-COMMENT ON COLUMN People.popularity IS '인물 인기도';
-
--- 1-3. Movie_Info
+-- 1-2. Movie_Info
 CREATE TABLE Movie_Info
 (
   movie_idx     NUMBER              NOT NULL,
@@ -81,7 +46,7 @@ CREATE TABLE Movie_Info
 );
 
 ALTER TABLE Movie_Info
-  ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
+  ADD CONSTRAINT UQ_tmdb_movie_id UNIQUE (tmdb_movie_id);
 
 COMMENT ON TABLE Movie_Info IS '영화 정보';
 
@@ -107,7 +72,7 @@ COMMENT ON COLUMN Movie_Info.poster_path IS '영화 상세 포스터 경로';
 
 COMMENT ON COLUMN Movie_Info.release_date IS '영화 개봉일';
 
--- 1-4. Review
+-- 1-3. Review
 CREATE TABLE Review
 (
   review_idx NUMBER              NOT NULL,
@@ -119,9 +84,6 @@ CREATE TABLE Review
   isBlind    NUMBER(1)           DEFAULT 0,
   CONSTRAINT PK_Review PRIMARY KEY (review_idx)
 );
-
-ALTER TABLE Review
-  ADD CONSTRAINT UQ_review_idx UNIQUE (review_idx);
 
 COMMENT ON TABLE Review IS '리뷰';
 
@@ -139,7 +101,7 @@ COMMENT ON COLUMN Review.update_at IS '수정 날짜';
 
 COMMENT ON COLUMN Review.isBlind IS '블라인드 (0: off, 1: on)';
 
--- 1-5. Articles
+-- 1-4. Articles
 CREATE TABLE Articles
 (
   articles_idx NUMBER        NOT NULL,
@@ -150,9 +112,6 @@ CREATE TABLE Articles
   published_at DATE         ,
   CONSTRAINT PK_Articles PRIMARY KEY (articles_idx)
 );
-
-ALTER TABLE Articles
-  ADD CONSTRAINT UQ_articles_idx UNIQUE (articles_idx);
 
 COMMENT ON TABLE Articles IS '관련 기사';
 
@@ -168,16 +127,14 @@ COMMENT ON COLUMN Articles.article_url IS '기사 링크';
 
 COMMENT ON COLUMN Articles.published_at IS '기사 발행일';
 
--- 1-6. Bookmark
+-- 1-5. Bookmark
 CREATE TABLE Bookmark
 (
   bookmark_idx NUMBER        NOT NULL,
   userid       VARCHAR2(100) NOT NULL,
+  movie_idx    NUMBER        NOT NULL,
   CONSTRAINT PK_Bookmark PRIMARY KEY (bookmark_idx)
 );
-
-ALTER TABLE Bookmark
-  ADD CONSTRAINT UQ_bookmark_idx UNIQUE (bookmark_idx);
 
 COMMENT ON TABLE Bookmark IS '북마크';
 
@@ -185,7 +142,9 @@ COMMENT ON COLUMN Bookmark.bookmark_idx IS '북마크 인덱스';
 
 COMMENT ON COLUMN Bookmark.userid IS '이메일주소';
 
--- 1-7. Comments
+COMMENT ON COLUMN Bookmark.movie_idx IS '영화 인덱스';
+
+-- 1-6. Comments
 CREATE TABLE Comments
 (
   comment_idx NUMBER              NOT NULL,
@@ -196,9 +155,6 @@ CREATE TABLE Comments
   update_at   DATE                DEFAULT sysdate,
   CONSTRAINT PK_Comments PRIMARY KEY (comment_idx)
 );
-
-ALTER TABLE Comments
-  ADD CONSTRAINT UQ_comment_idx UNIQUE (comment_idx);
 
 COMMENT ON TABLE Comments IS '댓글';
 
@@ -214,8 +170,7 @@ COMMENT ON COLUMN Comments.created_at IS '작성 날짜';
 
 COMMENT ON COLUMN Comments.update_at IS '수정 날짜';
 
-
--- 1-8. Notice
+-- 1-7. Notice
 CREATE TABLE Notice
 (
   notice_idx   NUMBER              NOT NULL,
@@ -225,9 +180,6 @@ CREATE TABLE Notice
   created_date DATE                DEFAULT sysdate,
   CONSTRAINT PK_Notice PRIMARY KEY (notice_idx)
 );
-
-ALTER TABLE Notice
-  ADD CONSTRAINT UQ_notice_idx UNIQUE (notice_idx);
 
 COMMENT ON TABLE Notice IS '공지사항';
 
@@ -241,7 +193,7 @@ COMMENT ON COLUMN Notice.content IS '공지 내용';
 
 COMMENT ON COLUMN Notice.created_date IS '작성 날짜';
 
--- 1-9. Genres
+-- 1-8. Genres
 CREATE TABLE Genres
 (
   genre_idx NUMBER       NOT NULL,
@@ -249,9 +201,6 @@ CREATE TABLE Genres
   name      VARCHAR2(50) NOT NULL,
   CONSTRAINT PK_Genres PRIMARY KEY (genre_idx)
 );
-
-ALTER TABLE Genres
-  ADD CONSTRAINT UQ_genre_idx UNIQUE (genre_idx);
 
 ALTER TABLE Genres
   ADD CONSTRAINT UQ_genre_id UNIQUE (genre_id);
@@ -267,7 +216,62 @@ COMMENT ON COLUMN Genres.genre_id IS '장르 아이디';
 
 COMMENT ON COLUMN Genres.name IS '장르명';
 
--- 1-10. Movie_Genres
+-- 1-9. Movie_Cast
+CREATE TABLE Movie_Cast
+(
+  cast_idx          NUMBER        NOT NULL,
+  tmdb_movie_id     NUMBER        NOT NULL,
+  tmdb_cast_id      NUMBER        NOT NULL,
+  character         VARCHAR2(255),
+  cast_name         VARCHAR2(255),
+  cast_profile_path VARCHAR2(255),
+  credit_order      NUMBER       ,
+  CONSTRAINT PK_Movie_Cast PRIMARY KEY (cast_idx)
+);
+
+COMMENT ON TABLE Movie_Cast IS '배우 정보';
+
+COMMENT ON COLUMN Movie_Cast.cast_idx IS '캐스 인덱스';
+
+COMMENT ON COLUMN Movie_Cast.tmdb_movie_id IS 'tmdb_movie_id';
+
+COMMENT ON COLUMN Movie_Cast.tmdb_cast_id IS '(CAST) tmdb_cast_id';
+
+COMMENT ON COLUMN Movie_Cast.character IS '(CAST) 배역 이름';
+
+COMMENT ON COLUMN Movie_Cast.cast_name IS '(CAST) 배우 이름';
+
+COMMENT ON COLUMN Movie_Cast.cast_profile_path IS '(CAST) 배우 프로필';
+
+COMMENT ON COLUMN Movie_Cast.credit_order IS '(CAST) 배우 순서';
+
+-- 1-10. Movie_Crew
+CREATE TABLE Movie_Crew
+(
+  credit_idx        NUMBER        NOT NULL,
+  tmdb_movie_id     NUMBER        NOT NULL,
+  tmdb_crew_id      NUMBER       ,
+  crew_name         VARCHAR2(255),
+  crew_profile_path VARCHAR2(255),
+  job               VARCHAR2(255),
+  CONSTRAINT PK_Movie_Crew PRIMARY KEY (credit_idx)
+);
+
+COMMENT ON TABLE Movie_Crew IS '감독 정보';
+
+COMMENT ON COLUMN Movie_Crew.credit_idx IS '크루 인덱스';
+
+COMMENT ON COLUMN Movie_Crew.tmdb_movie_id IS 'tmdb_movie_id';
+
+COMMENT ON COLUMN Movie_Crew.tmdb_crew_id IS '(CREW) tmdb_crew_id';
+
+COMMENT ON COLUMN Movie_Crew.crew_name IS '(CREW) 감독이름';
+
+COMMENT ON COLUMN Movie_Crew.crew_profile_path IS '(CREW) 감독 프로필';
+
+COMMENT ON COLUMN Movie_Crew.job IS '(CREW) 직무(Director)';
+
+-- 1-11. Movie_Genres
 CREATE TABLE Movie_Genres
 (
   MG_idx    NUMBER NOT NULL,
@@ -284,41 +288,6 @@ COMMENT ON COLUMN Movie_Genres.movie_idx IS '영화 인덱스';
 
 COMMENT ON COLUMN Movie_Genres.genre_id IS '장르 아이디';
 
--- 1-11. Movie_Credits
-CREATE TABLE Movie_Credits
-(
-  credit_idx   NUMBER        NOT NULL,
-  movie_idx    NUMBER        NOT NULL,
-  person_idx   NUMBER        NOT NULL,
-  role_type    VARCHAR2(10) ,
-  character    VARCHAR2(255),
-  credit_order NUMBER       ,
-  department   VARCHAR2(255),
-  job          VARCHAR2(255),
-  CONSTRAINT PK_Movie_Credits PRIMARY KEY (credit_idx)
-);
-
-ALTER TABLE Movie_Credits
-  ADD CONSTRAINT UQ_credit_idx UNIQUE (credit_idx);
-
-COMMENT ON TABLE Movie_Credits IS '영화 참여 정보';
-
-COMMENT ON COLUMN Movie_Credits.credit_idx IS '크레딧 인덱스';
-
-COMMENT ON COLUMN Movie_Credits.movie_idx IS '영화 인덱스';
-
-COMMENT ON COLUMN Movie_Credits.person_idx IS '인물정보 인덱스';
-
-COMMENT ON COLUMN Movie_Credits.role_type IS 'CAST or CREW 구분';
-
-COMMENT ON COLUMN Movie_Credits.character IS '(CAST) 배역 이름';
-
-COMMENT ON COLUMN Movie_Credits.credit_order IS '(CAST) 크레딧 순서';
-
-COMMENT ON COLUMN Movie_Credits.department IS '(CREW) 소속 부서';
-
-COMMENT ON COLUMN Movie_Credits.job IS '(CREW) 직무';
-
 
 -- 1-12. Movie_VS
 CREATE TABLE Movie_VS
@@ -329,9 +298,6 @@ CREATE TABLE Movie_VS
   active    NUMBER(1) DEFAULT 0,
   CONSTRAINT PK_Movie_VS PRIMARY KEY (VS_idx)
 );
-
-ALTER TABLE Movie_VS
-  ADD CONSTRAINT UQ_VS_idx UNIQUE (VS_idx);
 
 COMMENT ON TABLE Movie_VS IS 'VS 투표하는 영화';
 
@@ -352,9 +318,6 @@ CREATE TABLE Movie_Vote
   VS_idx    NUMBER        NOT NULL,
   CONSTRAINT PK_Movie_Vote PRIMARY KEY (vote_idx)
 );
-
-ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_vote_idx UNIQUE (vote_idx);
 
 ALTER TABLE Movie_Vote
   ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
@@ -385,16 +348,13 @@ CREATE TABLE Ranking
   CONSTRAINT PK_Ranking PRIMARY KEY (ranking_idx)
 );
 
-ALTER TABLE Ranking
-  ADD CONSTRAINT UQ_ranking_idx UNIQUE (ranking_idx);
-
 COMMENT ON TABLE Ranking IS '영화 랭킹';
 
 COMMENT ON COLUMN Ranking.ranking_idx IS '영화 랭킹 인덱스';
 
 COMMENT ON COLUMN Ranking.movie_idx IS '영화 인덱스';
 
-COMMENT ON COLUMN Ranking.ranking_count IS 'Movie_Info의 popularity 값 (트리거로 연동)';
+COMMENT ON COLUMN Ranking.ranking_count IS 'Movie_Info의 popularity 값';
 
 COMMENT ON COLUMN Ranking.created_date IS '랭킹 기준 날짜';
 
@@ -435,9 +395,6 @@ CREATE TABLE Sound_Track
   playback_url   VARCHAR2(255),
   CONSTRAINT PK_Sound_Track PRIMARY KEY (soundtrack_idx)
 );
-
-ALTER TABLE Sound_Track
-  ADD CONSTRAINT UQ_soundtrack_idx UNIQUE (soundtrack_idx);
 
 COMMENT ON TABLE Sound_Track IS 'OST정보';
 
