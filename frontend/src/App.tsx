@@ -1,22 +1,20 @@
-// src/App.tsx
-import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
-import { MainPage } from "./pages/MainPage";
-import { useAuth } from "./hooks/useAuth";
+import { MyPage } from "./pages/MyPage";
+import { AuthProvider } from "./hooks/AuthContext";
 
-export function App() {
-  const { isLoggedIn } = useAuth();
-  const [page, setPage] = useState("login");
-
-  useEffect(() => {
-    if (isLoggedIn) setPage("main");
-    else setPage("login");
-  }, [isLoggedIn]);
-
+function App() {
   return (
-    <>
-      {page === "login" && <LoginPage onNavigate={setPage} />}
-      {page === "main" && <MainPage onNavigate={setPage} />}
-    </>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/mypage" element={<MyPage />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
+
+export default App;
