@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,7 +20,8 @@ import lombok.ToString;
 @ToString
 @Table(name = "Users")
 @Entity
-public class UsersEntity {
+@Builder
+public class UsersEntity {  
   @Id
   @Column(name = "user_id", length = 100)
   private String userId;
@@ -31,11 +33,14 @@ public class UsersEntity {
   private String password;
 
   @Column(length = 20)
+  @Builder.Default
   private String role = "user";
 
   @Column(name = "reg_date")
+  @Builder.Default
   private LocalDateTime regDate = LocalDateTime.now();
 
   @Column
-  private Integer status = 0; // 로그인 상태 0:로그인 1:로그아웃
+  @Builder.Default
+  private Integer status = 0; // 로그인 상태 1:로그인 0:로그아웃
 }
