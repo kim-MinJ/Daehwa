@@ -353,7 +353,7 @@ COMMENT ON COLUMN Ranking.ranking_idx IS '영화 랭킹 인덱스';
 
 COMMENT ON COLUMN Ranking.movie_idx IS '영화 인덱스';
 
-COMMENT ON COLUMN Ranking.ranking_count IS 'Movie_Info의 popularity 값';
+COMMENT ON COLUMN Ranking.ranking_count IS '영화 평균 별점';
 
 COMMENT ON COLUMN Ranking.created_date IS '랭킹 기준 날짜';
 

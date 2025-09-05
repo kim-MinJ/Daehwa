@@ -4,7 +4,7 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -778,
+    "scrollTop": -1078,
     "scrollLeft": -789,
     "zoomLevel": 0.73,
     "show": 495,
@@ -1416,19 +1416,19 @@
         "id": "17MAjD156cfxgwVNyvaqb",
         "tableId": "8qwX6yK4S8rrZDHEwwKPC",
         "name": "ranking_count",
-        "comment": "Movie_Info의 popularity 값",
+        "comment": "영화 평균 별점",
         "dataType": "NUMBER",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 77,
-          "widthComment": 145,
+          "widthComment": 81,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1757038497120,
+          "updateAt": 1757064580287,
           "createAt": 1756716083331
         }
       },
@@ -3213,7 +3213,7 @@
           "columnIds": [
             "YohFxm2rexjLllUEK3nea"
           ],
-          "x": 516.1112,
+          "x": 464.1112,
           "y": 1310.394,
           "direction": 2
         },
