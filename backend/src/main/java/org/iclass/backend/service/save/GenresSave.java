@@ -1,4 +1,4 @@
-package org.iclass.backend.service;
+package org.iclass.backend.service.save;
 
 import org.iclass.backend.Entity.GenresEntity;
 import org.iclass.backend.repository.GenresRepository;
@@ -18,7 +18,7 @@ public class GenresSave {
     private final GenresRepository genresRepository;
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
-    
+
     private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4";
 
     public GenresSave(GenresRepository genresRepository) {
@@ -48,12 +48,21 @@ public class GenresSave {
                 Long genreId = genreNode.get("id").asLong();
                 String name = genreNode.get("name").asText();
 
-                GenresEntity entity = GenresEntity.builder()
-                        .genreId(genreId)
-                        .name(name)
-                        .build();
-
-                genresRepository.save(entity);
+                genresRepository.findByGenreId(genreId)
+                        .ifPresentOrElse(
+                                entity -> {
+                                    // 이미 존재하면 API 값으로 덮어쓰기
+                                    entity.setName(name);
+                                    genresRepository.save(entity);
+                                },
+                                () -> {
+                                    // 없으면 새로 저장
+                                    GenresEntity newEntity = GenresEntity.builder()
+                                            .genreId(genreId)
+                                            .name(name)
+                                            .build();
+                                    genresRepository.save(newEntity);
+                                });
             }
         }
     }

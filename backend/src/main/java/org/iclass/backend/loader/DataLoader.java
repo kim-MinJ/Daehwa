@@ -1,7 +1,7 @@
 package org.iclass.backend.loader;
 
-import org.iclass.backend.service.GenresSave;
-import org.iclass.backend.service.MovieInfoSave;
+import org.iclass.backend.service.save.GenresSave;
+import org.iclass.backend.service.save.MovieInfoSave;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +16,7 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        genresSave.fetchAndSaveGenres();
-        movieInfoSave.fetchAndSaveAllPages();
+        genresSave.fetchAndSaveGenres();            // Genres 저장
+        movieInfoSave.fetchAndSaveAllPages();       // MovieInfo, MovieGenres 저장
     }
 }
