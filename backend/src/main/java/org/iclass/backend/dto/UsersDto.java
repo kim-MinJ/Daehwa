@@ -28,9 +28,10 @@ public class UsersDto {
     private String role;
     private LocalDateTime regDate;
     private Integer status;
+    private String token;
 
     // Entity → DTO 변환 메서드
-    public static UsersDto of(UsersEntity entity) {
+    public static UsersDto of(UsersEntity entity, String token) {
         return UsersDto.builder()
                 .userId(entity.getUserId())
                 .username(entity.getUsername())
@@ -38,6 +39,7 @@ public class UsersDto {
                 .role(entity.getRole())
                 .regDate(entity.getRegDate())
                 .status(entity.getStatus())
+                .token(token)
                 .build();
     }
 }
