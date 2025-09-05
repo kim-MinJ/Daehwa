@@ -34,3 +34,45 @@ BEGIN
     END LOOP;
 END;
 /
+
+
+SELECT *
+FROM movie_info
+WHERE tmdb_movie_id IN (
+    SELECT tmdb_movie_id
+    FROM movie_info
+    GROUP BY tmdb_movie_id
+    HAVING COUNT(*) > 1
+)
+ORDER BY tmdb_movie_id;
+
+-- 중복 데이터 검사
+DELETE FROM movie_info
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM movie_info
+    GROUP BY tmdb_movie_id
+);
+
+-- 중복 데이터 삭제
+DELETE FROM Movie_Genres
+WHERE movie_idx IN (
+    SELECT movie_idx
+    FROM (
+        SELECT movie_idx,
+               ROW_NUMBER() OVER (PARTITION BY tmdb_movie_id ORDER BY movie_idx) AS rn
+        FROM Movie_Info
+    )
+    WHERE rn > 1
+);
+
+DELETE FROM Movie_Info
+WHERE movie_idx IN (
+    SELECT movie_idx
+    FROM (
+        SELECT movie_idx,
+               ROW_NUMBER() OVER (PARTITION BY tmdb_movie_id ORDER BY movie_idx) AS rn
+        FROM Movie_Info
+    )
+    WHERE rn > 1
+);

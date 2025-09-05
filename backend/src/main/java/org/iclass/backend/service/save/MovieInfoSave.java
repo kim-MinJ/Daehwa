@@ -2,7 +2,9 @@ package org.iclass.backend.service.save;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.iclass.backend.Entity.MovieGenresEntity;
 import org.iclass.backend.Entity.MovieInfoEntity;
@@ -29,12 +31,14 @@ public class MovieInfoSave {
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4"; // 실제 키로 교체
+    private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4"; // 실제
+                                                                                                                                                                                                                                                                                                  // 키로
+                                                                                                                                                                                                                                                                                                  // 교체
     private final int TOTAL_PAGE = 224;
 
     public MovieInfoSave(MovieInfoRepository movieInfoRepository,
-                         MovieGenresRepository movieGenresRepository,
-                         GenresRepository genresRepository) {
+            MovieGenresRepository movieGenresRepository,
+            GenresRepository genresRepository) {
         this.movieInfoRepository = movieInfoRepository;
         this.movieGenresRepository = movieGenresRepository;
         this.genresRepository = genresRepository;
@@ -74,7 +78,19 @@ public class MovieInfoSave {
         List<MovieInfoResponse.MovieInfoApiDto> movies = response.getResults();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+        Set<Long> processedTmdbIds = new HashSet<>(); // 중복 검사용 Set
+
         for (MovieInfoResponse.MovieInfoApiDto dto : movies) {
+            if (dto.getTmdb_movie_id() == null)
+                continue;
+
+            // 이미 처리한 영화면 건너뜀
+            if (processedTmdbIds.contains(dto.getTmdb_movie_id())) {
+                continue;
+            }
+
+            processedTmdbIds.add(dto.getTmdb_movie_id());
+
             final LocalDate releaseDate = (dto.getRelease_date() != null && !dto.getRelease_date().isBlank())
                     ? LocalDate.parse(dto.getRelease_date(), formatter)
                     : null;
