@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
 const API_URL = "http://localhost:8080/api";
+// const API_URL = "http://192.168.0.30:8080/api";
 
 export function useAuth() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));

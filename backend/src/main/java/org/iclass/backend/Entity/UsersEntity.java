@@ -33,16 +33,15 @@ public class UsersEntity {
     private String password;
 
     @Column(length = 20)
+    @Builder.Default
     private String role = "user";
 
     @Column(name = "reg_date")
+    @Builder.Default
     private LocalDateTime regDate = LocalDateTime.now();
 
-<<<<<<< HEAD
     @Column
-    private Integer status = 0;
-=======
-  @Column
-  private Integer status = 0; // 로그인 상태 0:로그인 1:로그아웃
->>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
+    @Builder.Default
+    private Integer status = 0; // 로그인 상태 0:로그인 1:로그아웃
+
 }
