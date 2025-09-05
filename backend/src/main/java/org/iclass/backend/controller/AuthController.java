@@ -2,15 +2,15 @@ package org.iclass.backend.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.iclass.backend.dto.UsersDto;
-
-import java.time.LocalDateTime;
-
 import org.iclass.backend.Entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtTokenProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,40 +21,55 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
+    // 회원가입
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UsersDto dto) {
-        // Optional로 존재 여부 확인
-        if (usersRepository.findByUserId(dto.getUserId()).isPresent()) {
-            return ResponseEntity.badRequest().body("exists");
+        if (usersRepository.existsById(dto.getUserId())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "이미 존재하는 아이디입니다."));
         }
 
-        // 새로운 사용자 저장
         UsersEntity user = UsersEntity.builder()
                 .userId(dto.getUserId())
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .role("user")
-                .regDate(LocalDateTime.now()) // 추가
-                .status(0) // 추가
+                .regDate(LocalDateTime.now())
+                .status(0)
                 .build();
+
         usersRepository.save(user);
 
-        // JWT 발급
         String token = jwtTokenProvider.createTokenWithUserId(user.getUserId());
 
-        return ResponseEntity.ok(UsersDto.of(user, token));
+        return ResponseEntity.ok(Map.of(
+                "userId", user.getUserId(),
+                "username", user.getUsername(),
+                "role", user.getRole(),
+                "regDate", user.getRegDate(),
+                "status", user.getStatus(),
+                "token", token));
     }
 
+    // 로그인
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UsersDto dto) {
-        UsersEntity user = usersRepository.findByUserId(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        UsersEntity user = usersRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-            return ResponseEntity.badRequest().body("Invalid password");
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "비밀번호 불일치"));
         }
 
         String token = jwtTokenProvider.createTokenWithUserId(user.getUserId());
-        return ResponseEntity.ok(UsersDto.of(user, token));
+
+        return ResponseEntity.ok(Map.of(
+                "userId", user.getUserId(),
+                "username", user.getUsername(),
+                "role", user.getRole(),
+                "regDate", user.getRegDate(),
+                "status", user.getStatus(),
+                "token", token));
     }
 }

@@ -2,7 +2,23 @@
   position: relative;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+}
+
+.login-card {
+  width: 400px;
+  padding: 2rem;
+  position: relative;
+  z-index: 10;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
 }
 
 .poster-slider {

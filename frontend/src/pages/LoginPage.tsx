@@ -2,14 +2,12 @@
 import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Card, CardContent } from "../components/ui/card";
-import { Separator } from "../components/ui/separator";
-import { Eye, EyeOff, User, Lock, ArrowLeft } from "lucide-react";
+import { Card } from "../components/ui/card";
+import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
-export function LoginPage() {
-  const { login, register, logout, loading, error } = useAuth();
+export function LoginPage({ onNavigate }: { onNavigate: (page: string) => void }) {
+  const { login, register, logout, loading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -19,16 +17,16 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage(""); // 이전 메시지 초기화
+    setMessage("");
     try {
       if (isLogin) {
         await login(userId, password);
-        setMessage("로그인 성공!");
         setLoggedIn(true);
+        setMessage("로그인 성공!");
       } else {
         await register(userId, password, username);
         setMessage("회원가입 성공!");
-        setIsLogin(true); // 회원가입 후 로그인 모드로 전환
+        setIsLogin(true);
       }
       setUserId("");
       setPassword("");
@@ -45,48 +43,68 @@ export function LoginPage() {
   };
 
   return (
-    <Card className="p-6 max-w-md mx-auto mt-20">
-      <h1 className="text-2xl mb-4">{isLogin ? "로그인" : "회원가입"}</h1>
-      {message && <p className="text-red-600 mb-4">{message}</p>}
+    <div className="w-screen h-screen bg-gray-50 relative">
+      {/* 메인 버튼: 로그인 박스와 완전히 별개, 좌측 상단 고정 */}
+      <Button
+        variant="outline"
+        className="fixed top-4 left-4 flex items-center gap-1 z-10"
+        onClick={() => onNavigate("main")}
+      >
+        <ArrowLeft size={18} /> 메인
+      </Button>
 
-      {!loggedIn ? (
-        <>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            {!isLogin && (
+      {/* 로그인 박스: 화면 중앙 정사각형 */}
+      <div className="w-full h-full flex items-center justify-center">
+        <Card className="w-80 h-80 p-6 shadow-lg flex flex-col justify-center">
+          <h1 className="text-2xl font-bold mb-4 text-center">
+            {isLogin ? "로그인" : "회원가입"}
+          </h1>
+
+          {message && <p className="text-red-600 mb-4 text-center">{message}</p>}
+
+          {!loggedIn ? (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              {!isLogin && (
+                <Input
+                  placeholder="이름"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              )}
               <Input
-                placeholder="이름"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="아이디"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
                 required
               />
-            )}
-            <Input
-              placeholder="아이디"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              required
-            />
-            <Input
-              placeholder="비밀번호"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <Button type="submit" disabled={loading}>
-              {isLogin ? "로그인" : "회원가입"}
-            </Button>
-          </form>
+              <Input
+                placeholder="비밀번호"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <Button type="submit" disabled={loading} className="mt-2">
+                {isLogin ? "로그인" : "회원가입"}
+              </Button>
+            </form>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleLogout}>로그아웃</Button>
+              <Button onClick={() => onNavigate("mypage")}>마이페이지</Button>
+            </div>
+          )}
 
-          <Button variant="link" onClick={() => setIsLogin(!isLogin)}>
+          <Button
+            variant="link"
+            className="mt-2 text-center"
+            onClick={() => setIsLogin(!isLogin)}
+          >
             {isLogin ? "회원가입으로 전환" : "로그인으로 전환"}
           </Button>
-        </>
-      ) : (
-        <Button onClick={handleLogout} className="mt-4">
-          로그아웃
-        </Button>
-      )}
-    </Card>
+        </Card>
+      </div>
+    </div>
   );
 }

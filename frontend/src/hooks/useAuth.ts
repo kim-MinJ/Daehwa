@@ -1,32 +1,35 @@
-// src/hooks/useAuth.ts
-import { useState, useEffect } from "react";
+import { useState } from "react";
+
+const API_URL = "http://localhost:8080/api/auth";
 
 export function useAuth() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const saveToken = (token: string) => {
+    localStorage.setItem("token", token);
+    setToken(token);
+  };
+
   const login = async (userId: string, password: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
+      const res = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, password }),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "로그인 실패");
-      }
       const data = await res.json();
-      localStorage.setItem("token", data.token);
-      setToken(data.token);
+      if (!res.ok) throw new Error(data.message || "로그인 실패");
+      saveToken(data.token);
+      setLoading(false);
+      return data;
     } catch (e: any) {
       setError(e.message);
-      throw e;
-    } finally {
       setLoading(false);
+      throw e;
     }
   };
 
@@ -34,23 +37,20 @@ export function useAuth() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8080/register", {
+      const res = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, password, username }),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "회원가입 실패");
-      }
       const data = await res.json();
-      localStorage.setItem("token", data.token);
-      setToken(data.token);
+      if (!res.ok) throw new Error(data.message || "회원가입 실패");
+      saveToken(data.token);
+      setLoading(false);
+      return data;
     } catch (e: any) {
       setError(e.message);
-      throw e;
-    } finally {
       setLoading(false);
+      throw e;
     }
   };
 
@@ -59,7 +59,5 @@ export function useAuth() {
     setToken(null);
   };
 
-  const isLoggedIn = !!token;
-
-  return { token, isLoggedIn, login, register, logout, loading, error };
+  return { token, login, register, logout, loading, error };
 }
