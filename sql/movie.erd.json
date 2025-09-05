@@ -4,8 +4,8 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -451.8122,
-    "scrollLeft": -121.975,
+    "scrollTop": -778,
+    "scrollLeft": -789,
     "zoomLevel": 0.73,
     "show": 495,
     "database": 8,
@@ -3985,22 +3985,6 @@
     },
     "indexColumnEntities": {},
     "memoEntities": {
-      "ivXQBqiEfNORlI2iHVOqI": {
-        "id": "ivXQBqiEfNORlI2iHVOqI",
-        "value": "",
-        "ui": {
-          "x": 326.38618556701033,
-          "y": 96.90721649484536,
-          "zIndex": 507,
-          "width": 116,
-          "height": 100,
-          "color": ""
-        },
-        "meta": {
-          "updateAt": 1756714239714,
-          "createAt": 1756714239714
-        }
-      },
       "fWcrNwe4cYA6RufrxeJIa": {
         "id": "fWcrNwe4cYA6RufrxeJIa",
         "value": "idx 부분 부 시퀀즈 작성 필요",
