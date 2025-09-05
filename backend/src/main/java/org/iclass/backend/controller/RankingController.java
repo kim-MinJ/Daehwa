@@ -27,7 +27,7 @@ public class RankingController {
         return ResponseEntity.ok(rankingService.getTodayTop10());
     }
 
-    // 맞춤 추천 2개
+    // 맞춤 추천 5개
     @GetMapping("/recommend")
     public ResponseEntity<List<RankingDto>> getRecommended2() {
         return ResponseEntity.ok(rankingService.getRecommended2());

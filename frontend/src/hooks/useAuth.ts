@@ -3,8 +3,14 @@ import { useState } from "react";
 const API_URL = "http://localhost:8080/api/auth";
 
 export function useAuth() {
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const saveToken = (token: string) => {
+    localStorage.setItem("token", token);
+    setToken(token);
+  };
 
   const login = async (userId: string, password: string) => {
     setLoading(true);
@@ -15,48 +21,46 @@ export function useAuth() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, password }),
       });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "로그인 실패");
-      }
-
       const data = await res.json();
-      localStorage.setItem("token", data.token); // JWT 저장
+      if (!res.ok) throw new Error(data.message || "로그인 실패");
+      saveToken(data.token);
+      return data;
     } catch (e: any) {
       setError(e.message);
+      throw e;
     } finally {
       setLoading(false);
     }
   };
 
-const register = async (userId: string, password: string, username: string) => {
-  setLoading(true);
-  setError(null);
-  try {
-    const res = await fetch(`${API_URL}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, password, username }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Register failed - Status:", res.status, "Message:", text);
-      throw new Error(text || "회원가입 실패");
+  const register = async (userId: string, password: string, username: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, password, username }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "회원가입 실패");
+      saveToken(data.token);
+      return data;
+    } catch (e: any) {
+      setError(e.message);
+      throw e;
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const data = await res.json();
-    console.log("Register success:", data); // 성공 데이터 로그
-    localStorage.setItem("token", data.token);
-  } catch (e: any) {
-    console.error("Register error:", e);
-    setError(e.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+  };
 
+  // ✅ 여기서 isLoggedIn 추가
+  const isLoggedIn = !!token;
 
-  return { login, register, loading, error };
+  return { token, isLoggedIn, login, register, logout, loading, error };
 }

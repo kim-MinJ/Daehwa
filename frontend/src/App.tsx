@@ -1,14 +1,22 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+// src/App.tsx
+import { useState, useEffect } from "react";
 import { LoginPage } from "./pages/LoginPage";
 import { MainPage } from "./pages/MainPage";
+import { useAuth } from "./hooks/useAuth";
 
-export default function App() {
+export function App() {
+  const { isLoggedIn } = useAuth();
+  const [page, setPage] = useState("login");
+
+  useEffect(() => {
+    if (isLoggedIn) setPage("main");
+    else setPage("login");
+  }, [isLoggedIn]);
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/main" element={<MainPage />} />
-      </Routes>
-    </Router>
+    <>
+      {page === "login" && <LoginPage onNavigate={setPage} />}
+      {page === "main" && <MainPage onNavigate={setPage} />}
+    </>
   );
 }

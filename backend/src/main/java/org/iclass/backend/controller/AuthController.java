@@ -1,77 +1,75 @@
-// package org.iclass.backend.controller;
+package org.iclass.backend.controller;
 
-// import lombok.RequiredArgsConstructor;
-// import org.iclass.backend.dto.UsersDto;
-// import org.iclass.backend.Entity.UsersEntity;
-// import org.iclass.backend.repository.UsersRepository;
-// import org.iclass.backend.security.JwtTokenProvider;
-// import org.springframework.security.authentication.AuthenticationManager;
-// import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-// import org.springframework.security.core.Authentication;
-// import org.springframework.security.crypto.password.PasswordEncoder;
-// import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
+import org.iclass.backend.dto.UsersDto;
+import org.iclass.backend.Entity.UsersEntity;
+import org.iclass.backend.repository.UsersRepository;
+import org.iclass.backend.security.JwtTokenProvider;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
-// import java.time.LocalDateTime;
+import java.time.LocalDateTime;
+import java.util.Map;
 
-// @RestController
-// @RequestMapping("/api/auth")
-// @RequiredArgsConstructor
-// @CrossOrigin(origins = "http://localhost:5173")
-// public class AuthController {
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
 
-//     private final AuthenticationManager authenticationManager;
-//     private final UsersRepository usersRepository;
-//     private final PasswordEncoder passwordEncoder;
-//     private final JwtTokenProvider jwtTokenProvider;
+    private final UsersRepository usersRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
-//     @PostMapping("/login")
-//     public UsersDto login(@RequestBody UsersDto request) {
-//         Authentication authentication = authenticationManager.authenticate(
-//                 new UsernamePasswordAuthenticationToken(request.getUserId(), request.getPassword()));
+    // 회원가입
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody UsersDto dto) {
+        if (usersRepository.existsById(dto.getUserId())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "이미 존재하는 아이디입니다."));
+        }
 
-//         UsersEntity user = usersRepository.findByUserId(request.getUserId())
-//                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        UsersEntity user = UsersEntity.builder()
+                .userId(dto.getUserId())
+                .username(dto.getUsername())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .role("user")
+                .regDate(LocalDateTime.now())
+                .status(0)
+                .build();
 
-//         String token = jwtTokenProvider.createToken(authentication);
-//         return UsersDto.of(user, token);
-//     }
+        usersRepository.save(user);
 
-//     // 로그인/회원가입 이후 사용자 정보 반환용
-//     @GetMapping("/me")
-//     public UsersDto getMyInfo(@RequestHeader("Authorization") String authHeader) {
-//         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-//             throw new RuntimeException("토큰 없음");
-//         }
+        String token = jwtTokenProvider.createTokenWithUserId(user.getUserId());
 
-//         String token = authHeader.substring(7);
-//         String userId = jwtTokenProvider.getUsernameFromToken(token);
+        return ResponseEntity.ok(Map.of(
+                "userId", user.getUserId(),
+                "username", user.getUsername(),
+                "role", user.getRole(),
+                "regDate", user.getRegDate(),
+                "status", user.getStatus(),
+                "token", token));
+    }
 
-//         UsersEntity user = usersRepository.findByUserId(userId)
-//                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    // 로그인
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UsersDto dto) {
+        UsersEntity user = usersRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
-//         return UsersDto.of(user, token);
-//     }
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "비밀번호 불일치"));
+        }
 
-//     @PostMapping("/register")
-//     public UsersDto register(@RequestBody UsersDto request) {
-//         if (usersRepository.findByUserId(request.getUserId()).isPresent()) {
-//             throw new RuntimeException("이미 존재하는 아이디입니다.");
-//         }
+        String token = jwtTokenProvider.createTokenWithUserId(user.getUserId());
 
-//         UsersEntity user = UsersEntity.builder()
-//                 .userId(request.getUserId())
-//                 .username(request.getUsername())
-//                 .password(passwordEncoder.encode(request.getPassword()))
-//                 .role("user")
-//                 .status(0)
-//                 .regDate(LocalDateTime.now())
-//                 .build();
-
-//         usersRepository.save(user);
-
-//         Authentication authentication = authenticationManager.authenticate(
-//                 new UsernamePasswordAuthenticationToken(request.getUserId(), request.getPassword()));
-//         String token = jwtTokenProvider.createToken(authentication);
-//         return UsersDto.of(user, token);
-//     }
-// }
+        return ResponseEntity.ok(Map.of(
+                "userId", user.getUserId(),
+                "username", user.getUsername(),
+                "role", user.getRole(),
+                "regDate", user.getRegDate(),
+                "status", user.getStatus(),
+                "token", token));
+    }
+}

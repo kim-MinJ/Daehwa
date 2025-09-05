@@ -68,14 +68,14 @@ public class RankingService {
     // 맞춤 추천 (랜덤 5개 - 샘플)
     public List<RankingDto> getRecommended2() {
         List<RankingEntity> all = rankingRepository.findAll();
-        if (all.size() <= 5) {
+        if (all.size() <= 3) {
             return all.stream().map(this::toDto).collect(Collectors.toList());
         }
 
         Random random = new Random();
         return random.ints(0, all.size())
                 .distinct()
-                .limit(5)
+                .limit(3)
                 .mapToObj(all::get)
                 .map(this::toDto)
                 .collect(Collectors.toList());

@@ -27,13 +27,7 @@ public class MovieVsController {
     public ResponseEntity<List<MovieVsDto>> getAllVs() {
         return ResponseEntity.ok(movieVsService.getAllVs());
     }
-
-    // 특정 VS 조회
-    @GetMapping("/{id}")
-    public ResponseEntity<MovieVsDto> getVs(@PathVariable Long id) {
-        return ResponseEntity.ok(movieVsService.getVs(id));
-    }
-
+    
     // VS 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVs(@PathVariable Long id) {

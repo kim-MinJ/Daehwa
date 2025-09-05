@@ -2,7 +2,7 @@ package org.iclass.backend.controller;
 
 import java.util.Map;
 
-
+import org.iclass.backend.dto.MovieVoteDto;
 import org.iclass.backend.service.MovieVoteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/vote")
+@RequestMapping("/vote")
 @RequiredArgsConstructor
 public class MovieVoteController {
 
@@ -19,15 +19,15 @@ public class MovieVoteController {
     // 투표하기
     @PostMapping
     public ResponseEntity<?> vote(
-        @RequestParam Long vsId,
-        @RequestParam Long movieId,
-        @RequestParam String userId) {
-    try {
-        return ResponseEntity.ok(movieVoteService.vote(vsId, movieId, userId));
-    } catch (IllegalStateException e) {
-        return ResponseEntity.badRequest().body(e.getMessage()); // 이미 투표한 경우 메시지 반환
+            @RequestParam Long vsId,
+            @RequestParam Long movieId,
+            @RequestParam String userId) {
+        try {
+            return ResponseEntity.ok(movieVoteService.vote(vsId, movieId, userId));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage()); // 이미 투표한 경우 메시지 반환
+        }
     }
-}
 
     // 특정 VS 투표 결과
     @GetMapping("/{vsId}/result")
