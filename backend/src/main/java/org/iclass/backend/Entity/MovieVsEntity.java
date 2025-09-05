@@ -36,5 +36,5 @@ public class MovieVsEntity {
   @JoinColumn(name = "movie_VS2", nullable = false)
   private MovieInfoEntity movieVs2;
 
-  private Integer actice = 0;
+  private Integer active = 0;
 }

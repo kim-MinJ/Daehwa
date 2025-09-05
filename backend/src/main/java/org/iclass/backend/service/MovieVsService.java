@@ -31,7 +31,7 @@ public class MovieVsService {
         MovieVsEntity entity = new MovieVsEntity();
         entity.setMovieVs1(movie1);
         entity.setMovieVs2(movie2);
-        entity.setActice(1);
+        entity.setActive(1);
 
         MovieVsEntity saved = movieVSRepository.save(entity);
 
@@ -61,9 +61,9 @@ public class MovieVsService {
     private MovieVsDto toDto(MovieVsEntity entity) {
         return MovieVsDto.builder()
                 .vsIdx(entity.getVsIdx())
-                .movieVs1Id(entity.getMovieVs1().getMovieIdx())
-                .movieVs2Id(entity.getMovieVs2().getMovieIdx())
-                .active(entity.getActice())
+                .movieVs1Idx(entity.getMovieVs1().getMovieIdx())
+                .movieVs2Idx(entity.getMovieVs2().getMovieIdx())
+                .active(entity.getActive())
                 .build();
     }
 }

@@ -31,13 +31,13 @@ public class NoticeEntity {
   private Long noticeIdx;
 
   @ManyToOne
-  @JoinColumn(name = "userid", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 
   @Column(nullable = false, length = 255)
   private String title;
 
-  @Column(nullable = false, length = 255)
+  @Column(nullable = false, length = 2000)
   private String content;
 
   @Column(name = "created_date")

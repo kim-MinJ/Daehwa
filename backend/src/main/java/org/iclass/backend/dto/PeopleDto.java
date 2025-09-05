@@ -16,23 +16,24 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Builder
-@Table(name = "people")
+@Table(name = "PEOPLE")
 public class PeopleDto {
-  private Long personIdx;
-  private Long tmdbPersonId;
-  private String name;
-  private Integer gender;
-  private String profilePath;
-  private int popularity;
+    private Long personIdx;
+    private Long tmdbPersonId;
+    private String name;
+    private Integer gender;      // 0: 남, 1: 여
+    private String profilePath;
+    private int popularity;
 
-  public static PeopleDto of(PeopleEntity entity) {
-    return PeopleDto.builder()
-        .personIdx(entity.getPersonIdx())
-        .tmdbPersonId(entity.getTmdbPersonId())
-        .name(entity.getName())
-        .gender(entity.getGender())
-        .profilePath(entity.getProfilePath())
-        .popularity(entity.getPopularity())
-        .build();
-  }
+    // Entity → DTO 변환 메서드
+    public static PeopleDto of(PeopleEntity entity) {
+        return PeopleDto.builder()
+                .personIdx(entity.getPersonIdx())
+                .tmdbPersonId(entity.getTmdbPersonId())
+                .name(entity.getName())
+                .gender(entity.getGender())
+                .profilePath(entity.getProfilePath())
+                .popularity(entity.getPopularity())
+                .build();
+    }
 }
