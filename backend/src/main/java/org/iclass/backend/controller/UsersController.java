@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 public class UsersController {
 
   private final UsersService usersService;
