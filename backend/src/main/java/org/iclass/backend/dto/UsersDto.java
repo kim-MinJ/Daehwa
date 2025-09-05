@@ -18,8 +18,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Builder
-@Table(name = "users")
+@Table(name = "Users")
 public class UsersDto {
+<<<<<<< HEAD
   private String userId;
   private String username;
   private String password;
@@ -39,4 +40,25 @@ public class UsersDto {
         .token(token)
         .build();
   }
+=======
+
+    private String userId;
+    private String username;
+    private String password;
+    private String role;
+    private LocalDateTime regDate;
+    private Integer status;
+
+    // Entity → DTO 변환 메서드
+    public static UsersDto of(UsersEntity entity) {
+        return UsersDto.builder()
+                .userId(entity.getUserId())
+                .username(entity.getUsername())
+                .password(entity.getPassword())
+                .role(entity.getRole())
+                .regDate(entity.getRegDate())
+                .status(entity.getStatus())
+                .build();
+    }
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
 }

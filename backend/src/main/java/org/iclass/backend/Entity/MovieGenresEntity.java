@@ -35,6 +35,6 @@ public class MovieGenresEntity {
   private MovieInfoEntity movie;
 
   @ManyToOne
-  @JoinColumn(name = "genre_id", nullable = false)
+  @JoinColumn(name = "genre_id", referencedColumnName = "genre_idx", nullable = false)
   private GenresEntity genre;
 }

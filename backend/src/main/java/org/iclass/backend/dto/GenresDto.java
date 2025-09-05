@@ -16,18 +16,18 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Builder
-@Table(name = "genres")
+@Table(name = "GENRES")
 public class GenresDto {
-  private Long genreIdx;
-  private Long genreId;
-  private String name;
+    private Long genreIdx;
+    private Long genreId;
+    private String name;
 
-  public static GenresDto of(GenresEntity entity) {
-    return GenresDto.builder()
-        .genreIdx(entity.getGenreIdx())
-        .genreId(entity.getGenreId())
-        .name(entity.getName())
-        .build();
-
-  }
+    // Entity → DTO 변환 메서드
+    public static GenresDto of(GenresEntity entity) {
+        return GenresDto.builder()
+                .genreIdx(entity.getGenreIdx())
+                .genreId(entity.getGenreId())
+                .name(entity.getName())
+                .build();
+    }
 }

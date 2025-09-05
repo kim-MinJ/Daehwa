@@ -37,7 +37,7 @@ public class NoticeEntity {
   @Column(nullable = false, length = 255)
   private String title;
 
-  @Column(nullable = false, length = 255)
+  @Column(nullable = false, length = 2000)
   private String content;
 
   @Column(name = "created_date")

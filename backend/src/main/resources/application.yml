@@ -8,11 +8,16 @@ spring:
     password: ${DB_PASS}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
+<<<<<<< HEAD
         'format_sql': true
         'show_sql': true
+=======
+        '[format_sql]': true
+        '[show_sql]': true
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
   h2:
     console:
       enabled: true
