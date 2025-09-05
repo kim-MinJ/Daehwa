@@ -1,153 +1,225 @@
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { Star, Calendar, Clock, Users, Share2, Heart } from "lucide-react"; // ✅ Share2 아이콘 추가
-import { useState } from "react";
+// src/components/MovieDetailCard.tsx
+import React from "react";
+import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
+import {
+  Star,
+  Clock,
+  Calendar,
+  UserRound,
+  Share2,
+  Heart,
+} from "lucide-react";
 
-
-interface MovieDetailCardProps {
-  title?: string;
+type Props = {
+  title: string;
   year?: string;
-  rating?: string;
   genre?: string[];
   director?: string;
-  cast?: string[];
   runtime?: string;
   description?: string;
   posterUrl?: string;
-  userRating?: number;
-  movieId?: number;                 // ✅ 영화 ID
-  isFavorite?: boolean;             // ✅ 현재 찜 여부
-  onToggleFavorite?: () => void;    // ✅ 찜 토글 핸들러
-  // myRating?: number;                  // ✅ 내 별점(1~5)
-  // onRate?: (value: number) => void;   // ✅ 별점 저장 핸들러
-}
+  userRating?: number; // 0~5 (TMDB 10점 → 5점 환산값)
+  movieId?: number;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 
-export function MovieDetailCard({ 
-  title = "영화 제목", 
-  year = "2023", 
-  rating = "15세 이상 관람가",
-  genre = ["액션", "드라마", "스릴러"],
-  director = "김감독",
-  cast = ["배우1", "배우2", "배우3"],
-  runtime = "120분",
-  description = "이곳에는 선택된 영화의 상세한 줄거리와 정보가 표시됩니다.",
-  posterUrl = "https://images.unsplash.com/photo-1618410321132-9f4cebb2f7f5?...",
-  userRating = 4.5,
-  onRate,
-  isFavorite = false,
+  voteCount?: number;
+  ageText?: string;
+
+  onRate?: () => void;
+  onShare?: () => void;
+
+  clampLines?: 3 | 4 | 5;
+  fullOverviewAnchorId?: string;
+};
+
+export function MovieDetailCard({
+  title,
+  year,
+  genre = [],
+  director,
+  runtime,
+  description,
+  posterUrl,
+  userRating = 0,
+  isFavorite,
   onToggleFavorite,
+  voteCount,
+  ageText,
+  onRate,
+  onShare,
+  clampLines = 3,
+  fullOverviewAnchorId = "full-overview",
+}: Props) {
+  const tenScale = Math.round(userRating * 20) / 10;
 
-}: MovieDetailCardProps) {
-  const [copied, setCopied] = useState(false);
-  
-  
+  const handleRate = () =>
+    onRate ? onRate() : alert("평가하기 기능은 준비 중입니다.");
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // 2초 후 안내문구 사라짐
-    } catch (err) {
-      console.error("클립보드 복사 실패", err);
-      alert("링크 복사에 실패했습니다 😢");
+  const handleShare = () => {
+    if (onShare) return onShare();
+    const url = window.location.href;
+    if ((navigator as any).share) {
+      (navigator as any).share({ title, url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url).then(() => alert("링크를 복사했어요."));
     }
   };
 
   return (
-    <Card className="p-6 w-full">
-      <div className="flex gap-8">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* 포스터 */}
-        <div className="flex-shrink-0">
-          <ImageWithFallback 
-            src={posterUrl}
-            alt={title}
-            className="w-64 h-96 object-cover rounded-lg shadow-lg"
-          />
+        <div className="w-full md:w-[260px] shrink-0">
+          <div className="aspect-[2/3] rounded-xl overflow-hidden bg-gray-100">
+            {posterUrl ? (
+              <ImageWithFallback
+                src={posterUrl}
+                alt={title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full grid place-items-center text-sm text-muted-foreground">
+                No Image
+              </div>
+            )}
+          </div>
         </div>
-        
-        {/* 상세 정보 */}
-        <div className="flex-1 space-y-6">
-          <div className="space-y-3">
-            <h1 className="text-3xl">{title}</h1>
-            <div className="flex items-center gap-4 text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                <span>{year}</span>
+
+        {/* 정보 */}
+        <div className="flex-1">
+          {/* 상단 뱃지들 */}
+          <div className="flex items-center gap-2 mb-2 sm:px-4 mb-4 space-y-2">
+            {year && (
+              <span className="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-200">
+                {year}년 작품
+              </span>
+            )}
+            {genre.slice(0, 3).map((g) => (
+              <span
+                key={g}
+                className="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-gray-50 text-gray-600 ring-1 ring-gray-200 sm:px-4"
+              >
+                {g}
+              </span>
+            ))}
+          </div>
+
+          {/* 제목 */}
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-1 sm:px-4 mb-4 space-y-2">
+            {title}
+          </h1>
+
+          {/* 감독 */}
+          {director && (
+            <div className="mb-3 text-[15px] text-gray-700 sm:px-4" >
+              감독: <span className="font-medium text-gray-900">{director}</span>
+            </div>
+          )}
+
+          {/* ===================== 메타 두 줄 정렬 ===================== */}
+          <div className="mb-4 space-y-2">
+            {/* 1행: 평점(좌) / 상영시간(우) */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:px-4 mb-4 space-y-2">
+              <div className="inline-flex items-center gap-1.5 ">
+                <Star className="h-4 w-4 text-yellow-500 fill-yellow-400 " />
+                <span className="font-semibold text-gray-900 ">
+                  {tenScale.toFixed(1)}
+                </span>
+                {typeof voteCount === "number" && (
+                  <span className="text-gray-500">
+                    ({voteCount.toLocaleString()}명 평가)
+                  </span>
+                )}
               </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{runtime}</span>
-              </div>
-              <Badge variant="outline">{rating}</Badge>
+
+              {runtime && (
+                <div className="inline-flex items-center gap-1.5 text-gray-700 sm:px-30">
+                  <Clock className="h-4 w-4 text-gray-600" />
+                  <span>{runtime}</span>
+                </div>
+              )}
             </div>
 
-            {/* 평점 */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className={`w-5 h-5 ${i < Math.floor(userRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
-                  />
-                ))}
-                <span className="ml-2">{userRating}/5.0</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 장르 */}
-          <div className="space-y-2">
-            <h3>장르</h3>
-            <div className="flex gap-2">
-              {genre.map((g, index) => (
-                <Badge key={index} variant="secondary">{g}</Badge>
-              ))}
+            {/* 2행: 개봉일(좌) / 관람가(우) */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:px-4 mb-4 space-y-2">
+              {year && (
+                <div className="inline-flex items-center gap-1.5 text-gray-700">
+                  <Calendar className="h-4 w-4 text-gray-600" />
+                  <span>{year}년 개봉</span>
+                </div>
+              )}
+              {ageText && (
+                <div className="inline-flex items-center gap-1.5 text-gray-700 sm:px-37">
+                  <UserRound className="h-4 w-4 text-gray-600" />
+                  <span>{ageText}</span>
+                </div>
+              )}
             </div>
           </div>
+          {/* ========================================================== */}
 
-          {/* 감독/출연진 */}
-          <div className="space-y-4">
-            <div>
-              <h3>감독</h3>
-              <p className="text-muted-foreground">{director}</p>
+          {/* 줄거리 – 짧게(클램프) */}
+          {description && (
+            <div className="space-y-2">
+              <div className="font-semibold text-[18px] text-sm text-gray-800 sm:px-4">줄거리</div>
+              <p
+                className={`text-gray-800 leading-7 sm:px-4 ${
+                  clampLines === 5
+                    ? "line-clamp-5"
+                    : clampLines === 4
+                    ? "line-clamp-4"
+                    : "line-clamp-3"
+                }`}
+              >
+                {description}
+              </p>
+              <a
+                href={`#${fullOverviewAnchorId}`}
+                className="inline-block text-sm text-primary hover:underline sm:px-4"
+              >
+                줄거리 전체 보기
+              </a>
             </div>
-            <div>
-              <h3>주요 출연진</h3>
-              <p className="text-muted-foreground">{cast.join(", ")}</p>
-            </div>
-          </div>
+          )}
 
-          {/* 줄거리 */}
-          <div className="space-y-2">
-            <h3>줄거리</h3>
-            <p className="text-muted-foreground leading-relaxed">{description}</p>
-          </div>
-
-          {/* 버튼 영역 */}
-          <div className="flex gap-3 pt-4">
-            <Button className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              평가하기
-            </Button>
-
-            <Button
-              variant={isFavorite ? "default" : "outline"}
-              onClick={onToggleFavorite}
-              className="flex items-center gap-2"
-              aria-pressed={isFavorite}
+          {/* 액션 바 */}
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleRate}
+              className="inline-flex items-center gap-2 px-4 h-10 rounded-lg border shadow-sm bg-white hover:bg-gray-50"
             >
-              <Heart className={`w-4 h-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
-              {isFavorite ? "찜 취소" : "찜하기"}
-            </Button>
-            <Button variant="outline" onClick={handleShare} className="flex items-center gap-2">
-              <Share2 className="w-4 h-4" />
-              {copied ? "링크 복사됨!" : "공유하기"}
-            </Button>
+              <Star className="h-4 w-4" />
+              평가하기
+            </button>
+
+            <button
+              type="button"
+              onClick={onToggleFavorite}
+              className={`inline-flex items-center gap-2 px-4 h-10 rounded-lg border shadow-sm ${
+                isFavorite
+                  ? "bg-rose-500 text-white border-rose-500"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+            >
+              <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
+              {isFavorite ? "찜완료" : "찜하기"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 px-4 h-10 rounded-lg border shadow-sm bg-white hover:bg-gray-50"
+            >
+              <Share2 className="h-4 w-4" />
+              공유하기
+            </button>
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
+
+export default MovieDetailCard;

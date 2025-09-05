@@ -3,7 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/globals.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import MoviePage from './pages/MoviePage.tsx'
+import MoviePage from './pages/MoviePage1'
 
 const router = createBrowserRouter([
   { path: '/', element: <MoviePage defaultId={299534} /> },   // 기본 진입

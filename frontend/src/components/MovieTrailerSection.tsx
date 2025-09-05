@@ -3,7 +3,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { Play, Eye } from "lucide-react";
+import { Play, Eye, Film } from "lucide-react";
 
 /** App.tsx에서 넘기는 예고편 아이템 타입 */
 export type TrailerItem = {
@@ -11,6 +11,7 @@ export type TrailerItem = {
   name: string;
   url: string;         // 유튜브 등 실제 시청 URL
   thumbnail?: string;  // 썸네일 URL(선택)
+  duration?: string;  
 };
 
 export function MovieTrailerSection({
@@ -23,9 +24,10 @@ export function MovieTrailerSection({
   return (
     <Card className="p-6">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">          
           <h2 className="flex items-center gap-2">
-            <Play className="w-5 h-5" />
+            {/* <Play className="w-5 h-5" /> */}
+            <Film className="h-6 w-6 text-red-600" />
             예고편 & 영상
           </h2>
           <Button variant="outline" size="sm">

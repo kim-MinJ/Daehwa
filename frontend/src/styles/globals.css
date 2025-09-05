@@ -1,9 +1,8 @@
 @import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
 
-
 :root {
-  --font-size: 14px;
+  --font-size: 16px;
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
   --card: #ffffff;
@@ -128,6 +127,24 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* 스크롤바 숨김 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 텍스트 클램프 */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
