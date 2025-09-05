@@ -64,4 +64,21 @@ public class UsersService {
         "인기 영화2",
         "인기 영화3");
   }
+
+  public UsersDto updateUsername(String userId, String newUsername) {
+    UsersEntity entity = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+    entity.setUsername(newUsername);
+    usersRepository.save(entity);
+
+    return UsersDto.builder()
+        .userId(entity.getUserId())
+        .username(entity.getUsername())
+        .role(entity.getRole())
+        .regDate(entity.getRegDate())
+        .status(entity.getStatus())
+        .token(null) // 수정 시 새 토큰은 안 줘도 됨
+        .build();
+  }
 }

@@ -17,6 +17,17 @@ public class UsersController {
     this.usersService = usersService;
   }
 
+  @PutMapping("/update")
+  public ResponseEntity<UsersDto> updateUser(@RequestBody UsersDto dto, HttpServletRequest request) {
+    UsersDto user = usersService.getUserFromToken(request);
+    if (user == null) {
+      return ResponseEntity.status(401).build();
+    }
+
+    UsersDto updated = usersService.updateUsername(user.getUserId(), dto.getUsername());
+    return ResponseEntity.ok(updated);
+  }
+
   // JWT 토큰으로 현재 사용자 정보 확인
   @GetMapping("/me")
   public ResponseEntity<UsersDto> getCurrentUser(HttpServletRequest request) {

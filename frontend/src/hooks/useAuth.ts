@@ -50,45 +50,45 @@ export function useAuth() {
     setUserInfo(null);
   };
 
-  const getUserInfo = async () => {
-    if (!token) throw new Error("로그인 토큰이 없습니다.");
+const getUserInfo = async () => {
+  if (!token) throw new Error("로그인 토큰이 없습니다.");
 
-    const res = await fetch(`${API_URL}/users/me`, {
-      method: "GET",
-      headers: { 
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-    });
+  const res = await fetch(`${API_URL}/users/me`, {
+    method: "GET",
+    headers: { 
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+  });
 
-    if (!res.ok) throw new Error("사용자 정보를 가져오는 데 실패했습니다.");
+  if (!res.ok) throw new Error("사용자 정보를 가져오는 데 실패했습니다.");
 
-    const data = await res.json();
-    setUserInfo(data);
-    return data;
-  };
+  const data = await res.json();
+  // **setUserInfo 제거**
+  return data;
+};
 
-  const updateUser = async (username: string, email: string) => {
-    if (!token) throw new Error("로그인 토큰이 없습니다.");
+const updateUser = async (username: string) => {
+  if (!token) throw new Error("로그인 토큰이 없습니다.");
 
-    const res = await fetch(`${API_URL}/users/update`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ username, email }),
-    });
+  const res = await fetch(`${API_URL}/users/update`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ username }),
+  });
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.message || "수정 실패");
-    }
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "수정 실패");
+  }
 
-    const data = await res.json();
-    setUserInfo(data);
-    return data;
-  };
+  const data = await res.json();
+  setUserInfo(data);
+  return data;
+};
 
   return {
     token,
