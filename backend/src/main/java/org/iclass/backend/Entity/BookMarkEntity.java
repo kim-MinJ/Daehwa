@@ -33,4 +33,9 @@ public class BookMarkEntity {
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
+
+  @ManyToOne
+  @JoinColumn(name = "movie_idx", nullable = false)
+  private MovieInfoEntity movie;
+  // 09.07 추가
 }

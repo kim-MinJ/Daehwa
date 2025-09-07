@@ -3,19 +3,6 @@
 -- ===========================
 
 -- 1-1. Users
-<<<<<<< HEAD
-CREATE TABLE Users (
-    user_id  VARCHAR2(100) NOT NULL,
-    username VARCHAR2(50 CHAR) NOT NULL,
-    password VARCHAR2(100 CHAR) NOT NULL,
-    role     VARCHAR2(20) DEFAULT 'user',
-    reg_date DATE DEFAULT sysdate,
-    status   NUMBER(1) DEFAULT 0,
-    CONSTRAINT PK_Users PRIMARY KEY (user_id)
-);
-
-ALTER TABLE Users MODIFY (password VARCHAR2(100));
-=======
 CREATE TABLE Users
 (
   user_id  VARCHAR2(100)     NOT NULL,
@@ -43,7 +30,6 @@ COMMENT ON COLUMN Users.role IS '역할';
 COMMENT ON COLUMN Users.reg_date IS '회원가입 날짜';
 
 COMMENT ON COLUMN Users.status IS '로그인(0: off, 1: on)';
->>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
 
 -- 1-2. People
 CREATE TABLE People
@@ -198,6 +184,7 @@ COMMENT ON TABLE Bookmark IS '북마크';
 COMMENT ON COLUMN Bookmark.bookmark_idx IS '북마크 인덱스';
 
 COMMENT ON COLUMN Bookmark.userid IS '이메일주소';
+
 
 -- 1-7. Comments
 CREATE TABLE Comments

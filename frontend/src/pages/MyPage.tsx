@@ -3,71 +3,72 @@ import axios from "axios";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { ArrowLeft, Settings } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useAuth } from "../hooks/useAuth";
 
 interface MyPageProps {
   onNavigate: (page: string) => void;
+} 
+
+interface Bookmark {
+  bookmarkIdx: number;
+  userId: string;
+  movieIdx: number;
+  title?: string;
+  posterPath?: string;
 }
 
 export function MyPage({ onNavigate }: MyPageProps) {
   const { token, userInfo } = useAuth();
   const [randomMovie, setRandomMovie] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
 
-  // 추천 영화 가져오기
+  // 랜덤 추천 영화
   useEffect(() => {
     if (!token) return;
-
     setLoading(true);
-    axios
-      .get("http://localhost:8080/api/movies/random", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then(res => setRandomMovie(res.data))
-      .catch(err => {
-        console.error(err);
-        if (err.response?.status === 403) onNavigate("login");
-      })
+    axios.get("http://localhost:8080/api/movies/random", {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => setRandomMovie(res.data))
+      .catch(console.error)
       .finally(() => setLoading(false));
   }, [token]);
 
-  // 북마크 가져오기
-  useEffect(() => {
+  // 북마크 목록 가져오기
+  const fetchBookmarks = () => {
     if (!token) return;
+    axios.get("http://localhost:8080/api/bookmarks", {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(res => setBookmarks(res.data))
+      .catch(console.error);
+  };
 
-    axios
-      .get("http://localhost:8080/api/bookmarks", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then(res => setBookmarks(res.data.map((b: any) => String(b.movieId))))
-      .catch(err => console.error(err));
+  useEffect(() => {
+    fetchBookmarks();
   }, [token]);
 
-  // 북마크 추가/삭제
-  const toggleBookmark = async (movieId: number) => {
+  // 북마크 토글
+  const toggleBookmark = (movieIdx: number) => {
     if (!token) return;
 
-    const isBookmarked = bookmarks.includes(String(movieId));
-    try {
-      if (isBookmarked) {
-        await axios.delete(`http://localhost:8080/api/bookmarks/${movieId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setBookmarks(bookmarks.filter(id => id !== String(movieId)));
-      } else {
-        await axios.post(
-          `http://localhost:8080/api/bookmarks`,
-          { movieId },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setBookmarks([...bookmarks, String(movieId)]);
-      }
-    } catch (err) {
-      console.error(err);
+    const existing = bookmarks.find(b => b.movieIdx === movieIdx);
+
+    if (existing) {
+      // 삭제
+      axios.delete(`http://localhost:8080/api/bookmarks/${existing.bookmarkIdx}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(() => fetchBookmarks())
+        .catch(console.error);
+    } else {
+      // 추가
+      axios.post(`http://localhost:8080/api/bookmarks`, null, {
+        params: { movieIdx },
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(() => fetchBookmarks())
+        .catch(console.error);
     }
   };
 
@@ -79,16 +80,14 @@ export function MyPage({ onNavigate }: MyPageProps) {
           <Button variant="ghost" size="sm" onClick={() => onNavigate("main")}>
             <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
           </Button>
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" /> 설정
-            </Button>
-          </div>
+          <Button variant="outline" size="sm">
+            <Settings className="w-4 h-4 mr-2" /> 설정
+          </Button>
         </div>
       </div>
 
-      {/* 프로필 + 추천 영화 카드 */}
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* 프로필 + 추천 영화 */}
         <Card>
           <CardContent className="p-8 flex items-center space-x-6">
             <Avatar className="w-24 h-24">
@@ -102,10 +101,9 @@ export function MyPage({ onNavigate }: MyPageProps) {
           </CardContent>
         </Card>
 
+        {/* 추천 영화 카드 */}
         <Card>
-          <CardHeader>
-            <CardTitle>추천 영화</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>추천 영화</CardTitle></CardHeader>
           <CardContent className="text-center">
             {loading && <p>Loading...</p>}
             {!loading && randomMovie && (
@@ -119,173 +117,52 @@ export function MyPage({ onNavigate }: MyPageProps) {
                 <Button
                   size="sm"
                   onClick={() => toggleBookmark(randomMovie.movieIdx)}
-                  variant={bookmarks.includes(String(randomMovie.movieIdx)) ? "destructive" : "outline"}
+                  variant={bookmarks.some(b => b.movieIdx === randomMovie.movieIdx) ? "destructive" : "outline"}
                 >
-                  {bookmarks.includes(String(randomMovie.movieIdx)) ? "북마크 해제" : "북마크"}
+                  {bookmarks.some(b => b.movieIdx === randomMovie.movieIdx) ? "북마크 해제" : "북마크"}
                 </Button>
               </div>
             )}
-            {!loading && !randomMovie && <p>추천 영화가 없습니다.</p>}
           </CardContent>
         </Card>
 
-        {/* Tabs UI */}
-        <Tabs defaultValue="watched" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="watched">시청한 영화</TabsTrigger>
-            <TabsTrigger value="reviews">내 리뷰</TabsTrigger>
-            <TabsTrigger value="favorites">즐겨찾기</TabsTrigger>
-            <TabsTrigger value="settings">계정 설정</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* 북마크 목록 테이블 */}
+        <Card>
+          <CardHeader><CardTitle>북마크 목록</CardTitle></CardHeader>
+          <CardContent>
+            {bookmarks.length === 0 ? <p>북마크가 없습니다.</p> : (
+              <table className="w-full border-collapse border border-gray-300 text-left">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border p-2">영화 포스터</th>
+                    <th className="border p-2">영화 제목</th>
+                    <th className="border p-2">액션</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookmarks.map(b => (
+                    <tr key={b.bookmarkIdx}>
+                      <td className="border p-2">
+                        <img
+                          src={b.posterPath ? `https://image.tmdb.org/t/p/w200${b.posterPath}` : "/fallback-image.png"}
+                          alt={b.title}
+                          className="w-16 rounded"
+                        />
+                      </td>
+                      <td className="border p-2">{b.title}</td>
+                      <td className="border p-2">
+                        <Button size="sm" variant="destructive" onClick={() => toggleBookmark(b.movieIdx)}>
+                          삭제
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
-
-
-// import { useEffect, useState } from "react";
-// import axios from "axios";
-// import { Button } from "../components/ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-// import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-// import { ArrowLeft, Settings } from "lucide-react";
-// import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-// import { useAuth } from "../hooks/useAuth";
-
-// interface MyPageProps {
-//   onNavigate: (page: string) => void;
-// }
-
-// export function MyPage({ onNavigate }: MyPageProps) {
-//   const { token, userInfo } = useAuth();
-//   const [randomMovie, setRandomMovie] = useState<any>(null);
-//   const [loading, setLoading] = useState(true);
-//   const [bookmarks, setBookmarks] = useState<string[]>([]);
-
-//   // 랜덤 영화 가져오기
-//   useEffect(() => {
-//     if (!token) return;
-
-//     setLoading(true);
-//     axios
-//       .get("http://localhost:8080/api/movies/random", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       })
-//       .then(res => setRandomMovie(res.data))
-//       .catch(err => {
-//         console.error(err);
-//         if (err.response?.status === 403) {
-//           onNavigate("login");
-//         }
-//       })
-//       .finally(() => setLoading(false));
-//   }, [token]);
-
-//   // 북마크 가져오기
-//   useEffect(() => {
-//     if (!token) return;
-
-//     axios
-//       .get("http://localhost:8080/api/bookmarks", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       })
-//       .then(res => setBookmarks(res.data.map((b: any) => b.movieId)))
-//       .catch(err => console.error(err));
-//   }, [token]);
-
-//   const toggleBookmark = async (movieId: number) => {
-//     if (!token) return;
-
-//     const isBookmarked = bookmarks.includes(String(movieId));
-//     try {
-//       if (isBookmarked) {
-//         await axios.delete(`http://localhost:8080/api/bookmarks/${movieId}`, {
-//           headers: { Authorization: `Bearer ${token}` },
-//         });
-//         setBookmarks(bookmarks.filter(id => id !== String(movieId)));
-//       } else {
-//         await axios.post(
-//           `http://localhost:8080/api/bookmarks`,
-//           { movieId },
-//           { headers: { Authorization: `Bearer ${token}` } }
-//         );
-//         setBookmarks([...bookmarks, String(movieId)]);
-//       }
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-background">
-//       {/* 헤더 */}
-//       <div className="bg-card border-b">
-//         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-//           <Button variant="ghost" size="sm" onClick={() => onNavigate("main")}>
-//             <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
-//           </Button>
-//           <div className="flex items-center space-x-4">
-//             <Button variant="outline" size="sm">
-//               <Settings className="w-4 h-4 mr-2" /> 설정
-//             </Button>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* 프로필 + 추천 영화 카드 */}
-//       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-//         <Card>
-//           <CardContent className="p-8 flex items-center space-x-6">
-//             <Avatar className="w-24 h-24">
-//               <AvatarImage src={userInfo?.profileImage || ""} />
-//               <AvatarFallback className="text-xl">{userInfo?.username?.charAt(0)}</AvatarFallback>
-//             </Avatar>
-//             <div className="flex-1">
-//               <h1 className="text-2xl font-bold">{userInfo?.username}님</h1>
-//               <p className="text-muted-foreground">오늘의 추천 영화</p>
-//             </div>
-//           </CardContent>
-//         </Card>
-
-//         <Card>
-//           <CardHeader>
-//             <CardTitle>추천 영화</CardTitle>
-//           </CardHeader>
-//           <CardContent className="text-center">
-//             {loading && <p>Loading...</p>}
-//             {!loading && randomMovie && (
-//               <div className="space-y-4">
-//                 <ImageWithFallback
-//                   src={randomMovie.posterPath ? `https://image.tmdb.org/t/p/w500${randomMovie.posterPath}` : "/fallback-image.png"}
-//                   alt={randomMovie.title || "추천 영화"}
-//                   className="w-[300px] rounded-lg mx-auto"
-//                 />
-//                 <h2 className="text-lg font-semibold">{randomMovie.title || "추천 영화 없음"}</h2>
-//                 <Button
-//                   size="sm"
-//                   onClick={() => toggleBookmark(randomMovie.movieIdx)}
-//                   variant={bookmarks.includes(String(randomMovie.movieIdx)) ? "destructive" : "outline"}
-//                 >
-//                   {bookmarks.includes(String(randomMovie.movieIdx)) ? "북마크 해제" : "북마크"}
-//                 </Button>
-//               </div>
-//             )}
-//             {!loading && !randomMovie && <p>추천 영화가 없습니다.</p>}
-//           </CardContent>
-//         </Card>
-
-//         {/* Tabs UI */}
-//         <Tabs defaultValue="watched" className="space-y-6">
-//           <TabsList className="grid w-full grid-cols-4">
-//             <TabsTrigger value="watched">시청한 영화</TabsTrigger>
-//             <TabsTrigger value="reviews">내 리뷰</TabsTrigger>
-//             <TabsTrigger value="favorites">즐겨찾기</TabsTrigger>
-//             <TabsTrigger value="settings">계정 설정</TabsTrigger>
-//           </TabsList>
-//         </Tabs>
-//       </div>
-//     </div>
-//   );
-// }
