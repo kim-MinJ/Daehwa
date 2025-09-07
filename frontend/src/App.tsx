@@ -14,7 +14,7 @@ function App() {
 
           {/* App.tsx의 MyPage 경로는 그대로 유지합니다. */}
           <Route path="/mypage" element={<MyPage />} />
-
+    
           {/* App.jsx의 주석을 반영하여 나중에 메인 페이지를 '/' 경로에 추가할 수 있음을 명시합니다. */}
           {/* 나중에 메인 페이지를 만들면 위쪽의 path="/" element를 MainPage 컴포넌트로 교체하면 됩니다. */}
 
