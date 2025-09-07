@@ -1,29 +1,34 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+// App.tsx
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
 import { MyPage } from "./pages/MyPage";
-import { AuthProvider } from "./hooks/AuthContext";
 
-function App() {
+function AppWrapper() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* App.jsx의 '/' 경로와 App.tsx의 '/login' 경로는 동일한 LoginPage를 렌더링하므로 둘 다 유지합니다. */}
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* App.tsx의 MyPage 경로는 그대로 유지합니다. */}
-          <Route path="/mypage" element={<MyPage />} />
-    
-          {/* App.jsx의 주석을 반영하여 나중에 메인 페이지를 '/' 경로에 추가할 수 있음을 명시합니다. */}
-          {/* 나중에 메인 페이지를 만들면 위쪽의 path="/" element를 MainPage 컴포넌트로 교체하면 됩니다. */}
-
-          {/* 잘못된 경로로 접근 시 로그인 페이지로 이동시키는 Navigate 기능은 유지합니다. */}
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <Router>
+      <App />
+    </Router>
   );
 }
 
-export default App;
+function App() {
+  const navigate = useNavigate();
+
+  // onNavigate를 통해 페이지 이동 관리
+  const handleNavigate = (page: string) => {
+    if (page === "main") navigate("/");        // 메인 페이지는 아직 미구현
+    else if (page === "login") navigate("/login");
+    else if (page === "mypage") navigate("/mypage");
+  };
+
+  return (
+    <Routes>
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/mypage" element={<MyPage onNavigate={handleNavigate} />} />
+      {/* 메인 페이지는 나중에 추가 가능 */}
+      {/* <Route path="/" element={<MainPage onNavigate={handleNavigate} />} /> */}
+    </Routes>
+  );
+}
+
+export default AppWrapper;
