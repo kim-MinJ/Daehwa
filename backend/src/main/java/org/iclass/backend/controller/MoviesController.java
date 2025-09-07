@@ -1,22 +1,27 @@
 package org.iclass.backend.controller;
 
 import org.iclass.backend.Entity.MovieInfoEntity;
+import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.service.MoviesService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
+@RequestMapping("/api/movies")
+@RequiredArgsConstructor
 public class MoviesController {
 
   private final MoviesService moviesService;
 
-  public MoviesController(MoviesService moviesService) {
-    this.moviesService = moviesService;
-    this.moviesService.fetchAndSaveMovies(); // 서버 시작 시 인기 영화 DB 저장
-  }
-
-  @GetMapping("/api/movies/random")
-  public MovieInfoEntity getRandomMovie() {
-    return moviesService.getRandomMovie();
+  // 랜덤 추천 영화
+  @GetMapping("/random")
+  public ResponseEntity<MovieInfoDto> getRandomMovie() {
+    MovieInfoEntity movie = moviesService.getRandomMovie();
+    if (movie == null) {
+      return ResponseEntity.noContent().build();
+    }
+    return ResponseEntity.ok(MovieInfoDto.of(movie));
   }
 }
