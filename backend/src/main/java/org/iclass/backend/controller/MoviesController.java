@@ -6,7 +6,6 @@ import java.util.List;
 import org.iclass.backend.Entity.MovieInfoEntity;
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.repository.MovieInfoRepository;
-import org.iclass.backend.service.MoviesService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
