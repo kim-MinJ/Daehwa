@@ -18,11 +18,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString
-<<<<<<< HEAD
-@Table(name = "movie_Info")
-=======
 @Table(name = "Movie_Info")
->>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
 public class MovieInfoDto {
     private Long movieIdx;
     private Long tmdbMovieId;
