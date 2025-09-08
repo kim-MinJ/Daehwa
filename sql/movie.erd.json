@@ -4,9 +4,22 @@
   "settings": {
     "width": 2000,
     "height": 2000,
+<<<<<<< HEAD
+<<<<<<< HEAD
+    "scrollTop": -548.8055,
+    "scrollLeft": -392.2653,
+    "zoomLevel": 0.76,
+=======
+
+    "scrollTop": -793.5869,
+    "scrollLeft": -287.0695,
+    "zoomLevel": 0.79,
+>>>>>>> ea44f3e77977a2868551a8ebb0d3c5096775f53d
+=======
     "scrollTop": -1148.8618,
     "scrollLeft": -428.9303,
     "zoomLevel": 0.85,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
     "show": 495,
     "database": 8,
     "databaseName": "movieProject",
@@ -44,9 +57,13 @@
       "9WWuxpDkxmllhTpYQqd22",
       "TM0GBOe5MYdPApN3ySDGM",
       "ITajp1HMntivEw7JKRPS5",
+<<<<<<< HEAD
+      "sBqdDhRE4lyyeCEHzzE4W"
+=======
       "sBqdDhRE4lyyeCEHzzE4W",
       "x7j2pRXcusuh31D6xWvg7",
       "CAlSlRulYhdz_VN-_QkqA"
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
     ],
     "relationshipIds": [
       "yDAeT7Twetsbw0WfpJ9ul",
@@ -62,11 +79,15 @@
       "WXLkmzGtgUSRg1h4KkbkW",
       "9T7l3mJR29poxHDgvTfFB",
       "GLz6GCfv7ttrnfzzH-614",
+<<<<<<< HEAD
+      "bHGiz4RPmUnYN4v-AWSEm"
+=======
       "bHGiz4RPmUnYN4v-AWSEm",
       "I4rBY26sHSN_fm0khkaKL",
       "eM69ZI20d1wCqXk-LmBOJ",
       "EyXNDOxj3kiCgolkedbKc",
       "7YQhMxjp7jCeqSlH3O10l"
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
     ],
     "indexIds": [
       "VkrFKkv2oVwnUTSzKkvdS",
@@ -189,15 +210,24 @@
           "cyiewmqasYbgsSs3J7fy0"
         ],
         "ui": {
+<<<<<<< HEAD
+          "x": 719.0654,
+          "y": 590.9362,
+=======
           "x": 632.734,
           "y": 390.7041,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "zIndex": 510,
           "widthName": 60,
           "widthComment": 60,
           "color": ""
         },
         "meta": {
+<<<<<<< HEAD
+          "updateAt": 1756882387457,
+=======
           "updateAt": 1757050538713,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "createAt": 1756714341130
         }
       },
@@ -464,15 +494,24 @@
           "A1wQq2DII--rAVhT_cSpj"
         ],
         "ui": {
+<<<<<<< HEAD
+          "x": 568.9889,
+          "y": 1401.8948,
+=======
           "x": 1454.5383,
           "y": 1456.2385,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "zIndex": 1087,
           "widthName": 62,
           "widthComment": 60,
           "color": ""
         },
         "meta": {
+<<<<<<< HEAD
+          "updateAt": 1756777343771,
+=======
           "updateAt": 1757050549770,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "createAt": 1756775916153
         }
       },
@@ -497,15 +536,15 @@
           "qcyswRZDdOIG7HsMeLjB0"
         ],
         "ui": {
-          "x": 1438.9646,
-          "y": 1215.2789,
+          "x": 1453.6706,
+          "y": 1235.8673,
           "zIndex": 1113,
           "widthName": 60,
           "widthComment": 65,
           "color": ""
         },
         "meta": {
-          "updateAt": 1756865356727,
+          "updateAt": 1756777343771,
           "createAt": 1756776287945
         }
       },
@@ -596,6 +635,8 @@
           "updateAt": 1757050566252,
           "createAt": 1756776833858
         }
+<<<<<<< HEAD
+=======
       },
       "x7j2pRXcusuh31D6xWvg7": {
         "id": "x7j2pRXcusuh31D6xWvg7",
@@ -662,6 +703,7 @@
           "updateAt": 1757050552266,
           "createAt": 1757042191440
         }
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
       }
     },
     "tableColumnEntities": {
@@ -2564,6 +2606,8 @@
           "updateAt": 1756777219582,
           "createAt": 1756777187161
         }
+<<<<<<< HEAD
+=======
       },
       "EvLYadYCBqOIM5zXu_wp_": {
         "id": "EvLYadYCBqOIM5zXu_wp_",
@@ -3024,6 +3068,7 @@
           "updateAt": 1757050620219,
           "createAt": 1757050087206
         }
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
       }
     },
     "relationshipEntities": {
@@ -3186,9 +3231,15 @@
           "columnIds": [
             "peodWo6iaJVkVVxNseWeR"
           ],
+<<<<<<< HEAD
+          "x": 946.5654,
+          "y": 590.9362,
+          "direction": 4
+=======
           "x": 1087.734,
           "y": 442.7041,
           "direction": 2
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
         },
         "meta": {
           "updateAt": 1756714471371,
@@ -3289,8 +3340,13 @@
           "columnIds": [
             "8oft47YPf98c8qGDp62o-"
           ],
+<<<<<<< HEAD
+          "x": 126.7846,
+          "y": 1099.8827999999999,
+=======
           "x": 477.7846,
           "y": 948.1181,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "direction": 8
         },
         "end": {
@@ -3513,7 +3569,11 @@
           "columnIds": [
             "8oft47YPf98c8qGDp62o-"
           ],
+<<<<<<< HEAD
+          "x": 492.7846,
+=======
           "x": 526.9512666666666,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "y": 1099.8827999999999,
           "direction": 8
         },
@@ -3522,8 +3582,13 @@
           "columnIds": [
             "908kKRFFwrP8gbHVSmo9c"
           ],
+<<<<<<< HEAD
+          "x": 568.9889,
+          "y": 1525.8948,
+=======
           "x": 650.1654,
           "y": 1552.8439,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "direction": 1
         },
         "meta": {
@@ -3550,8 +3615,13 @@
           "columnIds": [
             "h-AgADyvXX7yRPAN3gINg"
           ],
+<<<<<<< HEAD
+          "x": 1043.9888999999998,
+          "y": 1525.8948,
+=======
           "x": 1103.3419,
           "y": 1575.4322,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "direction": 2
         },
         "meta": {
@@ -3578,8 +3648,8 @@
           "columnIds": [
             "JjmfCq6gplYRzleFaelxh"
           ],
-          "x": 1438.9646,
-          "y": 1315.2789,
+          "x": 1453.6706,
+          "y": 1335.8673,
           "direction": 1
         },
         "meta": {
@@ -3653,8 +3723,13 @@
           "columnIds": [
             "8oft47YPf98c8qGDp62o-"
           ],
+<<<<<<< HEAD
+          "x": 309.7846,
+          "y": 1099.8827999999999,
+=======
           "x": 182.7846,
           "y": 948.1181,
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
           "direction": 8
         },
         "end": {
@@ -3670,6 +3745,8 @@
           "updateAt": 1756776925505,
           "createAt": 1756776925505
         }
+<<<<<<< HEAD
+=======
       },
       "eM69ZI20d1wCqXk-LmBOJ": {
         "id": "eM69ZI20d1wCqXk-LmBOJ",
@@ -3924,6 +4001,7 @@
           "updateAt": 1757049736794,
           "createAt": 1757049736794
         }
+>>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
       }
     },
     "indexEntities": {

@@ -20,22 +20,22 @@ import lombok.ToString;
 @Table(name = "Users")
 @Entity
 public class UsersEntity {
-  @Id
-  @Column(name = "user_id", length = 100)
-  private String userId;
+    @Id
+    @Column(name = "user_id", length = 100)
+    private String userId;
 
-  @Column(nullable = false, length = 50)
-  private String username;
+    @Column(nullable = false, length = 50)
+    private String username;
 
-  @Column(nullable = false, length = 16)
-  private String password;
+    @Column(nullable = false, length = 16)
+    private String password;
 
-  @Column(length = 20)
-  private String role = "user";
+    @Column(length = 20)
+    private String role = "user";
 
-  @Column(name = "reg_date")
-  private LocalDateTime regDate = LocalDateTime.now();
+    @Column(name = "reg_date")
+    private LocalDateTime regDate = LocalDateTime.now();
 
-  @Column
-  private Integer status = 0; // 로그인 상태 0:로그인 1:로그아웃
+    @Column
+    private Integer status = 0; // 로그인 상태 0:로그인 1:로그아웃
 }
