@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Separator } from "../components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, Edit3, Settings, Calendar, Heart, Film } from "lucide-react";
+import { ArrowLeft, Edit3, Settings, Calendar, Heart } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 interface MyPageProps {
@@ -32,7 +32,7 @@ interface Movie {
 export function MyPage({ onNavigate }: MyPageProps) {
   const { token, userInfo, logout } = useAuth();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-  const [recommendMovie, setRecommendMovie] = useState<Movie | null>(null);
+  const [recommendMovies, setRecommendMovies] = useState<Movie[]>([]);
 
   // 계정 정보 수정 상태
   const [username, setUsername] = useState(userInfo?.username || "");
@@ -42,7 +42,7 @@ export function MyPage({ onNavigate }: MyPageProps) {
 
   const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500"; // 포스터 절대 URL
 
-  // 즐겨찾기 목록 가져오기
+  // 북마크 목록 가져오기
   const fetchBookmarks = () => {
     if (!token) return;
     axios
@@ -54,19 +54,20 @@ export function MyPage({ onNavigate }: MyPageProps) {
   };
 
   // 추천 영화 가져오기
-  const fetchRecommendMovie = () => {
+  const fetchRecommendMovies = () => {
     if (!token) return;
     axios
       .get("http://localhost:8080/api/movies/random", {
         headers: { Authorization: `Bearer ${token}` },
+        params: { count: 8 },
       })
-      .then((res) => setRecommendMovie(res.data))
+      .then((res) => setRecommendMovies(res.data))
       .catch(console.error);
   };
 
   useEffect(() => {
     fetchBookmarks();
-    fetchRecommendMovie();
+    fetchRecommendMovies();
   }, [token]);
 
   // 북마크 토글
@@ -95,6 +96,8 @@ export function MyPage({ onNavigate }: MyPageProps) {
         .catch(console.error);
     }
   };
+
+  const isBookmarked = (movieIdx: number) => bookmarks.some(b => b.movieIdx === movieIdx);
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,7 +163,7 @@ export function MyPage({ onNavigate }: MyPageProps) {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold">{bookmarks.length}</div>
-                      <div className="text-sm text-muted-foreground">즐겨찾기</div>
+                      <div className="text-sm text-muted-foreground">북마크</div>
                     </div>
                   </div>
                 </div>
@@ -173,40 +176,41 @@ export function MyPage({ onNavigate }: MyPageProps) {
         <Tabs defaultValue="settings" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="recommend">추천 영화</TabsTrigger>
-            <TabsTrigger value="favorites">즐겨찾기</TabsTrigger>
+            <TabsTrigger value="favorites">북마크</TabsTrigger>
             <TabsTrigger value="reviews">내 리뷰</TabsTrigger>
             <TabsTrigger value="settings">계정 설정</TabsTrigger>
           </TabsList>
 
           {/* 추천 영화 */}
           <TabsContent value="recommend">
-            {recommendMovie ? (
-              <Card>
-                <CardContent className="flex items-center space-x-4">
-                  <img
-                    src={recommendMovie.posterPath ? `${TMDB_BASE_URL}${recommendMovie.posterPath}` : "/default.jpg"}
-                    alt={recommendMovie.title}
-                    className="w-32 h-48 object-cover rounded-md"
-                  />
-                  <div>
-                    <h2 className="text-lg font-bold">{recommendMovie.title}</h2>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="mt-2"
-                      onClick={() => toggleBookmark(recommendMovie.movieIdx)}
-                    >
-                      <Heart className="w-4 h-4 mr-1" /> 즐겨찾기
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+            {recommendMovies.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {recommendMovies.map((movie) => (
+                  <Card key={movie.movieIdx}>
+                    <img
+                      src={movie.posterPath ? `${TMDB_BASE_URL}${movie.posterPath}` : "/default.jpg"}
+                      alt={movie.title}
+                      className="w-full h-48 object-cover rounded-md"
+                    />
+                    <CardContent className="flex flex-col gap-2">
+                      <h3 className="font-bold">{movie.title}</h3>
+                      <Button
+                        size="sm"
+                        variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
+                        onClick={() => toggleBookmark(movie.movieIdx)}
+                      >
+                        <Heart className="w-4 h-4 mr-1" /> {isBookmarked(movie.movieIdx) ? "북마크" : "북마크"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             ) : (
               <p>추천 영화가 없습니다.</p>
             )}
           </TabsContent>
 
-          {/* 즐겨찾기 */}
+          {/* 북마크 */}
           <TabsContent value="favorites">
             {bookmarks.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -217,21 +221,21 @@ export function MyPage({ onNavigate }: MyPageProps) {
                       alt={b.title}
                       className="w-full h-48 object-cover rounded-md"
                     />
-                    <CardContent>
+                    <CardContent className="flex flex-col gap-2">
                       <h3 className="font-bold">{b.title}</h3>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="destructive"
                         onClick={() => toggleBookmark(b.movieIdx)}
                       >
-                        <Heart className="w-4 h-4 mr-1" /> 삭제
+                        <Heart className="w-4 h-4 mr-1" /> 북마크 제거
                       </Button>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : (
-              <p>즐겨찾기가 없습니다.</p>
+              <p>북마크가 없습니다.</p>
             )}
           </TabsContent>
 
