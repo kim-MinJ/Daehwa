@@ -1,9 +1,9 @@
 package org.iclass.backend.dto;
 
-import org.iclass.backend.entity.MovieVoteEntity;
-import org.iclass.backend.entity.MovieInfoEntity;
-import org.iclass.backend.entity.UsersEntity;
-import org.iclass.backend.entity.MovieVsEntity;
+import org.iclass.backend.asdf.MovieInfoEntity;
+import org.iclass.backend.asdf.MovieVoteEntity;
+import org.iclass.backend.asdf.MovieVsEntity;
+import org.iclass.backend.asdf.UsersEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;

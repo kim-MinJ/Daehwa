@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.asdf.MovieInfoEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
