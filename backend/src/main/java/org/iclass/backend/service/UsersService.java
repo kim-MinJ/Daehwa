@@ -78,6 +78,7 @@ public class UsersService {
         .build();
   }
 
+  // UsersService 클래스 안에 추가
   private final PasswordEncoder passwordEncoder; // 기존 생성자에 주입
 
   public UsersService(UsersRepository usersRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
@@ -90,12 +91,12 @@ public class UsersService {
     UsersEntity entity = usersRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
-    // 현재 비밀번호 검증
+    // 현재 비밀번호 확인
     if (!passwordEncoder.matches(currentPassword, entity.getPassword())) {
-      return false; // 여기서 false 나오는지 확인
+      return false;
     }
 
-    // 새 비밀번호 저장
+    // 새 비밀번호 인코딩 후 저장
     entity.setPassword(passwordEncoder.encode(newPassword));
     usersRepository.save(entity);
     return true;

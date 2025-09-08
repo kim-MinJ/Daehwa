@@ -8,8 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Separator } from "../components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, Edit3, Settings, Heart, Calendar, Film } from "lucide-react";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { ArrowLeft, Edit3, Settings, Calendar } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 interface MyPageProps {
@@ -25,10 +24,16 @@ interface Bookmark {
 }
 
 export function MyPage({ onNavigate }: MyPageProps) {
-  const { token, userInfo } = useAuth();
+  const { token, userInfo, logout } = useAuth();
   const [randomMovie, setRandomMovie] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+
+  // 계정 정보 수정 상태
+  const [username, setUsername] = useState(userInfo?.username || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // 랜덤 추천 영화
   useEffect(() => {
@@ -89,12 +94,18 @@ export function MyPage({ onNavigate }: MyPageProps) {
           <Button variant="ghost" size="sm" onClick={() => onNavigate("main")}>
             <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
           </Button>
-
           <div className="flex items-center space-x-4">
             <Button variant="outline" size="sm">
               <Settings className="w-4 h-4 mr-2" /> 설정
             </Button>
-            <Button variant="outline" size="sm" onClick={() => onNavigate("login")}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                logout();
+                onNavigate("login");
+              }}
+            >
               로그아웃
             </Button>
           </div>
@@ -111,7 +122,6 @@ export function MyPage({ onNavigate }: MyPageProps) {
                   <AvatarImage src={userInfo?.profileImage || ""} />
                   <AvatarFallback className="text-xl">{userInfo?.username?.charAt(0)}</AvatarFallback>
                 </Avatar>
-
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     <h1 className="text-2xl font-bold">{userInfo?.username || "정보 없음"}</h1>
@@ -119,9 +129,7 @@ export function MyPage({ onNavigate }: MyPageProps) {
                       <Edit3 className="w-4 h-4 mr-2" /> 프로필 편집
                     </Button>
                   </div>
-
                   <p className="text-muted-foreground mb-4">{userInfo?.username || "정보 없음"}</p>
-
                   <div className="flex items-center space-x-6 text-sm">
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -138,7 +146,6 @@ export function MyPage({ onNavigate }: MyPageProps) {
                     </div>
                   </div>
                 </div>
-
                 <div className="text-right">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
@@ -153,7 +160,7 @@ export function MyPage({ onNavigate }: MyPageProps) {
         </div>
 
         {/* 탭 구조 */}
-        <Tabs defaultValue="recommend" className="space-y-6">
+        <Tabs defaultValue="settings" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="recommend">추천 영화</TabsTrigger>
             <TabsTrigger value="favorites">즐겨찾기</TabsTrigger>
@@ -161,101 +168,101 @@ export function MyPage({ onNavigate }: MyPageProps) {
             <TabsTrigger value="settings">계정 설정</TabsTrigger>
           </TabsList>
 
-          {/* 추천 영화 탭 */}
-          <TabsContent value="recommend">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Film className="w-5 h-5 mr-2" /> 오늘의 추천 영화
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                {loading && <p>Loading...</p>}
-                {!loading && randomMovie && (
-                  <div className="space-y-4">
-                    <ImageWithFallback
-                      src={randomMovie.posterPath ? `https://image.tmdb.org/t/p/w500${randomMovie.posterPath}` : "/fallback-image.png"}
-                      alt={randomMovie.title || "추천 영화"}
-                      className="w-[300px] rounded-lg mx-auto"
-                    />
-                    <h2 className="text-lg font-semibold">{randomMovie.title || "추천 영화 없음"}</h2>
-                    <Button
-                      size="sm"
-                      onClick={() => toggleBookmark(randomMovie.movieIdx)}
-                      variant={bookmarks.some((b) => b.movieIdx === randomMovie.movieIdx) ? "destructive" : "outline"}
-                    >
-                      {bookmarks.some((b) => b.movieIdx === randomMovie.movieIdx) ? "북마크 해제" : "북마크"}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* 즐겨찾기 탭 */}
-          <TabsContent value="favorites">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Heart className="w-5 h-5 mr-2" /> 즐겨찾기 영화
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {bookmarks.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Heart className="w-12 h-12 mx-auto mb-4" />
-                    <p>아직 즐겨찾기한 영화가 없습니다.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {bookmarks.map((b) => (
-                      <div key={b.bookmarkIdx} className="space-y-2">
-                        <ImageWithFallback
-                          src={b.posterPath ? `https://image.tmdb.org/t/p/w200${b.posterPath}` : "/fallback-image.png"}
-                          alt={b.title}
-                          className="w-full aspect-[3/4] object-cover rounded-lg"
-                        />
-                        <div className="flex justify-between items-center">
-                          <p className="text-sm font-semibold line-clamp-2">{b.title}</p>
-                          <Button size="sm" variant="destructive" onClick={() => toggleBookmark(b.movieIdx)}>
-                            삭제
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* 내 리뷰 (임시) */}
-          <TabsContent value="reviews">
-            <Card>
-              <CardHeader>
-                <CardTitle>내가 작성한 리뷰</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">아직 리뷰가 없습니다.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* 계정 설정 */}
+          {/* 계정 설정 탭 */}
           <TabsContent value="settings">
             <Card>
               <CardHeader>
                 <CardTitle>계정 정보</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* 아이디 (수정불가) */}
                 <div className="space-y-2">
-                  <Label htmlFor="name">이름</Label>
-                  <Input id="name" value={userInfo?.username || ""} />
+                  <Label htmlFor="userid">아이디</Label>
+                  <Input id="userid" value={userInfo?.userId || ""} readOnly />
                 </div>
+
+                {/* 이름 수정 */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">이메일</Label>
-                  <Input id="email" type="email" value={userInfo?.userId || ""} />
+                  <Label htmlFor="username">이름</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => {
+                        if (!username.trim()) return alert("이름을 입력해주세요.");
+                        axios
+                          .put(
+                            "http://localhost:8080/api/users/update",
+                            { username },
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          )
+                          .then(() => alert("이름이 변경되었습니다."))
+                          .catch((err) => {
+                            console.error(err);
+                            alert("이름 변경에 실패했습니다.");
+                          });
+                      }}
+                    >
+                      변경
+                    </Button>
+                  </div>
                 </div>
+
+                {/* 비밀번호 변경 */}
+                <div className="space-y-2">
+                  <Label htmlFor="password">비밀번호 변경</Label>
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      type="password"
+                      placeholder="현재 비밀번호"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                    <Input
+                      type="password"
+                      placeholder="새 비밀번호"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <Input
+                      type="password"
+                      placeholder="비밀번호 확인"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => {
+                        if (!currentPassword || !newPassword || !confirmPassword)
+                          return alert("모든 필드를 입력해주세요.");
+                        if (newPassword !== confirmPassword)
+                          return alert("비밀번호 확인이 일치하지 않습니다.");
+
+                        axios
+                          .put(
+                            "http://localhost:8080/api/users/password",
+                            { currentPassword, newPassword },
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          )
+                          .then(() => {
+                            alert("비밀번호가 변경되었습니다.");
+                            setCurrentPassword("");
+                            setNewPassword("");
+                            setConfirmPassword("");
+                          })
+                          .catch((err) => {
+                            console.error(err);
+                            alert(err.response?.data || "비밀번호 변경 실패");
+                          });
+                      }}
+                    >
+                      변경
+                    </Button>
+                  </div>
+                </div>
+
                 <Separator />
               </CardContent>
             </Card>

@@ -144,6 +144,29 @@ export function useAuth() {
     return updatedUser;
   };
 
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    if (!token) throw new Error("로그인 토큰이 없습니다.");
+
+    const res = await fetch(`${API_URL}/users/password`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || "비밀번호 변경 실패");
+    }
+
+    return await res.json(); // 성공 메시지 반환
+  };
+
   return {
     token,
     userInfo,
@@ -153,6 +176,7 @@ export function useAuth() {
     logout,
     getUserInfo,
     updateUser,
+    updatePassword,
     isLoggedIn: !!token,
   };
 }

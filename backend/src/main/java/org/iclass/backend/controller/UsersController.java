@@ -56,20 +56,43 @@ public class UsersController {
     return ResponseEntity.ok(usersService.getMainPageData());
   }
 
-  @PutMapping("/update/password")
-  public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> body, HttpServletRequest request) {
+  // 비밀번호 변경
+  @PutMapping("/password")
+  public ResponseEntity<?> updatePassword(@RequestBody PasswordChangeRequest requestDto, HttpServletRequest request) {
     UsersDto user = usersService.getUserFromToken(request);
-    if (user == null)
+    if (user == null) {
       return ResponseEntity.status(401).body("로그인 필요");
+    }
 
-    String currentPassword = body.get("currentPassword");
-    String newPassword = body.get("newPassword");
-
-    boolean success = usersService.updatePassword(user.getUserId(), currentPassword, newPassword);
-    if (!success)
+    boolean success = usersService.updatePassword(user.getUserId(), requestDto.getCurrentPassword(),
+        requestDto.getNewPassword());
+    if (!success) {
       return ResponseEntity.status(400).body("현재 비밀번호가 일치하지 않습니다.");
+    }
 
-    return ResponseEntity.ok("비밀번호 변경 성공");
+    return ResponseEntity.ok("비밀번호 변경 완료");
+  }
+
+  // DTO 클래스 (컨트롤러 내부)
+  public static class PasswordChangeRequest {
+    private String currentPassword;
+    private String newPassword;
+
+    public String getCurrentPassword() {
+      return currentPassword;
+    }
+
+    public void setCurrentPassword(String currentPassword) {
+      this.currentPassword = currentPassword;
+    }
+
+    public String getNewPassword() {
+      return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+      this.newPassword = newPassword;
+    }
   }
 
 }

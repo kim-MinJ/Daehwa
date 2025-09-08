@@ -12,19 +12,19 @@ export function LoginPage() {
   const { login, register, logout, isLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(true); // 로그인폼 표시 여부
   const [showPassword, setShowPassword] = useState(false);
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
 
-    // 로그인 상태에 따라 초기 화면 동기화
+  // 로그인 상태에 따라 화면 동기화
   useEffect(() => {
     if (isLoggedIn) {
-      setIsLogin(true); // 이미 로그인 되어 있으면 로그인폼 대신 로그아웃 화면 표시
+      setIsLogin(false); // 로그인 상태면 버튼 화면
     } else {
-      setIsLogin(true); // 로그인 안 되어 있으면 로그인폼 보이게
+      setIsLogin(true); // 로그아웃 상태면 로그인폼
     }
   }, [isLoggedIn]);
 
@@ -38,8 +38,8 @@ export function LoginPage() {
         setMessage("로그인 성공!");
       } else {
         await register(userId, username, password);
-        setMessage("회원가입 성공!");
-        setIsLogin(true);
+        await login(userId, password); // 회원가입 후 자동 로그인
+        setMessage("회원가입 후 로그인 완료!");
       }
 
       setUserId("");
@@ -50,7 +50,6 @@ export function LoginPage() {
     }
   };
 
-  // 로딩 중에는 간단한 Loading 표시
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -89,7 +88,7 @@ export function LoginPage() {
             </p>
           </div>
 
-          {!isLoggedIn ? (
+          {!isLoggedIn || isLogin ? (
             <>
               {/* 로그인/회원가입 토글 */}
               <div className="flex mb-6 bg-muted rounded-lg p-1">
@@ -192,43 +191,17 @@ export function LoginPage() {
                   {isLogin ? "로그인" : "계정 만들기"}
                 </Button>
               </form>
-
-              {/* 소셜 로그인 */}
-              <div className="mt-6">
-                <div className="relative">
-                  <Separator className="my-6" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="bg-card px-4 text-sm text-muted-foreground">또는</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full" type="button">
-                    Google로 {isLogin ? "로그인" : "가입"}
-                  </Button>
-                  <Button variant="outline" className="w-full" type="button">
-                    GitHub으로 {isLogin ? "로그인" : "가입"}
-                  </Button>
-                </div>
-              </div>
-
-              {!isLogin && (
-                <p className="text-xs text-muted-foreground text-center mt-6">
-                  계정을 만들면{" "}
-                  <a href="#" className="text-primary hover:underline">
-                    이용약관
-                  </a>{" "}
-                  과{" "}
-                  <a href="#" className="text-primary hover:underline">
-                    개인정보처리방침
-                  </a>{" "}
-                  에 동의하는 것입니다.
-                </p>
-              )}
             </>
           ) : (
+            // 로그인 상태일 때 버튼 화면
             <div className="flex flex-col gap-2">
-              <Button onClick={logout}>로그아웃</Button>
+              <Button
+                onClick={() => {
+                  logout(); // 상태 갱신
+                }}
+              >
+                로그아웃
+              </Button>
               <Button onClick={() => navigate("/mypage")}>마이페이지</Button>
             </div>
           )}
