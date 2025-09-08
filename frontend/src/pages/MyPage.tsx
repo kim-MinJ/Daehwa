@@ -37,7 +37,7 @@ interface Movie {
 }
 
 export function MyPage({ onNavigate }: MyPageProps) {
-  const { token, userInfo, logout } = useAuth();
+  const { token, userInfo, setUserInfo, logout, getUserInfo } = useAuth();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [recommendMovies, setRecommendMovies] = useState<Movie[]>([]);
 
@@ -49,7 +49,7 @@ export function MyPage({ onNavigate }: MyPageProps) {
 
   // 관리자 모달 상태
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-const [adminCode, setAdminCode] = useState("");
+  const [adminCode, setAdminCode] = useState("");
 
   const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
@@ -57,9 +57,7 @@ const [adminCode, setAdminCode] = useState("");
   const fetchBookmarks = () => {
     if (!token) return;
     axios
-      .get("http://localhost:8080/api/bookmarks", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get("http://localhost:8080/api/bookmarks", { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => setBookmarks(res.data))
       .catch(console.error);
   };
@@ -82,9 +80,7 @@ const [adminCode, setAdminCode] = useState("");
   }, [token]);
 
   useEffect(() => {
-    if (userInfo?.username) {
-      setUsername(userInfo.username);
-    }
+    if (userInfo?.username) setUsername(userInfo.username);
   }, [userInfo]);
 
   // 북마크 토글
@@ -110,8 +106,7 @@ const [adminCode, setAdminCode] = useState("");
     }
   };
 
-  const isBookmarked = (movieIdx: number) =>
-    bookmarks.some((b) => b.movieIdx === movieIdx);
+  const isBookmarked = (movieIdx: number) => bookmarks.some((b) => b.movieIdx === movieIdx);
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,11 +117,7 @@ const [adminCode, setAdminCode] = useState("");
             <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
           </Button>
           <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAdminModalOpen(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setIsAdminModalOpen(true)}>
               <Edit3 className="w-4 h-4 mr-2" /> 관리자 모드
             </Button>
             <Button
@@ -143,120 +134,116 @@ const [adminCode, setAdminCode] = useState("");
         </div>
       </div>
 
-     {/* 관리자 모달 */}
-<Dialog open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen}>
-  <DialogContent className="sm:max-w-md">
-    <DialogHeader>
-      <DialogTitle>관리자 모드</DialogTitle>
-      <DialogDescription>
-        관리자 권한을 부여받기 위해 코드를 입력하세요.
-      </DialogDescription>
-    </DialogHeader>
+      {/* 관리자 모달 */}
+      <Dialog open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>관리자 모드</DialogTitle>
+            <DialogDescription>관리자 권한을 부여받기 위해 코드를 입력하세요.</DialogDescription>
+          </DialogHeader>
 
-    <div className="py-4 space-y-3">
-      <Label htmlFor="adminCode">관리자 코드</Label>
-      <Input
-  id="adminCode"
-  type="text"          // password -> text
-  placeholder="관리자 코드를 입력하세요"
-  value={adminCode}
-  onChange={(e) => setAdminCode(e.target.value)}
-  className="tracking-widest" // 입력 글자 간격을 넓혀 비밀번호처럼 보이게 옵션
-/>
-      <Button
-        className="w-full"
-        onClick={() => {
-          if (!adminCode.trim()) return alert("관리자 코드를 입력해주세요.");
-          axios
-            .put(
-              "http://localhost:8080/api/admin/grant", // 백엔드 URL
-              null,
-              {
-                params: { adminCode }, // 쿼리 파라미터로 전달
-                headers: { Authorization: `Bearer ${token}` }, // JWT 토큰
-              }
-            )
-            .then((res) => {
-              alert(res.data.message);
-              setIsAdminModalOpen(false);
-              setAdminCode(""); // 입력 초기화
-            })
-            .catch((err) => {
-              console.error(err);
-              alert(err.response?.data?.message || "관리자 권한 부여 실패");
-            });
-        }}
-      >
-        권한 부여
-      </Button>
-    </div>
+          <div className="py-4 space-y-3">
+            <Label htmlFor="adminCode">관리자 코드</Label>
+            <Input
+              id="adminCode"
+              type="text"
+              placeholder="관리자 코드를 입력하세요"
+              value={adminCode}
+              onChange={(e) => setAdminCode(e.target.value)}
+            />
+            <Button
+              className="w-full"
+              onClick={() => {
+                if (!adminCode.trim()) return alert("관리자 코드를 입력해주세요.");
 
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setIsAdminModalOpen(false)}>
-        닫기
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+                axios
+                  .put("http://localhost:8080/api/admin/grant", null, {
+                    params: { adminCode },
+                    headers: { Authorization: `Bearer ${token}` },
+                  })
+                  .then(async (res) => {
+                    alert(res.data.message);
+                    setIsAdminModalOpen(false);
+                    setAdminCode("");
+
+                    // 관리자 권한 갱신
+                    if (getUserInfo && setUserInfo) {
+                      const data = await getUserInfo();
+                      setUserInfo(data);
+                    }
+                  })
+                  .catch((err) => {
+                    console.error(err);
+                    alert(err.response?.data?.message || "관리자 권한 부여 실패");
+                  });
+              }}
+            >
+              권한 부여
+            </Button>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAdminModalOpen(false)}>
+              닫기
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* 프로필 카드 */}
         <div className="mb-8">
           <Card>
-  <CardContent className="p-8">
-    <div className="flex items-center space-x-6">
-      <Avatar className="w-24 h-24">
-        <AvatarImage src={userInfo?.profileImage || ""} />
-        <AvatarFallback className="text-xl">
-          {userInfo?.username?.charAt(0)}
-        </AvatarFallback>
-      </Avatar>
+            <CardContent className="p-8">
+              <div className="flex items-center space-x-6">
+                <Avatar className="w-24 h-24">
+                  <AvatarImage src={userInfo?.profileImage || ""} />
+                  <AvatarFallback className="text-xl">{userInfo?.username?.charAt(0)}</AvatarFallback>
+                </Avatar>
 
-      <div className="flex-1">
-        <div className="flex items-center space-x-3 mb-2">
-          <h1 className="text-2xl font-bold">
-            {userInfo?.username || "정보 없음"}
-          </h1>
-          {/* role이 admin이면 관리자 표시 */}
-          {userInfo?.role === "admin" && (
-            <span className="bg-red-600 text-white px-2 py-1 text-sm rounded">
-              관리자
-            </span>
-          )}
-        </div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <h1 className="text-2xl font-bold">{userInfo?.username || "정보 없음"}</h1>
 
-        <div className="flex items-center space-x-6 text-sm">
-          <div className="flex items-center space-x-1">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <span>
-              가입일:{" "}
-              {userInfo?.regDate
-                ? new Date(userInfo.regDate).toLocaleDateString()
-                : "정보 없음"}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span>선호 장르:</span>
-            <div className="flex space-x-1">
-              <Badge variant="secondary">액션</Badge>
-              <Badge variant="secondary">SF</Badge>
-            </div>
-          </div>
-        </div>
-      </div>
+                    {/* 관리자 빨간 박스 → 검은 박스, 빨간 글씨 */}
+{userInfo?.role === "admin" && (
+  <span className="bg-black text-red-600 px-3 py-1 text-sm rounded-md font-semibold">
+    관리자
+  </span>
+)}
+                  </div>
 
-      <div className="text-right">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold">{bookmarks.length}</div>
-            <div className="text-sm text-muted-foreground">북마크</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </CardContent>
-</Card>
+                  <div className="flex items-center space-x-6 text-sm">
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span>
+                        가입일:{" "}
+                        {userInfo?.regDate
+                          ? new Date(userInfo.regDate).toLocaleDateString()
+                          : "정보 없음"}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span>선호 장르:</span>
+                      <div className="flex space-x-1">
+                        <Badge variant="secondary">액션</Badge>
+                        <Badge variant="secondary">SF</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                <div className="text-right">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold">{bookmarks.length}</div>
+                      <div className="text-sm text-muted-foreground">북마크</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* 탭 구조 */}
@@ -275,11 +262,7 @@ const [adminCode, setAdminCode] = useState("");
                 {recommendMovies.map((movie) => (
                   <Card key={movie.movieIdx}>
                     <img
-                      src={
-                        movie.posterPath
-                          ? `${TMDB_BASE_URL}${movie.posterPath}`
-                          : "/default.jpg"
-                      }
+                      src={movie.posterPath ? `${TMDB_BASE_URL}${movie.posterPath}` : "/default.jpg"}
                       alt={movie.title}
                       className="w-full h-48 object-cover rounded-md"
                     />
@@ -287,15 +270,10 @@ const [adminCode, setAdminCode] = useState("");
                       <h3 className="font-bold">{movie.title}</h3>
                       <Button
                         size="sm"
-                        variant={
-                          isBookmarked(movie.movieIdx)
-                            ? "destructive"
-                            : "outline"
-                        }
+                        variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
                         onClick={() => toggleBookmark(movie.movieIdx)}
                       >
-                        <Heart className="w-4 h-4 mr-1" />{" "}
-                        {isBookmarked(movie.movieIdx) ? "북마크" : "북마크"}
+                        <Heart className="w-4 h-4 mr-1" /> 북마크
                       </Button>
                     </CardContent>
                   </Card>
@@ -313,9 +291,7 @@ const [adminCode, setAdminCode] = useState("");
                 {bookmarks.map((b) => (
                   <Card key={b.bookmarkIdx}>
                     <img
-                      src={
-                        b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"
-                      }
+                      src={b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"}
                       alt={b.title}
                       className="w-full h-48 object-cover rounded-md"
                     />
@@ -360,8 +336,7 @@ const [adminCode, setAdminCode] = useState("");
                     />
                     <Button
                       onClick={() => {
-                        if (!username.trim())
-                          return alert("이름을 입력해주세요.");
+                        if (!username.trim()) return alert("이름을 입력해주세요.");
                         axios
                           .put(
                             "http://localhost:8080/api/users/update",
@@ -369,10 +344,7 @@ const [adminCode, setAdminCode] = useState("");
                             { headers: { Authorization: `Bearer ${token}` } }
                           )
                           .then(() => alert("이름이 변경되었습니다."))
-                          .catch((err) => {
-                            console.error(err);
-                            alert("이름 변경에 실패했습니다.");
-                          });
+                          .catch(() => alert("이름 변경에 실패했습니다."));
                       }}
                     >
                       변경
@@ -421,12 +393,7 @@ const [adminCode, setAdminCode] = useState("");
                             setNewPassword("");
                             setConfirmPassword("");
                           })
-                          .catch((err) => {
-                            console.error(err);
-                            alert(
-                              err.response?.data || "비밀번호 변경 실패"
-                            );
-                          });
+                          .catch(() => alert("비밀번호 변경 실패"));
                       }}
                     >
                       변경
