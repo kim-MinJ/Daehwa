@@ -2,6 +2,8 @@ package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -25,6 +27,7 @@ public class MovieGenresEntity {
 
   @Id
   @Column(name = "MG_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long mgIdx;
 
   @ManyToOne

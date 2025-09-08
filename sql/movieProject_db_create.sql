@@ -145,6 +145,7 @@ COMMENT ON COLUMN Movie_Info.release_date IS '영화 개봉일';
 CREATE TABLE Review
 (
   review_idx NUMBER              NOT NULL,
+  movie_idx  NUMBER              NOT NULL,
   userid     VARCHAR2(100)       NOT NULL,
   content    VARCHAR2(2000 CHAR) NOT NULL,
   rating     NUMBER              DEFAULT 10 CHECK (rating BETWEEN 1 AND 10),
@@ -157,6 +158,8 @@ CREATE TABLE Review
 COMMENT ON TABLE Review IS '리뷰';
 
 COMMENT ON COLUMN Review.review_idx IS '리뷰 인덱스';
+
+COMMENT ON COLUMN Review.movie_idx IS '영화 인덱스';
 
 COMMENT ON COLUMN Review.userid IS '이메일주소';
 

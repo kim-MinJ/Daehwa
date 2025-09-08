@@ -26,8 +26,8 @@ import lombok.ToString;
 public class BookMarkEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "bookmark_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long bookmarkIdx;
 
   @ManyToOne

@@ -2,6 +2,8 @@ package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -21,7 +23,8 @@ public class MovieCrewEntity {
 
     @Id
     @Column(name = "CREDIT_IDX")
-    private Long creditIdx;   // PK (트리거로 자동 채워짐)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long creditIdx;
 
     @Column(name = "TMDB_MOVIE_ID", nullable = false)
     private Long tmdbMovieId;
