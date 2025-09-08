@@ -1,4 +1,4 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,8 +26,8 @@ import lombok.ToString;
 public class BookMarkEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "bookmark_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long bookmarkIdx;
 
   @ManyToOne

@@ -1,4 +1,4 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,13 +22,14 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Builder
 @Entity
 @Table(name = "RANKING")
 public class RankingEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "ranking_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long rankingIdx;
 
   @ManyToOne
@@ -35,8 +37,9 @@ public class RankingEntity {
   private MovieInfoEntity movie;
 
   @Column(name = "ranking_count")
-  private Integer rankingCount;
+  private Double rankingCount;
 
   @Column(name = "created_date")
+  @Builder.Default
   private LocalDateTime createdDate = LocalDateTime.now();
 }

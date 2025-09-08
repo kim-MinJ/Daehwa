@@ -1,4 +1,4 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import java.time.LocalDate;
 
@@ -28,8 +28,8 @@ import lombok.ToString;
 public class ArticlesEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "articles_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long articlesIdx;
 
   @ManyToOne

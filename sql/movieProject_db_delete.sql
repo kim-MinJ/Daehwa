@@ -16,9 +16,9 @@ BEGIN
         SELECT table_name
         FROM user_tables
         WHERE table_name IN (
-            'ARTICLES','BOOKMARK','COMMENTS','GENRES','MOVIE_GENRES',
-            'MOVIE_CREDITS','MOVIE_INFO','MOVIE_VOTE','MOVIE_VS','NOTICE',
-            'PEOPLE','RANKING','REVIEW','USERS','VIDEOS', 'SOUND_TRACK'
+            'ARTICLES','BOOKMARK','COMMENTS','MOVIE_INFO','REVIEW',
+            'NOTICE','Genres','Movie_Cast','Movie_Crew','Movie_Genres',
+            'Movie_VS','Movie_Vote','Ranking','Videos','Sound_Track', 'USERS'
         )
     )
     LOOP
