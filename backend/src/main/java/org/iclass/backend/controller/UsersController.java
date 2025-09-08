@@ -1,5 +1,7 @@
 package org.iclass.backend.controller;
 
+import java.util.Map;
+
 import org.iclass.backend.dto.UsersDto;
 import org.iclass.backend.service.UsersService;
 import org.springframework.http.ResponseEntity;
@@ -53,4 +55,21 @@ public class UsersController {
   public ResponseEntity<?> mainPage() {
     return ResponseEntity.ok(usersService.getMainPageData());
   }
+
+  @PutMapping("/update/password")
+  public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> body, HttpServletRequest request) {
+    UsersDto user = usersService.getUserFromToken(request);
+    if (user == null)
+      return ResponseEntity.status(401).body("로그인 필요");
+
+    String currentPassword = body.get("currentPassword");
+    String newPassword = body.get("newPassword");
+
+    boolean success = usersService.updatePassword(user.getUserId(), currentPassword, newPassword);
+    if (!success)
+      return ResponseEntity.status(400).body("현재 비밀번호가 일치하지 않습니다.");
+
+    return ResponseEntity.ok("비밀번호 변경 성공");
+  }
+
 }

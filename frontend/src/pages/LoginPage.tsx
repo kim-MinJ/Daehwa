@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "../components/ui/button";
@@ -9,7 +9,7 @@ import { Separator } from "../components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
 
 export function LoginPage() {
-  const { login, register, logout, isLoggedIn } = useAuth();
+  const { login, register, logout, isLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
 
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +18,15 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
+
+    // 로그인 상태에 따라 초기 화면 동기화
+  useEffect(() => {
+    if (isLoggedIn) {
+      setIsLogin(true); // 이미 로그인 되어 있으면 로그인폼 대신 로그아웃 화면 표시
+    } else {
+      setIsLogin(true); // 로그인 안 되어 있으면 로그인폼 보이게
+    }
+  }, [isLoggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +37,7 @@ export function LoginPage() {
         await login(userId, password);
         setMessage("로그인 성공!");
       } else {
-        await register(userId, password, username);
+        await register(userId, username, password);
         setMessage("회원가입 성공!");
         setIsLogin(true);
       }
@@ -37,16 +46,25 @@ export function LoginPage() {
       setPassword("");
       setUsername("");
     } catch (e: any) {
-      setMessage(e.message);
+      setMessage(e.message || "오류가 발생했습니다.");
     }
   };
 
+  // 로딩 중에는 간단한 Loading 표시
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
-      {/* 배경 패턴 */}
+      {/* 배경 */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10"></div>
 
-      {/* 메인 페이지로 돌아가기 버튼 */}
+      {/* 메인 버튼 */}
       <Button
         variant="ghost"
         size="sm"
@@ -57,10 +75,9 @@ export function LoginPage() {
         메인으로 돌아가기
       </Button>
 
-      {/* 로그인/회원가입 카드 */}
+      {/* 카드 */}
       <Card className="w-full max-w-md relative z-10 shadow-xl border-0 bg-card/80 backdrop-blur">
         <CardContent className="p-8">
-          {/* 로고/제목 */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold mb-2">MovieInfo</h1>
             <p className="text-muted-foreground">
@@ -176,7 +193,7 @@ export function LoginPage() {
                 </Button>
               </form>
 
-              {/* 소셜 로그인 UI */}
+              {/* 소셜 로그인 */}
               <div className="mt-6">
                 <div className="relative">
                   <Separator className="my-6" />
@@ -201,11 +218,11 @@ export function LoginPage() {
                   <a href="#" className="text-primary hover:underline">
                     이용약관
                   </a>{" "}
-                 과{" "}
+                  과{" "}
                   <a href="#" className="text-primary hover:underline">
                     개인정보처리방침
                   </a>{" "}
-                 에 동의하는 것입니다.
+                  에 동의하는 것입니다.
                 </p>
               )}
             </>

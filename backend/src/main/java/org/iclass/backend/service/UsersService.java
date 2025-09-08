@@ -4,6 +4,7 @@ import org.iclass.backend.dto.UsersDto;
 import org.iclass.backend.Entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtUtil;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,11 +15,6 @@ public class UsersService {
 
   private final UsersRepository usersRepository;
   private final JwtUtil jwtUtil;
-
-  public UsersService(UsersRepository usersRepository, JwtUtil jwtUtil) {
-    this.usersRepository = usersRepository;
-    this.jwtUtil = jwtUtil;
-  }
 
   // JWT 토큰에서 사용자 정보 가져오기
   public UsersDto getUserFromToken(HttpServletRequest request) {
@@ -81,4 +77,28 @@ public class UsersService {
         .token(null) // 수정 시 새 토큰은 안 줘도 됨
         .build();
   }
+
+  private final PasswordEncoder passwordEncoder; // 기존 생성자에 주입
+
+  public UsersService(UsersRepository usersRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    this.usersRepository = usersRepository;
+    this.jwtUtil = jwtUtil;
+    this.passwordEncoder = passwordEncoder;
+  }
+
+  public boolean updatePassword(String userId, String currentPassword, String newPassword) {
+    UsersEntity entity = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+    // 현재 비밀번호 검증
+    if (!passwordEncoder.matches(currentPassword, entity.getPassword())) {
+      return false; // 여기서 false 나오는지 확인
+    }
+
+    // 새 비밀번호 저장
+    entity.setPassword(passwordEncoder.encode(newPassword));
+    usersRepository.save(entity);
+    return true;
+  }
+
 }

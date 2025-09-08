@@ -1,5 +1,4 @@
-// App.tsx
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
 import { MyPage } from "./pages/MyPage";
 
@@ -23,7 +22,8 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />  {/* / 접속 시 /login으로 리디렉트 */}
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/mypage" element={<MyPage onNavigate={handleNavigate} />} />
       {/* 메인 페이지는 나중에 추가 가능 */}
       {/* <Route path="/" element={<MainPage onNavigate={handleNavigate} />} /> */}

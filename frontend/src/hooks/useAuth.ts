@@ -2,27 +2,44 @@ import { useState, useEffect } from "react";
 
 const API_URL = "http://localhost:8080/api";
 
-interface UserInfo {
+export interface UserInfo {
   userId: string;
   username: string;
   role: string;
   regDate: string; // ISO 문자열
   status: number;
-  profileImage?: string; // DB에는 없지만 UI fallback용
+  profileImage?: string; // UI fallback용
 }
 
 export function useAuth() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // token을 localStorage에 저장
+  // 토큰 상태 변화 시 localStorage 업데이트 및 사용자 정보 fetch
   useEffect(() => {
-    if (token) {
+    const fetchUser = async () => {
+      if (!token) {
+        localStorage.removeItem("token");
+        setUserInfo(null);
+        setLoading(false);
+        return;
+      }
+
       localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
-      setUserInfo(null);
-    }
+      try {
+        const data = await getUserInfo(token);
+        setUserInfo(data);
+      } catch (err) {
+        console.error(err);
+        setUserInfo(null);
+        setToken(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
   }, [token]);
 
   // 로그인
@@ -40,9 +57,7 @@ export function useAuth() {
 
     const data = await res.json();
     setToken(data.token);
-
-    // 로그인 직후 사용자 정보 가져오기
-    await getUserInfo(data.token);
+    // login 후 getUserInfo는 위 useEffect에서 처리됨
   };
 
   // 회원가입
@@ -74,9 +89,9 @@ export function useAuth() {
 
     const res = await fetch(`${API_URL}/users/me`, {
       method: "GET",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${t}`
+        Authorization: `Bearer ${t}`,
       },
     });
 
@@ -84,19 +99,20 @@ export function useAuth() {
 
     const data = await res.json();
 
-    setUserInfo({
+    const user: UserInfo = {
       userId: data.userId,
       username: data.username,
       role: data.role,
       regDate: data.regDate,
       status: data.status,
       profileImage: undefined, // fallback 처리
-    });
+    };
 
-    return data;
+    setUserInfo(user);
+    return user;
   };
 
-  // 사용자 정보 업데이트 (이름 변경 등)
+  // 사용자 정보 업데이트
   const updateUser = async (username: string) => {
     if (!token) throw new Error("로그인 토큰이 없습니다.");
 
@@ -115,22 +131,23 @@ export function useAuth() {
     }
 
     const data = await res.json();
-
-    setUserInfo({
+    const updatedUser: UserInfo = {
       userId: data.userId,
       username: data.username,
       role: data.role,
       regDate: data.regDate,
       status: data.status,
       profileImage: undefined,
-    });
+    };
 
-    return data;
+    setUserInfo(updatedUser);
+    return updatedUser;
   };
 
   return {
     token,
     userInfo,
+    loading,
     login,
     register,
     logout,
