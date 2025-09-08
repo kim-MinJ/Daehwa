@@ -1,17 +1,18 @@
 package org.iclass.backend.service;
 
-import lombok.RequiredArgsConstructor;
-import org.iclass.backend.Entity.BookMarkEntity;
-import org.iclass.backend.Entity.MovieInfoEntity;
-import org.iclass.backend.Entity.UsersEntity;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.iclass.backend.dto.BookMarkDto;
+import org.iclass.backend.entity.BookMarkEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.BookmarkRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.repository.UsersRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

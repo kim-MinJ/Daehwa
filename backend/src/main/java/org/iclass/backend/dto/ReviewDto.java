@@ -2,7 +2,8 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDateTime;
 
-import org.iclass.backend.Entity.ReviewEntity;
+import org.iclass.backend.entity.ReviewEntity;
+import org.iclass.backend.entity.UsersEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -28,7 +29,7 @@ public class ReviewDto {
     private LocalDateTime updateAt;
     private Integer isBlind;       // 0: off, 1: on
 
-    // Entity → DTO 변환 메서드
+    // ✅ Entity → DTO 변환
     public static ReviewDto of(ReviewEntity entity) {
         return ReviewDto.builder()
                 .reviewIdx(entity.getReviewIdx())
@@ -38,6 +39,19 @@ public class ReviewDto {
                 .createdAt(entity.getCreatedAt())
                 .updateAt(entity.getUpdateAt())
                 .isBlind(entity.getIsBlind())
+                .build();
+    }
+
+    // ✅ DTO → Entity 변환
+    public ReviewEntity toEntity(UsersEntity user) {
+        return ReviewEntity.builder()
+                .reviewIdx(this.reviewIdx)
+                .user(user)          // 연관관계 매핑 (UsersEntity)
+                .content(this.content)
+                .rating(this.rating)
+                .createdAt(this.createdAt)
+                .updateAt(this.updateAt)
+                .isBlind(this.isBlind)
                 .build();
     }
 }

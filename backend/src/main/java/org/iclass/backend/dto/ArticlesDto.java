@@ -2,7 +2,8 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDate;
 
-import org.iclass.backend.Entity.ArticlesEntity;
+import org.iclass.backend.entity.ArticlesEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -27,7 +28,7 @@ public class ArticlesDto {
     private String articleUrl;
     private LocalDate publishedAt;
 
-    // Entity → DTO 변환 메서드
+    // ✅ Entity → DTO 변환
     public static ArticlesDto of(ArticlesEntity entity) {
         return ArticlesDto.builder()
                 .articlesIdx(entity.getArticlesIdx())
@@ -36,6 +37,18 @@ public class ArticlesDto {
                 .sourceName(entity.getSourceName())
                 .articleUrl(entity.getArticleUrl())
                 .publishedAt(entity.getPublishedAt())
+                .build();
+    }
+
+    // ✅ DTO → Entity 변환
+    public ArticlesEntity toEntity(MovieInfoEntity movie) {
+        return ArticlesEntity.builder()
+                .articlesIdx(this.articlesIdx)
+                .movie(movie) // 연관관계 매핑 (MovieInfoEntity)
+                .title(this.title)
+                .sourceName(this.sourceName)
+                .articleUrl(this.articleUrl)
+                .publishedAt(this.publishedAt)
                 .build();
     }
 }

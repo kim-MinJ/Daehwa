@@ -1,10 +1,12 @@
 package org.iclass.backend.controller;
 
-import org.iclass.backend.Entity.MovieInfoEntity;
 import org.iclass.backend.dto.MovieInfoDto;
+import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.service.MoviesService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 

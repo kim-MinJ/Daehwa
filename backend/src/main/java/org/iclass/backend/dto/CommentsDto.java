@@ -2,7 +2,9 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDateTime;
 
-import org.iclass.backend.Entity.CommentsEntity;
+import org.iclass.backend.entity.CommentsEntity;
+import org.iclass.backend.entity.ReviewEntity;
+import org.iclass.backend.entity.UsersEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -27,7 +29,7 @@ public class CommentsDto {
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
 
-    // Entity → DTO 변환 메서드
+    // ✅ Entity → DTO 변환
     public static CommentsDto of(CommentsEntity entity) {
         return CommentsDto.builder()
                 .commentIdx(entity.getCommentIdx())
@@ -36,6 +38,18 @@ public class CommentsDto {
                 .content(entity.getContent())
                 .createdAt(entity.getCreatedAt())
                 .updateAt(entity.getUpdateAt())
+                .build();
+    }
+
+    // ✅ DTO → Entity 변환
+    public CommentsEntity toEntity(UsersEntity user, ReviewEntity review) {
+        return CommentsEntity.builder()
+                .commentIdx(this.commentIdx)
+                .user(user)       // 연관관계 매핑 (UsersEntity)
+                .review(review)   // 연관관계 매핑 (ReviewEntity)
+                .content(this.content)
+                .createdAt(this.createdAt)
+                .updateAt(this.updateAt)
                 .build();
     }
 }

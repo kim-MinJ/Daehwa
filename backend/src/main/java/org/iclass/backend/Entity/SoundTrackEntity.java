@@ -1,7 +1,17 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "SoundTrack")
@@ -13,9 +23,6 @@ import lombok.*;
 public class SoundTrackEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_SoundTrack")
-    @SequenceGenerator(name = "SEQ_SoundTrack", sequenceName = "SEQ_SoundTrack", // DB에 생성한 시퀀스 이름과 동일해야 함
-            allocationSize = 1)
     @Column(name = "soundtrack_idx")
     private Long soundtrackIdx; // OST 인덱스 (PK)
 

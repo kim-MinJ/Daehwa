@@ -1,11 +1,13 @@
 package org.iclass.backend.repository;
 
-import org.iclass.backend.Entity.*;
+import java.util.List;
+
+import org.iclass.backend.entity.BookMarkEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
 
 public interface BookmarkRepository extends JpaRepository<BookMarkEntity, Long> {
   List<BookMarkEntity> findByUser(UsersEntity user);

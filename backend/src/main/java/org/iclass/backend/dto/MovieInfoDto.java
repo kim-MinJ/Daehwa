@@ -2,7 +2,7 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDate;
 
-import org.iclass.backend.Entity.MovieInfoEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -18,11 +18,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString
-<<<<<<< HEAD
-@Table(name = "movie_Info")
-=======
 @Table(name = "Movie_Info")
->>>>>>> ae25e7826b07dfc0a8f1cc5d79cdb317a3802a3a
 public class MovieInfoDto {
     private Long movieIdx;
     private Long tmdbMovieId;
@@ -36,7 +32,7 @@ public class MovieInfoDto {
     private String posterPath;
     private LocalDate releaseDate;
 
-    // Entity → DTO 변환 메서드
+    // ✅ Entity → DTO 변환
     public static MovieInfoDto of(MovieInfoEntity entity) {
         return MovieInfoDto.builder()
                 .movieIdx(entity.getMovieIdx())
@@ -50,6 +46,23 @@ public class MovieInfoDto {
                 .backdropPath(entity.getBackdropPath())
                 .posterPath(entity.getPosterPath())
                 .releaseDate(entity.getReleaseDate())
+                .build();
+    }
+
+    // ✅ DTO → Entity 변환
+    public MovieInfoEntity toEntity() {
+        return MovieInfoEntity.builder()
+                .movieIdx(this.movieIdx)
+                .tmdbMovieId(this.tmdbMovieId)
+                .title(this.title)
+                .popularity(this.popularity)
+                .voteCount(this.voteCount)
+                .voteAverage(this.voteAverage)
+                .adult(this.adult)
+                .overview(this.overview)
+                .backdropPath(this.backdropPath)
+                .posterPath(this.posterPath)
+                .releaseDate(this.releaseDate)
                 .build();
     }
 }

@@ -1,11 +1,9 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -26,7 +24,6 @@ import lombok.ToString;
 public class MovieInfoEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "movie_idx")
     private Long movieIdx;
 
