@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Separator } from "../components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
-import { ArrowLeft, Edit3, Settings, Calendar } from "lucide-react";
+import { ArrowLeft, Edit3, Settings, Calendar, Heart, Film } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 interface MyPageProps {
@@ -23,11 +23,16 @@ interface Bookmark {
   posterPath?: string;
 }
 
+interface Movie {
+  movieIdx: number;
+  title: string;
+  posterPath?: string;
+}
+
 export function MyPage({ onNavigate }: MyPageProps) {
   const { token, userInfo, logout } = useAuth();
-  const [randomMovie, setRandomMovie] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [recommendMovie, setRecommendMovie] = useState<Movie | null>(null);
 
   // 계정 정보 수정 상태
   const [username, setUsername] = useState(userInfo?.username || "");
@@ -35,20 +40,9 @@ export function MyPage({ onNavigate }: MyPageProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // 랜덤 추천 영화
-  useEffect(() => {
-    if (!token) return;
-    setLoading(true);
-    axios
-      .get("http://localhost:8080/api/movies/random", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setRandomMovie(res.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [token]);
+  const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500"; // 포스터 절대 URL
 
-  // 북마크 목록 가져오기
+  // 즐겨찾기 목록 가져오기
   const fetchBookmarks = () => {
     if (!token) return;
     axios
@@ -59,8 +53,20 @@ export function MyPage({ onNavigate }: MyPageProps) {
       .catch(console.error);
   };
 
+  // 추천 영화 가져오기
+  const fetchRecommendMovie = () => {
+    if (!token) return;
+    axios
+      .get("http://localhost:8080/api/movies/random", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setRecommendMovie(res.data))
+      .catch(console.error);
+  };
+
   useEffect(() => {
     fetchBookmarks();
+    fetchRecommendMovie();
   }, [token]);
 
   // 북마크 토글
@@ -77,10 +83,14 @@ export function MyPage({ onNavigate }: MyPageProps) {
         .catch(console.error);
     } else {
       axios
-        .post(`http://localhost:8080/api/bookmarks`, null, {
-          params: { movieIdx },
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        .post(
+          `http://localhost:8080/api/bookmarks`,
+          null,
+          {
+            params: { movieIdx },
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
         .then(() => fetchBookmarks())
         .catch(console.error);
     }
@@ -168,14 +178,70 @@ export function MyPage({ onNavigate }: MyPageProps) {
             <TabsTrigger value="settings">계정 설정</TabsTrigger>
           </TabsList>
 
-          {/* 계정 설정 탭 */}
+          {/* 추천 영화 */}
+          <TabsContent value="recommend">
+            {recommendMovie ? (
+              <Card>
+                <CardContent className="flex items-center space-x-4">
+                  <img
+                    src={recommendMovie.posterPath ? `${TMDB_BASE_URL}${recommendMovie.posterPath}` : "/default.jpg"}
+                    alt={recommendMovie.title}
+                    className="w-32 h-48 object-cover rounded-md"
+                  />
+                  <div>
+                    <h2 className="text-lg font-bold">{recommendMovie.title}</h2>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => toggleBookmark(recommendMovie.movieIdx)}
+                    >
+                      <Heart className="w-4 h-4 mr-1" /> 즐겨찾기
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <p>추천 영화가 없습니다.</p>
+            )}
+          </TabsContent>
+
+          {/* 즐겨찾기 */}
+          <TabsContent value="favorites">
+            {bookmarks.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {bookmarks.map((b) => (
+                  <Card key={b.bookmarkIdx}>
+                    <img
+                      src={b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"}
+                      alt={b.title}
+                      className="w-full h-48 object-cover rounded-md"
+                    />
+                    <CardContent>
+                      <h3 className="font-bold">{b.title}</h3>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => toggleBookmark(b.movieIdx)}
+                      >
+                        <Heart className="w-4 h-4 mr-1" /> 삭제
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p>즐겨찾기가 없습니다.</p>
+            )}
+          </TabsContent>
+
+          {/* 계정 설정 */}
           <TabsContent value="settings">
             <Card>
               <CardHeader>
                 <CardTitle>계정 정보</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* 아이디 (수정불가) */}
                 <div className="space-y-2">
                   <Label htmlFor="userid">아이디</Label>
                   <Input id="userid" value={userInfo?.userId || ""} readOnly />
@@ -262,8 +328,6 @@ export function MyPage({ onNavigate }: MyPageProps) {
                     </Button>
                   </div>
                 </div>
-
-                <Separator />
               </CardContent>
             </Card>
           </TabsContent>
