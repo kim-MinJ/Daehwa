@@ -24,6 +24,11 @@ public class AuthController {
         // 회원가입
         @PostMapping("/register")
         public ResponseEntity<?> register(@RequestBody UsersDto dto) {
+
+                System.out.println("회원가입 userId: " + dto.getUserId());
+                System.out.println("회원가입 username: " + dto.getUsername());
+                System.out.println("회원가입 password: " + dto.getPassword());
+
                 if (usersRepository.existsById(dto.getUserId())) {
                         return ResponseEntity.badRequest()
                                         .body(Map.of("message", "이미 존재하는 아이디입니다."));
@@ -56,6 +61,11 @@ public class AuthController {
         public ResponseEntity<?> login(@RequestBody UsersDto dto) {
                 UsersEntity user = usersRepository.findById(dto.getUserId())
                                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+                System.out.println("회원가입 userId: " + dto.getUserId());
+                System.out.println("회원가입 username: " + dto.getUsername());
+                System.out.println("회원가입 password (원문): " + dto.getPassword());
+                System.out.println("회원가입 password (암호화): " + passwordEncoder.encode(dto.getPassword()));
 
                 if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
                         return ResponseEntity.badRequest()

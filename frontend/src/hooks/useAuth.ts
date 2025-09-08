@@ -61,7 +61,7 @@ export function useAuth() {
   };
 
   // 회원가입
-  const register = async (userId: string, password: string, username: string) => {
+  const register = async (userId: string, username: string, password: string) => {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
