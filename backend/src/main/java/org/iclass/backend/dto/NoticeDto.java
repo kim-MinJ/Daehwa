@@ -2,8 +2,8 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDateTime;
 
-import org.iclass.backend.entity.NoticeEntity;
-import org.iclass.backend.entity.UsersEntity;
+import org.iclass.backend.asdf.NoticeEntity;
+import org.iclass.backend.asdf.UsersEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;

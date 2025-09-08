@@ -3,10 +3,10 @@ package org.iclass.backend.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.iclass.backend.asdf.BookMarkEntity;
+import org.iclass.backend.asdf.MovieInfoEntity;
+import org.iclass.backend.asdf.UsersEntity;
 import org.iclass.backend.dto.BookMarkDto;
-import org.iclass.backend.entity.BookMarkEntity;
-import org.iclass.backend.entity.MovieInfoEntity;
-import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.BookmarkRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.repository.UsersRepository;

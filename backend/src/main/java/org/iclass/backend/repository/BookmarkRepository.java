@@ -2,9 +2,9 @@ package org.iclass.backend.repository;
 
 import java.util.List;
 
-import org.iclass.backend.entity.BookMarkEntity;
-import org.iclass.backend.entity.MovieInfoEntity;
-import org.iclass.backend.entity.UsersEntity;
+import org.iclass.backend.asdf.BookMarkEntity;
+import org.iclass.backend.asdf.MovieInfoEntity;
+import org.iclass.backend.asdf.UsersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

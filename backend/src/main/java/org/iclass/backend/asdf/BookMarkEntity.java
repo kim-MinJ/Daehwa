@@ -1,4 +1,4 @@
-package org.iclass.backend.entity;
+package org.iclass.backend.asdf;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,24 +17,25 @@ import lombok.ToString;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Builder
 @Entity
-@Table(name = "MOVIE_GENRES")
-public class MovieGenresEntity {
+@Table(name = "BOOKMARK")
+public class BookMarkEntity {
 
   @Id
-  @Column(name = "MG_idx")
+  @Column(name = "bookmark_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long mgIdx;
+  private Long bookmarkIdx;
+
+  @ManyToOne
+  @JoinColumn(name = "user_id", nullable = false)
+  private UsersEntity user;
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
   private MovieInfoEntity movie;
-
-  @ManyToOne
-  @JoinColumn(name = "genre_id", referencedColumnName = "genre_idx", nullable = false)
-  private GenresEntity genre;
+  // 09.07 추가
 }

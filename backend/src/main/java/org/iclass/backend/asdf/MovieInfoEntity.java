@@ -1,4 +1,4 @@
-package org.iclass.backend.entity;
+package org.iclass.backend.asdf;
 
 import java.time.LocalDate;
 

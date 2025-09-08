@@ -2,8 +2,8 @@ package org.iclass.backend.service;
 
 import java.util.List;
 
+import org.iclass.backend.asdf.UsersEntity;
 import org.iclass.backend.dto.UsersDto;
-import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtUtil;
 import org.springframework.stereotype.Service;

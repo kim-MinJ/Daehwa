@@ -1,7 +1,7 @@
 package org.iclass.backend.dto;
 
-import org.iclass.backend.entity.VideosEntity;
-import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.asdf.MovieInfoEntity;
+import org.iclass.backend.asdf.VideosEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;

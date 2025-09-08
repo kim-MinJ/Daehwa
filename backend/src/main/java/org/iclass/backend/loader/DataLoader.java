@@ -16,10 +16,8 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        genresSave.fetchAndSaveGenres();         // Genres 저장
-        movieInfoSave.fetchAndSaveAllPages();    // MovieInfo, MovieGenres 저장
-
-
+        genresSave.fetchAndSaveGenres(); // Genres 저장
+        movieInfoSave.fetchAndSaveAllPages(); // MovieInfo, MovieGenres 저장
 
         // DB 에 데이터 저장하고 싶으면 주석 풀기
     }

@@ -1,6 +1,6 @@
-package org.iclass.backend.entity;
+package org.iclass.backend.asdf;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,25 +24,26 @@ import lombok.ToString;
 @ToString
 @Builder
 @Entity
-@Table(name = "NOTICE")
-public class NoticeEntity {
+@Table(name = "ARTICLES")
+public class ArticlesEntity {
 
   @Id
-  @Column(name = "notice_idx")
+  @Column(name = "articles_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long noticeIdx;
+  private Long articlesIdx;
 
   @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
-  private UsersEntity user;
+  @JoinColumn(name = "movie_idx", nullable = false)
+  private MovieInfoEntity movie;
 
-  @Column(nullable = false, length = 255)
   private String title;
 
-  @Column(nullable = false, length = 2000)
-  private String content;
+  @Column(name = "source_name")
+  private String sourceName;
 
-  @Column(name = "created_date")
-  @Builder.Default
-  private LocalDateTime createdDate = LocalDateTime.now();
+  @Column(name = "article_url")
+  private String articleUrl;
+
+  @Column(name = "published_at")
+  private LocalDate publishedAt;
 }

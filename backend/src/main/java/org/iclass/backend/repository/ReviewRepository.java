@@ -3,8 +3,8 @@ package org.iclass.backend.repository;
 import java.util.List;
 import java.util.Optional;
 
-import org.iclass.backend.entity.ReviewEntity;
-import org.iclass.backend.entity.UsersEntity;
+import org.iclass.backend.asdf.ReviewEntity;
+import org.iclass.backend.asdf.UsersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

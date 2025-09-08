@@ -1,4 +1,4 @@
-package org.iclass.backend.entity;
+package org.iclass.backend.asdf;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,31 +13,34 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "MOVIE_CREW")
+@Table(name = "MOVIE_CAST")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MovieCrewEntity {
+public class MovieCastEntity {
 
     @Id
-    @Column(name = "CREDIT_IDX")
+    @Column(name = "CAST_IDX")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long creditIdx;
+    private Long castIdx;
 
     @Column(name = "TMDB_MOVIE_ID", nullable = false)
     private Long tmdbMovieId;
 
-    @Column(name = "TMDB_CREW_ID")
-    private Long tmdbCrewId;
+    @Column(name = "TMDB_CAST_ID", nullable = false)
+    private Long tmdbCastId;
 
-    @Column(name = "CREW_NAME", length = 255)
-    private String crewName;
+    @Column(name = "CHARACTER", length = 255)
+    private String character;
 
-    @Column(name = "CREW_PROFILE_PATH", length = 255)
-    private String crewProfilePath;
+    @Column(name = "CAST_NAME", length = 255)
+    private String castName;
 
-    @Column(name = "JOB", length = 255)
-    private String job;
+    @Column(name = "CAST_PROFILE_PATH", length = 255)
+    private String castProfilePath;
+
+    @Column(name = "CREDIT_ORDER")
+    private Integer creditOrder;
 }

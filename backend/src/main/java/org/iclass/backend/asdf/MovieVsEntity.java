@@ -1,4 +1,4 @@
-package org.iclass.backend.entity;
+package org.iclass.backend.asdf;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,30 +15,30 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@Setter
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @Builder
 @Entity
-@Table(name = "MOVIE_VOTE")
-public class MovieVoteEntity {
+@Table(name = "MOVIE_VS")
+public class MovieVsEntity {
 
   @Id
-  @Column(name = "vote_idx")
+  @Column(name = "VS_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long voteIdx;
+  private Long vsIdx;
 
   @ManyToOne
-  @JoinColumn(name = "movie_idx", nullable = false)
-  private MovieInfoEntity movie;
+  @JoinColumn(name = "movie_VS1", nullable = false)
+  private MovieInfoEntity movieVs1;
 
   @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
-  private UsersEntity user;
+  @JoinColumn(name = "movie_VS2", nullable = false)
+  private MovieInfoEntity movieVs2;
 
-  @ManyToOne
-  @JoinColumn(name = "VS_idx", nullable = false)
-  private MovieVsEntity movieVS;
+  @Column
+  @Builder.Default
+  private Integer active = 0;
 }

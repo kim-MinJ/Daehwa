@@ -2,9 +2,9 @@ package org.iclass.backend.service;
 
 import java.time.LocalDateTime;
 
+import org.iclass.backend.asdf.MovieInfoEntity;
+import org.iclass.backend.asdf.RankingEntity;
 import org.iclass.backend.dto.RankingDto;
-import org.iclass.backend.entity.MovieInfoEntity;
-import org.iclass.backend.entity.RankingEntity;
 import org.iclass.backend.repository.RankingRepository;
 import org.iclass.backend.repository.ReviewRepository;
 import org.springframework.stereotype.Service;

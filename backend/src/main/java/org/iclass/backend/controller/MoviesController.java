@@ -1,7 +1,7 @@
 package org.iclass.backend.controller;
 
+import org.iclass.backend.asdf.MovieInfoEntity;
 import org.iclass.backend.dto.MovieInfoDto;
-import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.service.MoviesService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
