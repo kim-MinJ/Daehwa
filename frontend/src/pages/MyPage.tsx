@@ -5,11 +5,11 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Separator } from "../components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
 import { ArrowLeft, Edit3, Settings, Calendar, Heart } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "../components/ui/dialog";
 
 interface MyPageProps {
   onNavigate: (page: string) => void;
@@ -33,14 +33,15 @@ export function MyPage({ onNavigate }: MyPageProps) {
   const { token, userInfo, logout } = useAuth();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [recommendMovies, setRecommendMovies] = useState<Movie[]>([]);
-
-  // 계정 정보 수정 상태
   const [username, setUsername] = useState(userInfo?.username || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500"; // 포스터 절대 URL
+  const [adminCode, setAdminCode] = useState("");
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+
+  const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
   // 북마크 목록 가져오기
   const fetchBookmarks = () => {
@@ -107,10 +108,51 @@ export function MyPage({ onNavigate }: MyPageProps) {
           <Button variant="ghost" size="sm" onClick={() => onNavigate("main")}>
             <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
           </Button>
+
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-    <Edit3 className="w-4 h-4 mr-2" /> 관리자 모드
-  </Button>
+            {/* 관리자 모드 버튼 + 모달 */}
+            <Dialog open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Settings className="w-4 h-4 mr-2" /> 관리자
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-[425px]">
+  <div className="bg-white p-6 rounded-lg shadow space-y-4">
+    <DialogHeader>
+      <DialogTitle>관리자 모드</DialogTitle>
+    </DialogHeader>
+    <p>관리자 코드를 입력하세요.</p>
+    <Input
+      type="password"
+      placeholder="관리자 코드 입력"
+      value={adminCode}
+      onChange={(e) => setAdminCode(e.target.value)}
+    />
+    <div className="flex justify-end gap-2">
+      <DialogClose asChild>
+        <Button variant="outline">취소</Button>
+      </DialogClose>
+      <Button
+        onClick={() => {
+          if (adminCode === "YOUR_ADMIN_CODE") {
+            alert("관리자 모드 진입 성공!");
+          } else {
+            alert("잘못된 관리자 코드입니다.");
+          }
+          setAdminCode("");
+          setIsAdminModalOpen(false);
+        }}
+      >
+        확인
+      </Button>
+    </div>
+  </div>
+</DialogContent>
+
+            </Dialog>
+
             <Button
               variant="outline"
               size="sm"
