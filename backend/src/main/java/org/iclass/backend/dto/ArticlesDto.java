@@ -1,6 +1,6 @@
 package org.iclass.backend.dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.iclass.backend.entity.ArticlesEntity;
 import org.iclass.backend.entity.MovieInfoEntity;
@@ -26,7 +26,7 @@ public class ArticlesDto {
     private String title;
     private String sourceName;
     private String articleUrl;
-    private LocalDate publishedAt;
+    private LocalDateTime publishedAt;
 
     // ✅ Entity → DTO 변환
     public static ArticlesDto of(ArticlesEntity entity) {
