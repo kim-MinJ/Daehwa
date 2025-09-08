@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.iclass.backend.asdf.MovieInfoEntity;
-import org.iclass.backend.asdf.MovieVoteEntity;
-import org.iclass.backend.asdf.MovieVsEntity;
-import org.iclass.backend.asdf.UsersEntity;
 import org.iclass.backend.dto.MovieVoteDto;
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.entity.MovieVoteEntity;
+import org.iclass.backend.entity.MovieVsEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.repository.MovieVSRepository;
 import org.iclass.backend.repository.MovieVoteRepository;

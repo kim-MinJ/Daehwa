@@ -1,4 +1,4 @@
-package org.iclass.backend.asdf;
+package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -2,8 +2,8 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDate;
 
-import org.iclass.backend.asdf.ArticlesEntity;
-import org.iclass.backend.asdf.MovieInfoEntity;
+import org.iclass.backend.entity.ArticlesEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;

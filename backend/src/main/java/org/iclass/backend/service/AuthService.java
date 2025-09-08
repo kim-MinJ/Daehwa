@@ -2,8 +2,8 @@ package org.iclass.backend.service;
 
 import java.time.LocalDateTime;
 
-import org.iclass.backend.asdf.UsersEntity;
 import org.iclass.backend.dto.UsersDto;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;

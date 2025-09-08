@@ -2,9 +2,9 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDateTime;
 
-import org.iclass.backend.asdf.MovieInfoEntity;
-import org.iclass.backend.asdf.ReviewEntity;
-import org.iclass.backend.asdf.UsersEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.entity.ReviewEntity;
+import org.iclass.backend.entity.UsersEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
