@@ -1,6 +1,6 @@
 package org.iclass.backend.service.save;
 
-import org.iclass.backend.asdf.GenresEntity;
+import org.iclass.backend.entity.GenresEntity;
 import org.iclass.backend.repository.GenresRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

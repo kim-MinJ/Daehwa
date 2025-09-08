@@ -1,7 +1,7 @@
 package org.iclass.backend.dto;
 
 
-import org.iclass.backend.asdf.GenresEntity;
+import org.iclass.backend.entity.GenresEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;

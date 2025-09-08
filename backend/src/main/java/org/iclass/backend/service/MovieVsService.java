@@ -3,9 +3,9 @@ package org.iclass.backend.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.iclass.backend.asdf.MovieInfoEntity;
-import org.iclass.backend.asdf.MovieVsEntity;
 import org.iclass.backend.dto.MovieVsDto;
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.entity.MovieVsEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.repository.MovieVSRepository;
 import org.springframework.stereotype.Service;

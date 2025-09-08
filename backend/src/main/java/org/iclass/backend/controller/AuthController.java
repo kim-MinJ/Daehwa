@@ -3,8 +3,8 @@ package org.iclass.backend.controller;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import org.iclass.backend.asdf.UsersEntity;
 import org.iclass.backend.dto.UsersDto;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtTokenProvider;
 import org.springframework.http.ResponseEntity;

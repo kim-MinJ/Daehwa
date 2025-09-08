@@ -1,6 +1,6 @@
 package org.iclass.backend.dto;
 
-import org.iclass.backend.asdf.MovieCrewEntity;
+import org.iclass.backend.entity.MovieCrewEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;

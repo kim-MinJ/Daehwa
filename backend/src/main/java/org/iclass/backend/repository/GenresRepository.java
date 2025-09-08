@@ -2,7 +2,7 @@ package org.iclass.backend.repository;
 
 import java.util.Optional;
 
-import org.iclass.backend.asdf.GenresEntity;
+import org.iclass.backend.entity.GenresEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

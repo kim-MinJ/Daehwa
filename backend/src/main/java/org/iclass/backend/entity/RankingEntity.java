@@ -1,4 +1,6 @@
-package org.iclass.backend.asdf;
+package org.iclass.backend.entity;
+
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,30 +17,29 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@Setter
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @Builder
 @Entity
-@Table(name = "MOVIE_VOTE")
-public class MovieVoteEntity {
+@Table(name = "RANKING")
+public class RankingEntity {
 
   @Id
-  @Column(name = "vote_idx")
+  @Column(name = "ranking_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long voteIdx;
+  private Long rankingIdx;
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
   private MovieInfoEntity movie;
 
-  @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
-  private UsersEntity user;
+  @Column(name = "ranking_count")
+  private Double rankingCount;
 
-  @ManyToOne
-  @JoinColumn(name = "VS_idx", nullable = false)
-  private MovieVsEntity movieVS;
+  @Column(name = "created_date")
+  @Builder.Default
+  private LocalDateTime createdDate = LocalDateTime.now();
 }

@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.iclass.backend.asdf.MovieGenresEntity;
-import org.iclass.backend.asdf.MovieInfoEntity;
+import org.iclass.backend.entity.MovieGenresEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.repository.GenresRepository;
 import org.iclass.backend.repository.MovieGenresRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
