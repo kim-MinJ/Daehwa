@@ -185,6 +185,7 @@ COMMENT ON COLUMN Bookmark.bookmark_idx IS '북마크 인덱스';
 
 COMMENT ON COLUMN Bookmark.userid IS '이메일주소';
 
+
 -- 1-7. Comments
 CREATE TABLE Comments
 (
