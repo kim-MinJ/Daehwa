@@ -223,13 +223,6 @@ export function MyPage({ onNavigate }: MyPageProps) {
                           : "정보 없음"}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span>선호 장르:</span>
-                      <div className="flex space-x-1">
-                        <Badge variant="secondary">액션</Badge>
-                        <Badge variant="secondary">SF</Badge>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
