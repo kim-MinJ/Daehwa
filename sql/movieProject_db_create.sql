@@ -63,6 +63,7 @@ COMMENT ON COLUMN People.profile_path IS '프로필 이미지 경로';
 
 COMMENT ON COLUMN People.popularity IS '인물 인기도';
 
+
 -- 1-3. Movie_Info
 CREATE TABLE Movie_Info
 (

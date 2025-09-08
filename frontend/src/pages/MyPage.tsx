@@ -70,6 +70,12 @@ export function MyPage({ onNavigate }: MyPageProps) {
     fetchRecommendMovies();
   }, [token]);
 
+  useEffect(() => {
+  if (userInfo?.username) {
+    setUsername(userInfo.username);
+  }
+}, [userInfo]);
+
   // 북마크 토글
   const toggleBookmark = (movieIdx: number) => {
     if (!token) return;
@@ -248,34 +254,34 @@ export function MyPage({ onNavigate }: MyPageProps) {
                 </div>
 
                 {/* 이름 수정 */}
-                <div className="space-y-2">
-                  <Label htmlFor="username">이름</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                    />
-                    <Button
-                      onClick={() => {
-                        if (!username.trim()) return alert("이름을 입력해주세요.");
-                        axios
-                          .put(
-                            "http://localhost:8080/api/users/update",
-                            { username },
-                            { headers: { Authorization: `Bearer ${token}` } }
-                          )
-                          .then(() => alert("이름이 변경되었습니다."))
-                          .catch((err) => {
-                            console.error(err);
-                            alert("이름 변경에 실패했습니다.");
-                          });
-                      }}
-                    >
-                      변경
-                    </Button>
-                  </div>
-                </div>
+<div className="space-y-2">
+  <Label htmlFor="username">이름</Label>
+  <div className="flex gap-2">
+    <Input
+      id="username"
+      value={username}
+      onChange={(e) => setUsername(e.target.value)}
+    />
+    <Button
+      onClick={() => {
+        if (!username.trim()) return alert("이름을 입력해주세요.");
+        axios
+          .put(
+            "http://localhost:8080/api/users/update",
+            { username },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+          .then(() => alert("이름이 변경되었습니다."))
+          .catch((err) => {
+            console.error(err);
+            alert("이름 변경에 실패했습니다.");
+          });
+      }}
+    >
+      변경
+    </Button>
+  </div>
+</div>
 
                 {/* 비밀번호 변경 */}
                 <div className="space-y-2">
