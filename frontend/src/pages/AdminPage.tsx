@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Edit, Trash2, Plus, Users, MessageSquare, FileText, Bell } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -10,6 +11,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useAuth } from '../hooks/useAuth';
 
 type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail' | 'search' | 'admin';
 
@@ -101,8 +103,18 @@ const sampleNotices: Notice[] = Array.from({ length: 10 }, (_, i) => ({
   status: ['published', 'draft'][Math.floor(Math.random() * 2)] as 'published' | 'draft',
 }));
 
-// AdminPage named export
 export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
+  const { userInfo, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // --- admin 접근 제한 ---
+  useEffect(() => {
+    if (!loading && (!userInfo || userInfo.role !== 'admin')) {
+      alert('관리자만 접근할 수 있습니다.');
+      navigate('/');
+    }
+  }, [userInfo, loading, navigate]);
+
   const [activeTab, setActiveTab] = useState('users');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -121,55 +133,50 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
   // 새 공지사항 작성 상태
   const [newNotice, setNewNotice] = useState({ title: '', content: '', isImportant: false });
 
-  // 검색 필터링 함수
-  const filterUsers = () => users.filter(user =>
-    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  // 검색 필터링
+  const filterUsers = () => users.filter(u =>
+    u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filterReviews = () => reviews.filter(r =>
+    r.movieTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filterPosts = () => posts.filter(p =>
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.author.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filterNotices = () => notices.filter(n =>
+    n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    n.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filterReviews = () => reviews.filter(review =>
-    review.movieTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    review.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // 삭제
+  const deleteUser = (id: string) => setUsers(users.filter(u => u.id !== id));
+  const deleteReview = (id: string) => setReviews(reviews.filter(r => r.id !== id));
+  const deletePost = (id: string) => setPosts(posts.filter(p => p.id !== id));
+  const deleteNotice = (id: string) => setNotices(notices.filter(n => n.id !== id));
 
-  const filterPosts = () => posts.filter(post =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.author.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filterNotices = () => notices.filter(notice =>
-    notice.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    notice.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // 삭제 함수
-  const deleteUser = (id: string) => setUsers(users.filter(user => user.id !== id));
-  const deleteReview = (id: string) => setReviews(reviews.filter(review => review.id !== id));
-  const deletePost = (id: string) => setPosts(posts.filter(post => post.id !== id));
-  const deleteNotice = (id: string) => setNotices(notices.filter(notice => notice.id !== id));
-
-  // 상태 업데이트
+  // 상태 변경
   const updateUserStatus = (id: string, status: 'active' | 'inactive' | 'banned') =>
-    setUsers(users.map(user => user.id === id ? { ...user, status } : user));
-
+    setUsers(users.map(u => u.id === id ? { ...u, status } : u));
   const updateReviewStatus = (id: string, status: 'approved' | 'pending' | 'rejected') =>
-    setReviews(reviews.map(review => review.id === id ? { ...review, status } : review));
+    setReviews(reviews.map(r => r.id === id ? { ...r, status } : r));
 
-  // 새 공지사항 작성
+  // 새 공지 작성
   const createNotice = () => {
-    if (newNotice.title && newNotice.content) {
-      const notice: Notice = {
-        id: `notice-${Date.now()}`,
-        title: newNotice.title,
-        content: newNotice.content,
-        author: 'admin',
-        date: new Date().toISOString().split('T')[0],
-        isImportant: newNotice.isImportant,
-        status: 'published',
-      };
-      setNotices([notice, ...notices]);
-      setNewNotice({ title: '', content: '', isImportant: false });
-    }
+    if (!newNotice.title || !newNotice.content) return;
+    const notice: Notice = {
+      id: `notice-${Date.now()}`,
+      title: newNotice.title,
+      content: newNotice.content,
+      author: 'admin',
+      date: new Date().toISOString().split('T')[0],
+      isImportant: newNotice.isImportant,
+      status: 'published',
+    };
+    setNotices([notice, ...notices]);
+    setNewNotice({ title: '', content: '', isImportant: false });
   };
 
   const getStatusBadge = (status: string, type: 'user' | 'review' | 'post' | 'notice') => {
@@ -179,17 +186,14 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
       post: { published: 'bg-green-600', draft: 'bg-yellow-600', deleted: 'bg-red-600' },
       notice: { published: 'bg-green-600', draft: 'bg-yellow-600' },
     };
-    return (
-      <Badge className={`${colorMap[type][status as keyof typeof colorMap[typeof type]]} text-white`}>
-        {status}
-      </Badge>
-    );
+    return <Badge className={`${colorMap[type][status as keyof typeof colorMap[typeof type]]} text-white`}>{status}</Badge>;
   };
+
+  if (loading) return <p>로딩 중...</p>;
 
   return (
     <div className="min-h-screen bg-white">
       <Header currentPage="admin" onNavigation={onNavigation} />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 페이지 헤더 */}
         <div className="mb-8">
