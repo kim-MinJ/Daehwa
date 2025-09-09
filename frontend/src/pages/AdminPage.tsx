@@ -1,9 +1,7 @@
-// src/pages/AdminPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Search } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import Header from "../components/Header";
@@ -32,44 +30,43 @@ export function AdminPage() {
   }, [userInfo, loading, navigate]);
 
   // --- Users API 호출 ---
-useEffect(() => {
-  const fetchUsers = async () => {
-    if (!token) return;
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!token) return;
 
-    try {
-      const res = await api.get("/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const res = await api.get("/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      const formattedUsers: User[] = res.data.map((u: any) => ({
-        id: u.userId,
-        username: u.username,
-        status:
-          u.status === 0
-            ? "active"
-            : u.status === 1
-            ? "inactive"
-            : "banned",
-        regDate:
-          u.regDate && !isNaN(Date.parse(u.regDate))
-            ? new Date(u.regDate).toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })
-            : "-", // null/잘못된 값도 안전하게 처리
-      }));
+        const formattedUsers: User[] = res.data.map((u: any) => ({
+          id: u.userId,
+          username: u.username,
+          status:
+            u.status === 0
+              ? "active"
+              : u.status === 1
+              ? "inactive"
+              : "banned",
+          regDate:
+            u.regDate && !isNaN(Date.parse(u.regDate))
+              ? new Date(u.regDate).toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })
+              : "-",
+        }));
 
-      setUsers(formattedUsers);
-    } catch (err: any) {
-      console.error(err);
-      alert("회원 목록을 가져오는 데 실패했습니다.");
-    }
-  };
+        setUsers(formattedUsers);
+      } catch (err: any) {
+        console.error(err);
+        alert("회원 목록을 가져오는 데 실패했습니다.");
+      }
+    };
 
-  fetchUsers();
-}, [token]);
-
+    fetchUsers();
+  }, [token]);
 
   // --- 삭제 ---
   const deleteUser = async (id: string) => {
@@ -78,33 +75,32 @@ useEffect(() => {
       await api.delete(`/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(users.filter(u => u.id !== id));
+      setUsers(prev => prev.filter(u => u.id !== id));
     } catch (err: any) {
       console.error(err.response?.status, err.response?.data || err);
       alert("삭제 실패");
     }
   };
 
- // --- 상태 변경 ---
-const updateUserStatus = async (id: string, status: User["status"]) => {
-  if (!token) return;
-  try {
-    const statusNum = status === "active" ? 0 : status === "inactive" ? 1 : 2;
+  // --- 상태 변경 ---
+  const updateUserStatus = async (id: string, status: User["status"]) => {
+    if (!token) return;
+    try {
+      const statusNum = status === "active" ? 0 : status === "inactive" ? 1 : 2;
 
-    // 서버에 PATCH 요청
-    await api.patch(
-      `/users/${id}/status`,
-      { status: statusNum },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      await api.patch(
+        `/users/${id}/status`,
+        { status: statusNum },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    // 프론트에도 상태 반영
-    setUsers(prev => prev.map(u => (u.id === id ? { ...u, status } : u)));
-  } catch (err: any) {
-    console.error(err.response?.status, err.response?.data || err);
-    alert("상태 변경 실패");
-  }
-};
+      // UI에도 바로 반영
+      setUsers(prev => prev.map(u => (u.id === id ? { ...u, status } : u)));
+    } catch (err: any) {
+      console.error(err.response?.status, err.response?.data || err);
+      alert("상태 변경 실패");
+    }
+  };
 
   if (loading) return <p>로딩 중...</p>;
 
@@ -113,7 +109,6 @@ const updateUserStatus = async (id: string, status: User["status"]) => {
       <Header currentPage="admin" onNavigation={() => {}} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 페이지 헤더 */}
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
@@ -121,7 +116,6 @@ const updateUserStatus = async (id: string, status: User["status"]) => {
           </div>
         </div>
 
-        {/* 검색바 */}
         <div className="mb-6 relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
@@ -133,25 +127,23 @@ const updateUserStatus = async (id: string, status: User["status"]) => {
           />
         </div>
 
-        {/* 탭 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users">회원 관리</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
- <AdminUsersTab
-  users={users}
-  searchQuery={searchQuery}
-  setEditingUser={setEditingUser}
-  deleteUser={deleteUser}
-  updateUserStatus={updateUserStatus}
-/>
-</TabsContent>
+            <AdminUsersTab
+              users={users}
+              searchQuery={searchQuery}
+              setEditingUser={setEditingUser}
+              deleteUser={deleteUser}
+              updateUserStatus={updateUserStatus}
+            />
+          </TabsContent>
         </Tabs>
       </div>
 
-      {/* 편집 모달 */}
       <AdminEditUserModal
         editingUser={editingUser}
         setEditingUser={setEditingUser}
