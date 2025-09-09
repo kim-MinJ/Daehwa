@@ -52,7 +52,7 @@ public class SecurityConfig {
     CorsConfiguration config = new CorsConfiguration();
     // 모든 도메인 허용
     config.setAllowedOriginPatterns(List.of("*"));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true); // 쿠키/인증 허용
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

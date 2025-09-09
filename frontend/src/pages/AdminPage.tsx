@@ -85,21 +85,26 @@ useEffect(() => {
     }
   };
 
-  // --- 상태 변경 ---
-  const updateUserStatus = async (id: string, status: User["status"]) => {
-    if (!token) return;
-    try {
-      await api.patch(
-        `/users/${id}/status`,
-        { status },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUsers(users.map(u => (u.id === id ? { ...u, status } : u)));
-    } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
-      alert("상태 변경 실패");
-    }
-  };
+ // --- 상태 변경 ---
+const updateUserStatus = async (id: string, status: User["status"]) => {
+  if (!token) return;
+  try {
+    const statusNum = status === "active" ? 0 : status === "inactive" ? 1 : 2;
+
+    // 서버에 PATCH 요청
+    await api.patch(
+      `/users/${id}/status`,
+      { status: statusNum },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    // 프론트에도 상태 반영
+    setUsers(prev => prev.map(u => (u.id === id ? { ...u, status } : u)));
+  } catch (err: any) {
+    console.error(err.response?.status, err.response?.data || err);
+    alert("상태 변경 실패");
+  }
+};
 
   if (loading) return <p>로딩 중...</p>;
 
@@ -135,7 +140,13 @@ useEffect(() => {
           </TabsList>
 
           <TabsContent value="users">
-  <AdminUsersTab setEditingUser={setEditingUser} />
+ <AdminUsersTab
+  users={users}
+  searchQuery={searchQuery}
+  setEditingUser={setEditingUser}
+  deleteUser={deleteUser}
+  updateUserStatus={updateUserStatus}
+/>
 </TabsContent>
         </Tabs>
       </div>

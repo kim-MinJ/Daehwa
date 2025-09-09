@@ -15,16 +15,19 @@ export default function AdminEditUserModal({
 }: Props) {
   const [status, setStatus] = useState<User["status"]>("active");
 
+  // editingUser가 바뀔 때만 초기화
   useEffect(() => {
-    if (editingUser) setStatus(editingUser.status);
-  }, [editingUser]);
-
-  const handleSave = () => {
     if (editingUser) {
-      updateUserStatus(editingUser.id, status);
-      setEditingUser(null);
+      setStatus(editingUser.status);
     }
-  };
+  }, [editingUser?.id]);
+
+ const handleSave = async () => {
+  if (editingUser) {
+    await updateUserStatus(editingUser.id, status); // 서버 반영 후
+    setEditingUser(null); // 모달 닫기
+  }
+};
 
   if (!editingUser) return null;
 
@@ -33,7 +36,7 @@ export default function AdminEditUserModal({
       {/* 배경 */}
       <div className="modal-backdrop"></div>
 
-      {/* 모달 */}
+      {/* 모달 박스 */}
       <div className="modal-box">
         <h2 className="modal-title">회원 편집</h2>
 
@@ -55,7 +58,15 @@ export default function AdminEditUserModal({
 
           <div>
             <label>상태</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value as User["status"])}>
+            <select
+              value={status}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "active" || value === "inactive" || value === "banned") {
+                  setStatus(value);
+                }
+              }}
+            >
               <option value="active">정상</option>
               <option value="inactive">접속제한</option>
               <option value="banned">정지</option>

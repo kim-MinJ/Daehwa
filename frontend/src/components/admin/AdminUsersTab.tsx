@@ -25,7 +25,11 @@ const numberToStatus: Record<number, User["status"]> = {
 };
 
 interface AdminUsersTabProps {
+  users: User[];
+  searchQuery: string;
   setEditingUser: React.Dispatch<React.SetStateAction<User | null>>;
+  deleteUser: (id: string) => Promise<void>;
+  updateUserStatus: (id: string, status: User["status"]) => Promise<void>;
 }
 
 export default function AdminUsersTab({ setEditingUser }: AdminUsersTabProps) {
