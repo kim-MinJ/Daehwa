@@ -1,16 +1,18 @@
-// src/components/admin/AdminEditUserModal.tsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "../ui/dialog";
-import { Button } from "../ui/button";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { User } from "./types";
-import { useState, useEffect } from "react";
+import "/src/assets/AdminEditUserModal.css";
 
 interface Props {
   editingUser: User | null;
-  setEditingUser: (user: User | null) => void;
+  setEditingUser: Dispatch<SetStateAction<User | null>>;
   updateUserStatus: (id: string, status: User["status"]) => void;
 }
 
-export default function AdminEditUserModal({ editingUser, setEditingUser, updateUserStatus }: Props) {
+export default function AdminEditUserModal({
+  editingUser,
+  setEditingUser,
+  updateUserStatus,
+}: Props) {
   const [status, setStatus] = useState<User["status"]>("active");
 
   useEffect(() => {
@@ -27,47 +29,49 @@ export default function AdminEditUserModal({ editingUser, setEditingUser, update
   if (!editingUser) return null;
 
   return (
-    <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>회원 편집</DialogTitle>
-        </DialogHeader>
+    <div className="modal-overlay">
+      {/* 배경 */}
+      <div className="modal-backdrop"></div>
 
-        <div className="space-y-4 mt-2">
+      {/* 모달 */}
+      <div className="modal-box">
+        <h2 className="modal-title">회원 편집</h2>
+
+        <div className="modal-field">
           <div>
-            <label className="block font-medium text-gray-700">회원ID</label>
+            <label>회원ID</label>
             <p>{editingUser.id}</p>
           </div>
 
           <div>
-            <label className="block font-medium text-gray-700">이름</label>
+            <label>이름</label>
             <p>{editingUser.username}</p>
           </div>
 
           <div>
-            <label className="block font-medium text-gray-700">가입일</label>
+            <label>가입일</label>
             <p>{editingUser.regDate?.slice(0, 10) || "-"}</p>
           </div>
 
           <div>
-            <label className="block font-medium text-gray-700">상태</label>
-            <select
-              value={status}
-              onChange={e => setStatus(e.target.value as User["status"])}
-              className="mt-1 block w-full border rounded p-2"
-            >
-              <option value="active">활성</option>
-              <option value="inactive">비활성</option>
-              <option value="banned">차단</option>
+            <label>상태</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value as User["status"])}>
+              <option value="active">정상</option>
+              <option value="inactive">접속제한</option>
+              <option value="banned">정지</option>
             </select>
           </div>
         </div>
 
-        <DialogFooter className="mt-4">
-          <Button onClick={handleSave}>저장</Button>
-          <Button variant="outline" onClick={() => setEditingUser(null)}>취소</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div className="modal-buttons">
+          <button className="modal-save-btn" onClick={handleSave}>
+            저장
+          </button>
+          <button className="modal-cancel-btn" onClick={() => setEditingUser(null)}>
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

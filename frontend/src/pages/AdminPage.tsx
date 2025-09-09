@@ -135,14 +135,8 @@ useEffect(() => {
           </TabsList>
 
           <TabsContent value="users">
-            <AdminUsersTab
-              users={users}
-              searchQuery={searchQuery}
-              setEditingUser={setEditingUser}
-              deleteUser={deleteUser}
-              updateUserStatus={updateUserStatus}
-            />
-          </TabsContent>
+  <AdminUsersTab setEditingUser={setEditingUser} />
+</TabsContent>
         </Tabs>
       </div>
 
