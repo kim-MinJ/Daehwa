@@ -71,29 +71,23 @@ export function AdminPage() {
     }
   };
 
- // --- 상태 변경 ---
-const updateUserStatus = async (id: string, status: User["status"]) => {
-  if (!token) return;
-  try {
-    // status를 숫자로 변환
-    const statusNum = status === "active" ? 0 : status === "inactive" ? 1 : 2;
-
-    // 백엔드 호출
-    await api.patch(
-      `/users/${id}/status`,
-      { status: statusNum },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    // ✅ UI에 바로 반영
-    setUsers(prev =>
-      prev.map(u => (u.id === id ? { ...u, status } : u))
-    );
-  } catch (err: any) {
-    console.error(err.response?.status, err.response?.data || err);
-    alert("상태 변경 실패");
-  }
-};
+  // --- 상태 변경 ---
+  const updateUserStatus = async (id: string, status: User["status"]) => {
+    if (!token) return;
+    try {
+      // 상태를 숫자로 변환 후 백엔드 호출
+      const statusNum = status === "active" ? 0 : status === "inactive" ? 1 : 2;
+      await api.patch(
+        `/users/${id}/status`,
+        { status: statusNum },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUsers(users.map(u => (u.id === id ? { ...u, status } : u)));
+    } catch (err: any) {
+      console.error(err.response?.status, err.response?.data || err);
+      alert("상태 변경 실패");
+    }
+  };
 
   if (loading) return <p>로딩 중...</p>;
 
@@ -126,22 +120,21 @@ const updateUserStatus = async (id: string, status: User["status"]) => {
           </TabsList>
 
           <TabsContent value="users">
-            // AdminPage.tsx (핵심 부분)
-<AdminUsersTab
-  users={users} // AdminPage의 users 사용
-  searchQuery={searchQuery}
-  setEditingUser={setEditingUser}
-  updateUserStatus={updateUserStatus} // AdminPage의 updateUserStatus 사용
-/>
+            <AdminUsersTab
+              users={users}
+              searchQuery={searchQuery}
+              setEditingUser={setEditingUser}
+              updateUserStatus={updateUserStatus}
+            />
           </TabsContent>
         </Tabs>
       </div>
 
       <AdminEditUserModal
-  editingUser={editingUser}
-  setEditingUser={setEditingUser}
-  updateUserStatus={updateUserStatus} // 모달에서도 AdminPage 상태를 직접 업데이트
-/>
+        editingUser={editingUser}
+        setEditingUser={setEditingUser}
+        updateUserStatus={updateUserStatus}
+      />
 
       <Footer />
     </div>

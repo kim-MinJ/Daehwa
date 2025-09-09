@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Search } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import Header from "../components/Header";
@@ -116,33 +117,83 @@ export function AdminPage() {
           </div>
         </div>
 
-        <div className="mb-6 relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="검색어를 입력하세요"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        {/* 통계 카드 */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center">
+                        <Users className="h-8 w-8 text-blue-600" />
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-gray-600">총 회원수</p>
+                          <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  {/* <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center">
+                        <MessageSquare className="h-8 w-8 text-green-600" />
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-gray-600">총 리뷰수</p>
+                          <p className="text-2xl font-bold text-gray-900">{reviews.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center">
+                        <FileText className="h-8 w-8 text-purple-600" />
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-gray-600">총 게시글수</p>
+                          <p className="text-2xl font-bold text-gray-900">{posts.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center">
+                        <Bell className="h-8 w-8 text-orange-600" />
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-gray-600">공지사항</p>
+                          <p className="text-2xl font-bold text-gray-900">{notices.length}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card> */}
+                </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="users">회원 관리</TabsTrigger>
-            <TabsTrigger value="reviews">리뷰 관리</TabsTrigger>
-            <TabsTrigger value="comments">댓글 관리</TabsTrigger>
-            <TabsTrigger value="votes">투표 관리</TabsTrigger>
-          </TabsList>
+        {/* 검색바 */}
+<div className="mb-6 relative max-w-md">
+  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+  <Input
+    type="text"
+    placeholder="검색어를 입력하세요"
+    value={searchQuery}
+    onChange={e => setSearchQuery(e.target.value)}
+    className="pl-10"
+  />
+</div>
 
-          <TabsContent value="users">
-            <AdminUsersTab
-              users={users}
-              searchQuery={searchQuery}
-              setEditingUser={setEditingUser}
-              updateUserStatus={updateUserStatus}
-            />
-          </TabsContent>
+        {/* 탭 */}
+<Tabs value={activeTab} onValueChange={setActiveTab}>
+  <TabsList className="grid w-full grid-cols-4">
+    <TabsTrigger value="users">회원 관리</TabsTrigger>
+    <TabsTrigger value="reviews">리뷰 관리</TabsTrigger>
+    <TabsTrigger value="comments">댓글 관리</TabsTrigger>
+    <TabsTrigger value="votes">투표 관리</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="users">
+    <AdminUsersTab
+      users={users}
+      searchQuery={searchQuery} // 여기에서 검색어 전달
+      setEditingUser={setEditingUser}
+      updateUserStatus={updateUserStatus}
+    />
+  </TabsContent>
           
         </Tabs>
       </div>
