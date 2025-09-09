@@ -32,21 +32,41 @@ export function AdminPage() {
   }, [userInfo, loading, navigate]);
 
   // --- Users API 호출 ---
-  useEffect(() => {
-    const fetchUsers = async () => {
-      if (!token) return; // 토큰 없으면 호출하지 않음
-      try {
-        const res = await api.get<User[]>("/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUsers(res.data);
-      } catch (err: any) {
-        console.error(err.response?.status, err.response?.data || err);
-        alert("회원 목록을 가져오는 데 실패했습니다.");
-      }
-    };
-    fetchUsers();
-  }, [token]);
+useEffect(() => {
+  const fetchUsers = async () => {
+    if (!token) return; // 토큰 없으면 호출하지 않음
+    try {
+      const res = await api.get("/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // regDate를 YYYY-MM-DD 형식으로 변환
+      const formattedUsers: User[] = res.data.map((u: any) => ({
+        id: u.userId,
+        username: u.username,
+        status:
+          u.status === 0
+            ? "active"
+            : u.status === 1
+            ? "inactive"
+            : "banned",
+        regDate: u.regDate
+          ? new Date(u.regDate).toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })
+          : "-",
+      }));
+
+      setUsers(formattedUsers);
+    } catch (err: any) {
+      console.error(err.response?.status, err.response?.data || err);
+      alert("회원 목록을 가져오는 데 실패했습니다.");
+    }
+  };
+  fetchUsers();
+}, [token]);
 
   // --- 삭제 ---
   const deleteUser = async (id: string) => {
@@ -85,6 +105,7 @@ export function AdminPage() {
       <Header currentPage="admin" onNavigation={() => {}} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 페이지 헤더 */}
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
@@ -92,6 +113,7 @@ export function AdminPage() {
           </div>
         </div>
 
+        {/* 검색바 */}
         <div className="mb-6 relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
@@ -103,6 +125,7 @@ export function AdminPage() {
           />
         </div>
 
+        {/* 탭 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users">회원 관리</TabsTrigger>
@@ -120,6 +143,7 @@ export function AdminPage() {
         </Tabs>
       </div>
 
+      {/* 편집 모달 */}
       <AdminEditUserModal
         editingUser={editingUser}
         setEditingUser={setEditingUser}

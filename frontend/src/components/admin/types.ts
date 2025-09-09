@@ -5,12 +5,10 @@ export type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail' | 
 
 // --- 유저 타입 ---
 export interface User {
-  id: string;
+  id: string; // userId와 매칭
   username: string;
-  email: string;
-  joinDate: string; // YYYY-MM-DD
-  status: 'active' | 'inactive' | 'banned';
-  reviewCount: number;
+  status: "active" | "inactive" | "banned";
+  regDate: string; // ISO 문자열, 백엔드 LocalDateTime → string으로 변환
 }
 
 // --- 리뷰 타입 ---
