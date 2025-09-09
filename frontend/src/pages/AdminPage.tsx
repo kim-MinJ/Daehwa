@@ -60,6 +60,22 @@ interface Notice {
   status: 'published' | 'draft';
 }
 
+interface Vote {
+  id: string;
+  movieTitle: string;
+  voter: string;
+  voteCount: number;
+  status: 'active' | 'inactive';
+}
+
+const sampleVotes: Vote[] = Array.from({ length: 15 }, (_, i) => ({
+  id: `vote-${i + 1}`,
+  movieTitle: ['기생충', '올드보이', '부산행'][Math.floor(Math.random() * 3)],
+  voter: `user${Math.floor(Math.random() * 25) + 1}`,
+  voteCount: Math.floor(Math.random() * 100),
+  status: ['active', 'inactive'][Math.floor(Math.random() * 2)] as 'active' | 'inactive',
+}));
+
 // 샘플 데이터
 const sampleUsers: User[] = Array.from({ length: 25 }, (_, i) => ({
   id: `user-${i + 1}`,
@@ -123,6 +139,7 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
   const [reviews, setReviews] = useState(sampleReviews);
   const [posts, setPosts] = useState(samplePosts);
   const [notices, setNotices] = useState(sampleNotices);
+  const [votes, setVotes] = useState(sampleVotes);
 
   // 편집 모달 상태
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -150,18 +167,25 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
     n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     n.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const filterVotes = () => votes.filter(v =>
+  v.movieTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  v.voter.toLowerCase().includes(searchQuery.toLowerCase())
+);
 
-  // 삭제
-  const deleteUser = (id: string) => setUsers(users.filter(u => u.id !== id));
-  const deleteReview = (id: string) => setReviews(reviews.filter(r => r.id !== id));
-  const deletePost = (id: string) => setPosts(posts.filter(p => p.id !== id));
-  const deleteNotice = (id: string) => setNotices(notices.filter(n => n.id !== id));
+// 삭제
+const deleteUser = (id: string) => setUsers(users.filter(u => u.id !== id));
+const deleteReview = (id: string) => setReviews(reviews.filter(r => r.id !== id));
+const deletePost = (id: string) => setPosts(posts.filter(p => p.id !== id));
+const deleteNotice = (id: string) => setNotices(notices.filter(n => n.id !== id));
+const deleteVote = (id: string) => setVotes(votes.filter(v => v.id !== id));
 
-  // 상태 변경
-  const updateUserStatus = (id: string, status: 'active' | 'inactive' | 'banned') =>
-    setUsers(users.map(u => u.id === id ? { ...u, status } : u));
-  const updateReviewStatus = (id: string, status: 'approved' | 'pending' | 'rejected') =>
-    setReviews(reviews.map(r => r.id === id ? { ...r, status } : r));
+// 상태 변경
+const updateUserStatus = (id: string, status: 'active' | 'inactive' | 'banned') =>
+  setUsers(users.map(u => u.id === id ? { ...u, status } : u));
+const updateReviewStatus = (id: string, status: 'approved' | 'pending' | 'rejected') =>
+  setReviews(reviews.map(r => r.id === id ? { ...r, status } : r));
+const updateVoteStatus = (id: string, status: 'active' | 'inactive') =>
+  setVotes(votes.map(v => v.id === id ? { ...v, status } : v));
 
   // 새 공지 작성
   const createNotice = () => {
@@ -257,14 +281,14 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
 
   <Card
     className="cursor-pointer hover:shadow-lg transition-shadow"
-    onClick={() => setActiveTab('notices')}
+    onClick={() => setActiveTab('votes')}
   >
     <CardContent className="p-6">
       <div className="flex items-center">
         <Bell className="h-8 w-8 text-orange-600" />
         <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">공지사항</p>
-          <p className="text-2xl font-bold text-gray-900">{notices.length}</p>
+          <p className="text-sm font-medium text-gray-600">투표수</p>
+          <p className="text-2xl font-bold text-gray-900">{votes.length}</p>
         </div>
       </div>
     </CardContent>
@@ -293,7 +317,7 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
             <TabsTrigger value="users">회원 관리</TabsTrigger>
             <TabsTrigger value="reviews">리뷰 관리</TabsTrigger>
             <TabsTrigger value="posts">게시글 관리</TabsTrigger>
-            <TabsTrigger value="notices">공지사항 관리</TabsTrigger>
+            <TabsTrigger value="votes">투표 관리</TabsTrigger>
           </TabsList>
 
           {/* 회원 관리 탭 */}
@@ -464,105 +488,63 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
             </Card>
           </TabsContent>
 
-          {/* 공지사항 관리 탭 */}
-          <TabsContent value="notices">
-            <div className="space-y-6">
-              {/* 새 공지사항 작성 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>새 공지사항 작성</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="notice-title">제목</Label>
-                    <Input
-                      id="notice-title"
-                      value={newNotice.title}
-                      onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
-                      placeholder="공지사항 제목을 입력하세요"
-                    />
+         <TabsContent value="votes">
+  <Card>
+    <CardHeader>
+      <CardTitle>투표 관리</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left p-4">영화</th>
+              <th className="text-left p-4">투표자</th>
+              <th className="text-left p-4">투표수</th>
+              <th className="text-left p-4">상태</th>
+              <th className="text-left p-4">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filterVotes().map((vote) => (
+              <tr key={vote.id} className="border-b hover:bg-gray-50">
+                <td className="p-4 font-medium">{vote.movieTitle}</td>
+                <td className="p-4">{vote.voter}</td>
+                <td className="p-4">{vote.voteCount}</td>
+                <td className="p-4">{getStatusBadge(vote.status, 'notice')}</td>
+                <td className="p-4">
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={vote.status === 'active' ? 'default' : 'outline'}
+                      onClick={() => updateVoteStatus(vote.id, 'active')}
+                    >
+                      활성
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={vote.status === 'inactive' ? 'destructive' : 'outline'}
+                      onClick={() => updateVoteStatus(vote.id, 'inactive')}
+                    >
+                      비활성
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteVote(vote.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div>
-                    <Label htmlFor="notice-content">내용</Label>
-                    <Textarea
-                      id="notice-content"
-                      value={newNotice.content}
-                      onChange={(e) => setNewNotice({ ...newNotice, content: e.target.value })}
-                      placeholder="공지사항 내용을 입력하세요"
-                      rows={4}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="important"
-                      checked={newNotice.isImportant}
-                      onChange={(e) => setNewNotice({ ...newNotice, isImportant: e.target.checked })}
-                    />
-                    <Label htmlFor="important">중요 공지사항</Label>
-                  </div>
-                  <Button onClick={createNotice} className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    공지사항 작성
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* 공지사항 목록 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>공지사항 목록</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left p-4">제목</th>
-                          <th className="text-left p-4">작성자</th>
-                          <th className="text-left p-4">작성일</th>
-                          <th className="text-left p-4">중요</th>
-                          <th className="text-left p-4">상태</th>
-                          <th className="text-left p-4">관리</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filterNotices().map((notice) => (
-                          <tr key={notice.id} className="border-b hover:bg-gray-50">
-                            <td className="p-4 font-medium">{notice.title}</td>
-                            <td className="p-4">{notice.author}</td>
-                            <td className="p-4">{notice.date}</td>
-                            <td className="p-4">
-                              {notice.isImportant && <Badge className="bg-red-600 text-white hover:bg-red-600">중요</Badge>}
-                            </td>
-                            <td className="p-4">{getStatusBadge(notice.status, 'notice')}</td>
-                            <td className="p-4">
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingNotice(notice)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => deleteNotice(notice.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </CardContent>
+  </Card>
+</TabsContent>
         </Tabs>
       </div>
 
