@@ -7,9 +7,11 @@ import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { ArrowLeft, Settings } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { useAuth } from "../hooks/useAuth";
+import { Navigate, useNavigate } from "react-router-dom";
+import { Page } from "../components/types";
 
 interface MyPageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: Page) => void;
 } 
 
 interface Bookmark {
@@ -71,6 +73,15 @@ export function MyPage({ onNavigate }: MyPageProps) {
         .catch(console.error);
     }
   };
+function ReviewButton() {
+  const navigate = useNavigate();
+  return (
+    <Button size="sm" onClick={() => navigate("/reviews")}>
+      리뷰 작성
+    </Button>
+  );
+}
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -125,7 +136,7 @@ export function MyPage({ onNavigate }: MyPageProps) {
             )}
           </CardContent>
         </Card>
-
+<ReviewButton></ReviewButton>
         {/* 북마크 목록 테이블 */}
         <Card>
           <CardHeader><CardTitle>북마크 목록</CardTitle></CardHeader>
@@ -154,9 +165,10 @@ export function MyPage({ onNavigate }: MyPageProps) {
                         <Button size="sm" variant="destructive" onClick={() => toggleBookmark(b.movieIdx)}>
                           삭제
                         </Button>
+
                       </td>
                     </tr>
-                  ))}
+                  ))} 
                 </tbody>
               </table>
             )}
