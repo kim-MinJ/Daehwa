@@ -1,5 +1,6 @@
 package org.iclass.backend.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.iclass.backend.dto.UsersDto;
@@ -72,6 +73,16 @@ public class UsersController {
 
     return ResponseEntity.ok("비밀번호 변경 완료");
   }
+
+  @GetMapping
+public ResponseEntity<List<UsersDto>> getAllUsers(HttpServletRequest request) {
+    UsersDto currentUser = usersService.getUserFromToken(request);
+    if (currentUser == null || !"admin".equals(currentUser.getRole())) {
+        return ResponseEntity.status(403).build(); // 관리자 아니면 접근 불가
+    }
+    List<UsersDto> users = usersService.getAllUsers();
+    return ResponseEntity.ok(users);
+}
 
   // DTO 클래스 (컨트롤러 내부)
   public static class PasswordChangeRequest {

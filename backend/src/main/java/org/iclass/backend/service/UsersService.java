@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UsersService {
@@ -102,4 +103,15 @@ public class UsersService {
     return true;
   }
 
+  public List<UsersDto> getAllUsers() {
+    return usersRepository.findAll()
+        .stream()
+        .map(user -> UsersDto.builder()
+            .userId(user.getUserId())
+            .username(user.getUsername())
+            .role(user.getRole())
+            .status(user.getStatus())
+            .build())
+        .collect(Collectors.toList());
+  }
 }
