@@ -1,7 +1,7 @@
 // hooks/useAuth.ts
 import { useState, useEffect } from "react";
 
-const API_URL = "http://localhost:8080/api";
+const API_URL = "http://192.168.0.23:8080/api";
 
 export interface UserInfo {
   userId: string;
