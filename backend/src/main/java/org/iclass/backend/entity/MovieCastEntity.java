@@ -32,13 +32,13 @@ public class MovieCastEntity {
     @Column(name = "TMDB_CAST_ID", nullable = false)
     private Long tmdbCastId;
 
-    @Column(name = "CHARACTER", length = 255)
+    @Column(name = "CHARACTER", length = 1000)
     private String character;
 
-    @Column(name = "CAST_NAME", length = 255)
+    @Column(name = "CAST_NAME", length = 1000)
     private String castName;
 
-    @Column(name = "CAST_PROFILE_PATH", length = 255)
+    @Column(name = "CAST_PROFILE_PATH", length = 1000)
     private String castProfilePath;
 
     @Column(name = "CREDIT_ORDER")

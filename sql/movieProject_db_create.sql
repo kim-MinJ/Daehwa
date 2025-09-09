@@ -58,7 +58,7 @@ COMMENT ON COLUMN Articles.published_at IS '기사 발행일';
 CREATE TABLE Bookmark
 (
   bookmark_idx NUMBER        NOT NULL,
-  userid       VARCHAR2(100) NOT NULL,
+  user_id      VARCHAR2(100) NOT NULL,
   movie_idx    NUMBER        NOT NULL,
   CONSTRAINT PK_Bookmark PRIMARY KEY (bookmark_idx)
 );
@@ -67,7 +67,7 @@ COMMENT ON TABLE Bookmark IS '북마크';
 
 COMMENT ON COLUMN Bookmark.bookmark_idx IS '북마크 인덱스';
 
-COMMENT ON COLUMN Bookmark.userid IS '이메일주소';
+COMMENT ON COLUMN Bookmark.user_id IS '이메일주소';
 
 COMMENT ON COLUMN Bookmark.movie_idx IS '영화 인덱스';
 
@@ -75,7 +75,7 @@ COMMENT ON COLUMN Bookmark.movie_idx IS '영화 인덱스';
 CREATE TABLE Comments
 (
   comment_idx NUMBER              NOT NULL,
-  userid      VARCHAR2(100)       NOT NULL,
+  user_id     VARCHAR2(100)       NOT NULL,
   review_idx  NUMBER              NOT NULL,
   content     VARCHAR2(2000 CHAR) NOT NULL,
   created_at  DATE                DEFAULT sysdate,
@@ -87,7 +87,7 @@ COMMENT ON TABLE Comments IS '댓글';
 
 COMMENT ON COLUMN Comments.comment_idx IS '댓글 인덱스';
 
-COMMENT ON COLUMN Comments.userid IS '이메일주소';
+COMMENT ON COLUMN Comments.user_id IS '이메일주소';
 
 COMMENT ON COLUMN Comments.review_idx IS '리뷰 인덱스';
 
@@ -103,9 +103,9 @@ CREATE TABLE Movie_Info
   movie_idx     NUMBER              NOT NULL,
   tmdb_movie_id NUMBER              NOT NULL,
   title         VARCHAR2(500 CHAR) ,
-  popularity    NUMBER              DEFAULT 0,
+  popularity    BINARY_DOUBLE       DEFAULT 0,
   vote_count    NUMBER              DEFAULT 0,
-  vote_average  NUMBER              DEFAULT 0,
+  vote_average  BINARY_DOUBLE       DEFAULT 0,
   adult         NUMBER(1)           DEFAULT 0 NOT NULL,
   overview      VARCHAR2(2000 CHAR),
   backdrop_path VARCHAR2(255)      ,
@@ -146,7 +146,7 @@ CREATE TABLE Review
 (
   review_idx NUMBER              NOT NULL,
   movie_idx  NUMBER              NOT NULL,
-  userid     VARCHAR2(100)       NOT NULL,
+  user_id     VARCHAR2(100)       NOT NULL,
   content    VARCHAR2(2000 CHAR) NOT NULL,
   rating     NUMBER              DEFAULT 10 CHECK (rating BETWEEN 1 AND 10),
   created_at DATE                DEFAULT sysdate,
@@ -161,7 +161,7 @@ COMMENT ON COLUMN Review.review_idx IS '리뷰 인덱스';
 
 COMMENT ON COLUMN Review.movie_idx IS '영화 인덱스';
 
-COMMENT ON COLUMN Review.userid IS '이메일주소';
+COMMENT ON COLUMN Review.user_id IS '이메일주소';
 
 COMMENT ON COLUMN Review.content IS '리뷰 내용';
 
@@ -177,7 +177,7 @@ COMMENT ON COLUMN Review.isBlind IS '블라인드 (0: off, 1: on)';
 CREATE TABLE Notice
 (
   notice_idx   NUMBER              NOT NULL,
-  userid       VARCHAR2(100)       NOT NULL,
+  user_id       VARCHAR2(100)       NOT NULL,
   title        VARCHAR2(255)       NOT NULL,
   content      VARCHAR2(2000 CHAR) NOT NULL,
   created_date DATE                DEFAULT sysdate,
@@ -188,7 +188,7 @@ COMMENT ON TABLE Notice IS '공지사항';
 
 COMMENT ON COLUMN Notice.notice_idx IS '공지사항 인덱스';
 
-COMMENT ON COLUMN Notice.userid IS '이메일주소';
+COMMENT ON COLUMN Notice.user_id IS '이메일주소';
 
 COMMENT ON COLUMN Notice.title IS '공지 제목';
 
@@ -225,9 +225,9 @@ CREATE TABLE Movie_Cast
   cast_idx          NUMBER        NOT NULL,
   tmdb_movie_id     NUMBER        NOT NULL,
   tmdb_cast_id      NUMBER        NOT NULL,
-  character         VARCHAR2(255),
-  cast_name         VARCHAR2(255),
-  cast_profile_path VARCHAR2(255),
+  character         VARCHAR2(1000),
+  cast_name         VARCHAR2(1000),
+  cast_profile_path VARCHAR2(1000),
   credit_order      NUMBER       ,
   CONSTRAINT PK_Movie_Cast PRIMARY KEY (cast_idx)
 );
@@ -254,9 +254,9 @@ CREATE TABLE Movie_Crew
   credit_idx        NUMBER        NOT NULL,
   tmdb_movie_id     NUMBER        NOT NULL,
   tmdb_crew_id      NUMBER       ,
-  crew_name         VARCHAR2(255),
-  crew_profile_path VARCHAR2(255),
-  job               VARCHAR2(255),
+  crew_name         VARCHAR2(1000),
+  crew_profile_path VARCHAR2(1000),
+  job               VARCHAR2(1000),
   CONSTRAINT PK_Movie_Crew PRIMARY KEY (credit_idx)
 );
 
@@ -316,7 +316,7 @@ CREATE TABLE Movie_Vote
 (
   vote_idx  NUMBER        NOT NULL,
   movie_idx NUMBER        NOT NULL,
-  userid    VARCHAR2(100) NOT NULL,
+  user_id    VARCHAR2(100) NOT NULL,
   VS_idx    NUMBER        NOT NULL,
   CONSTRAINT PK_Movie_Vote PRIMARY KEY (vote_idx)
 );
@@ -325,7 +325,7 @@ ALTER TABLE Movie_Vote
   ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
 
 ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_userid UNIQUE (userid);
+  ADD CONSTRAINT UQ_user_id UNIQUE (user_id);
 
 ALTER TABLE Movie_Vote
   ADD CONSTRAINT UQ_VS_idx UNIQUE (VS_idx);
@@ -336,7 +336,7 @@ COMMENT ON COLUMN Movie_Vote.vote_idx IS '투표 인덱스';
 
 COMMENT ON COLUMN Movie_Vote.movie_idx IS '투표하는 영화 인덱스';
 
-COMMENT ON COLUMN Movie_Vote.userid IS '투표한 사용자';
+COMMENT ON COLUMN Movie_Vote.user_id IS '투표한 사용자';
 
 COMMENT ON COLUMN Movie_Vote.VS_idx IS '중복 투표 확인';
 
@@ -345,7 +345,7 @@ CREATE TABLE Ranking
 (
   ranking_idx   NUMBER NOT NULL,
   movie_idx     NUMBER NOT NULL,
-  ranking_count NUMBER,
+  ranking_count BINARY_DOUBLE,
   created_date  DATE   DEFAULT sysdate,
   CONSTRAINT PK_Ranking PRIMARY KEY (ranking_idx)
 );
@@ -368,7 +368,7 @@ CREATE TABLE Videos
   title        VARCHAR2(255),
   video_type   VARCHAR2(50) ,
   video_url    VARCHAR2(255),
-  thumnail_url VARCHAR2(255),
+  thumbnail_url VARCHAR2(255),
   CONSTRAINT PK_Videos PRIMARY KEY (video_idx)
 );
 
@@ -384,7 +384,7 @@ COMMENT ON COLUMN Videos.video_type IS '트레일러, 티저, 메이킹 영상 �
 
 COMMENT ON COLUMN Videos.video_url IS '영상 링크';
 
-COMMENT ON COLUMN Videos.thumnail_url IS '영상 썸네일 이미지 주소';
+COMMENT ON COLUMN Videos.thumbnail_url IS '영상 썸네일 이미지 주소';
 
 -- 1-16. SoundTrack
 CREATE TABLE Sound_Track
@@ -415,17 +415,17 @@ COMMENT ON COLUMN Sound_Track.playback_url IS 'ost 링크';
 
 ALTER TABLE Review
   ADD CONSTRAINT FK_Users_TO_Review
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Bookmark
   ADD CONSTRAINT FK_Users_TO_Bookmark
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Comments
   ADD CONSTRAINT FK_Users_TO_Comments
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Comments
@@ -435,7 +435,7 @@ ALTER TABLE Comments
 
 ALTER TABLE Notice
   ADD CONSTRAINT FK_Users_TO_Notice
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Ranking
@@ -455,7 +455,7 @@ ALTER TABLE Movie_Vote
 
 ALTER TABLE Movie_Vote
   ADD CONSTRAINT FK_Users_TO_Movie_Vote
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Movie_Vote
