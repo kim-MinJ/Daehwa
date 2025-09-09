@@ -148,10 +148,16 @@ export function useAuth() {
     return await res.json();
   };
 
+  // ✅ 새로 추가: status 즉시 반영
+  const updateStatus = (newStatus: number) => {
+    setUserInfo(prev => prev ? { ...prev, status: newStatus } : null);
+  };
+
   return {
     token,
     userInfo,
-    setUserInfo, // ✅ 외부에서도 setUserInfo 사용 가능
+    setUserInfo,
+    updateStatus, // 추가
     loading,
     login,
     register,

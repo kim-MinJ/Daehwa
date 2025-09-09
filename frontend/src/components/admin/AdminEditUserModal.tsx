@@ -1,10 +1,11 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+// AdminEditUserModal.tsx
+import { useEffect, useState } from "react";
 import { User } from "./types";
 import "/src/assets/AdminEditUserModal.css";
 
 interface Props {
   editingUser: User | null;
-  setEditingUser: Dispatch<SetStateAction<User | null>>;
+  setEditingUser: React.Dispatch<React.SetStateAction<User | null>>;
   updateUserStatus: (id: string, status: User["status"]) => Promise<void>;
 }
 
@@ -21,7 +22,7 @@ export default function AdminEditUserModal({
 
   const handleSave = async () => {
     if (editingUser) {
-      await updateUserStatus(editingUser.id, status);
+      await updateUserStatus(editingUser.id, status); // AdminPage의 users를 업데이트
       setEditingUser(null);
     }
   };

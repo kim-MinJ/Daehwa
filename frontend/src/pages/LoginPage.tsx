@@ -5,27 +5,21 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent } from "../components/ui/card";
-import { Separator } from "../components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
 
 export function LoginPage() {
   const { login, register, logout, isLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [isLogin, setIsLogin] = useState(true); // 로그인폼 표시 여부
+  const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
 
-  // 로그인 상태에 따라 화면 동기화
   useEffect(() => {
-    if (isLoggedIn) {
-      setIsLogin(false); // 로그인 상태면 버튼 화면
-    } else {
-      setIsLogin(true); // 로그아웃 상태면 로그인폼
-    }
+    setIsLogin(!isLoggedIn);
   }, [isLoggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,6 +40,7 @@ export function LoginPage() {
       setPassword("");
       setUsername("");
     } catch (e: any) {
+      // useAuth에서 던진 에러 메시지 그대로 표시
       setMessage(e.message || "오류가 발생했습니다.");
     }
   };
@@ -60,10 +55,8 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
-      {/* 배경 */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10"></div>
 
-      {/* 메인 버튼 */}
       <Button
         variant="ghost"
         size="sm"
@@ -74,7 +67,6 @@ export function LoginPage() {
         메인으로 돌아가기
       </Button>
 
-      {/* 카드 */}
       <Card className="w-full max-w-md relative z-10 shadow-xl border-0 bg-card/80 backdrop-blur">
         <CardContent className="p-8">
           <div className="text-center mb-8">
@@ -90,7 +82,6 @@ export function LoginPage() {
 
           {!isLoggedIn || isLogin ? (
             <>
-              {/* 로그인/회원가입 토글 */}
               <div className="flex mb-6 bg-muted rounded-lg p-1">
                 <Button
                   type="button"
@@ -114,7 +105,6 @@ export function LoginPage() {
 
               {message && <p className="text-red-600 text-center mb-2">{message}</p>}
 
-              {/* 폼 */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
                   <div className="space-y-2">
@@ -193,15 +183,8 @@ export function LoginPage() {
               </form>
             </>
           ) : (
-            // 로그인 상태일 때 버튼 화면
             <div className="flex flex-col gap-2">
-              <Button
-                onClick={() => {
-                  logout(); // 상태 갱신
-                }}
-              >
-                로그아웃
-              </Button>
+              <Button onClick={logout}>로그아웃</Button>
               <Button onClick={() => navigate("/mypage")}>마이페이지</Button>
             </div>
           )}

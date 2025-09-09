@@ -130,6 +130,9 @@ export function AdminPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users">회원 관리</TabsTrigger>
+            <TabsTrigger value="reviews">리뷰 관리</TabsTrigger>
+            <TabsTrigger value="comments">댓글 관리</TabsTrigger>
+            <TabsTrigger value="votes">투표 관리</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -137,10 +140,10 @@ export function AdminPage() {
               users={users}
               searchQuery={searchQuery}
               setEditingUser={setEditingUser}
-              deleteUser={deleteUser}
               updateUserStatus={updateUserStatus}
             />
           </TabsContent>
+          
         </Tabs>
       </div>
 
