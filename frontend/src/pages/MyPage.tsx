@@ -111,28 +111,35 @@ export function MyPage({ onNavigate }: MyPageProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* 헤더 */}
-      <div className="bg-card border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => onNavigate("main")}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
-          </Button>
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" onClick={() => setIsAdminModalOpen(true)}>
-              <Edit3 className="w-4 h-4 mr-2" /> 관리자 모드
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                logout();
-                onNavigate("login");
-              }}
-            >
-              로그아웃
-            </Button>
-          </div>
-        </div>
-      </div>
+<div className="bg-card border-b">
+  <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <Button variant="ghost" size="sm" onClick={() => onNavigate("main")}>
+      <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
+    </Button>
+    <div className="flex items-center space-x-4">
+      {/* 관리자 페이지 이동 버튼 */}
+      {userInfo?.role === "admin" && (
+        <Button variant="default" size="sm" onClick={() => onNavigate("admin")}>
+          관리자 페이지
+        </Button>
+      )}
+
+      <Button variant="outline" size="sm" onClick={() => setIsAdminModalOpen(true)}>
+        <Edit3 className="w-4 h-4 mr-2" /> 관리자 모드
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          logout();
+          onNavigate("login");
+        }}
+      >
+        로그아웃
+      </Button>
+    </div>
+  </div>
+</div>
 
       {/* 관리자 모달 */}
       <Dialog open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen}>
@@ -207,9 +214,12 @@ export function MyPage({ onNavigate }: MyPageProps) {
 
                     {/* 관리자 빨간 박스 → 검은 박스, 빨간 글씨 */}
 {userInfo?.role === "admin" && (
-  <span className="bg-black text-red-600 px-3 py-1 text-sm rounded-md font-semibold">
-    관리자
-  </span>
+  <span
+  style={{ backgroundColor: "black", color: "#f87171" }}
+  className="px-3 py-1 text-sm rounded-md font-semibold"
+>
+  관리자
+</span>
 )}
                   </div>
 
