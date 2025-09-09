@@ -4,14 +4,16 @@ import { Users, Search } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Input } from "../components/ui/input";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
-import { User } from "../components/admin/types";
+import { User, Review, Movie } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
+import AdminReviewsTab from "../components/admin/AdminReviewsTab";
 import AdminEditUserModal from "../components/admin/AdminEditUserModal";
 import { api } from "../lib/api";
+import AdminEditReviewModal from "../components/admin/AdminEditReviewModal";
+import AdminSearchBar from "../components/admin/AdminSearchBar";
 
 export function AdminPage() {
   const { userInfo, loading, token } = useAuth();
@@ -19,8 +21,13 @@ export function AdminPage() {
 
   const [activeTab, setActiveTab] = useState("users");
   const [searchQuery, setSearchQuery] = useState("");
+
   const [users, setUsers] = useState<User[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
+
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
 
   // --- admin 접근 제한 ---
   useEffect(() => {
@@ -83,6 +90,31 @@ export function AdminPage() {
     }
   };
 
+  // --- Reviews API 호출 ---
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!token) return;
+      try {
+        const res = await api.get("/reviews", { headers: { Authorization: `Bearer ${token}` } });
+        const formattedReviews: Review[] = res.data.map((r: any) => ({
+          reviewIdx: r.reviewIdx,
+          movieIdx: r.movieIdx,
+          userId: r.userId,
+          content: r.content,
+          rating: r.rating,
+          createdAt: r.createdAt,
+          updateAt: r.updateAt,
+          isBlind: r.isBlind
+        }));
+        setReviews(formattedReviews);
+      } catch (err) {
+        console.error(err);
+        alert("리뷰 목록을 가져오는 데 실패했습니다.");
+      }
+    };
+    fetchReviews();
+  }, [token]);
+
   // --- 상태 변경 ---
   const updateUserStatus = async (id: string, status: User["status"]) => {
     if (!token) return;
@@ -100,6 +132,26 @@ export function AdminPage() {
     } catch (err: any) {
       console.error(err.response?.status, err.response?.data || err);
       alert("상태 변경 실패");
+    }
+  };
+
+  // --- 상태 변경 (Reviews) --- <--- 여기
+  const updateReviewStatus = async (reviewIdx: number, isBlind: 0 | 1) => {
+    if (!token) return;
+
+    try {
+      await api.patch(
+        `/reviews/${reviewIdx}/status`,
+        { isBlind },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setReviews(prev =>
+        prev.map(r => (r.reviewIdx === reviewIdx ? { ...r, isBlind } : r))
+      );
+    } catch (err: any) {
+      console.error(err.response?.status, err.response?.data || err);
+      alert("리뷰 상태 변경 실패");
     }
   };
 
@@ -166,16 +218,7 @@ export function AdminPage() {
                 </div>
 
         {/* 검색바 */}
-<div className="mb-6 relative max-w-md">
-  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-  <Input
-    type="text"
-    placeholder="검색어를 입력하세요"
-    value={searchQuery}
-    onChange={e => setSearchQuery(e.target.value)}
-    className="pl-10"
-  />
-</div>
+<AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
         {/* 탭 */}
 <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -194,6 +237,16 @@ export function AdminPage() {
       updateUserStatus={updateUserStatus}
     />
   </TabsContent>
+
+  <TabsContent value="reviews">
+            <AdminReviewsTab
+              reviews={reviews}
+              searchQuery={searchQuery}
+              setEditingReview={setEditingReview}
+              users={users}
+              movies={movies}
+            />
+</TabsContent>  
           
         </Tabs>
       </div>
@@ -203,6 +256,13 @@ export function AdminPage() {
         setEditingUser={setEditingUser}
         updateUserStatus={updateUserStatus}
       />
+      <AdminEditReviewModal
+  editingReview={editingReview} // AdminPage에서 관리하는 상태
+  setEditingReview={setEditingReview} 
+  updateReviewStatus={updateReviewStatus}
+/>
+
+      
 
       <Footer />
     </div>

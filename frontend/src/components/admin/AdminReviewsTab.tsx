@@ -1,80 +1,75 @@
 // src/components/admin/AdminReviewsTab.tsx
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
-import { Review } from './types';
+import { Review } from "./types";
+import { Button } from "../ui/button";
 
 interface AdminReviewsTabProps {
   reviews: Review[];
   searchQuery: string;
-  setEditingReview: (review: Review | null) => void;
-  deleteReview: (id: string) => void;
-  updateReviewStatus: (id: string, status: 'approved' | 'pending' | 'rejected') => void;
+  setEditingReview: React.Dispatch<React.SetStateAction<Review | null>>;
+  users: { id: string; username: string }[];     // 추가
+  movies: { id: number; title: string }[];       // 추가
 }
 
-export default function AdminReviewsTab({
-  reviews,
-  searchQuery,
-  setEditingReview,
-  deleteReview,
-  updateReviewStatus,
-}: AdminReviewsTabProps) {
-  const filterReviews = () =>
-    reviews.filter(r =>
-      r.movieTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.username.toLowerCase().includes(searchQuery.toLowerCase())
+export default function AdminReviewsTab({ reviews, users, movies, searchQuery, setEditingReview }: AdminReviewsTabProps) {
+  const filteredReviews = reviews.filter(r => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      r.reviewIdx.toString().includes(query) ||
+      r.content.toLowerCase().includes(query)
     );
-
-  const getStatusBadge = (status: string) => {
-    const colorMap = { approved: 'bg-green-600', pending: 'bg-yellow-600', rejected: 'bg-red-600' };
-    return <Badge className={`${colorMap[status as keyof typeof colorMap]} text-white`}>{status}</Badge>;
-  };
+  });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>리뷰 관리</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-4">영화</th>
-                <th className="text-left p-4">작성자</th>
-                <th className="text-left p-4">평점</th>
-                <th className="text-left p-4">내용</th>
-                <th className="text-left p-4">작성일</th>
-                <th className="text-left p-4">상태</th>
-                <th className="text-left p-4">관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filterReviews().map(review => (
-                <tr key={review.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium">{review.movieTitle}</td>
-                  <td className="p-4">{review.username}</td>
-                  <td className="p-4">⭐ {review.rating}</td>
-                  <td className="p-4 max-w-xs truncate">{review.content}</td>
-                  <td className="p-4">{review.date}</td>
-                  <td className="p-4">{getStatusBadge(review.status)}</td>
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => setEditingReview(review)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteReview(review.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b">
+            <th className="p-2 text-left">리뷰 idx</th>
+            <th className="p-2 text-left">영화 idx</th>
+            <th className="p-2 text-left">유저ID</th>
+            <th className="p-2 text-left">내용</th>
+            <th className="p-2 text-left">평점</th>
+            <th className="p-2 text-left">생성일</th>
+            <th className="p-2 text-left">수정일</th>
+            <th className="p-2 text-left">관리</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredReviews.length > 0 ? (
+            filteredReviews.map(review => {
+              const user = users.find(u => u.id === review.userId);
+              const movie = movies.find(m => m.id === review.movieIdx);
+
+              return (
+                <tr key={review.reviewIdx} className="border-b">
+                  <td className="p-2">{review.reviewIdx}</td>
+                  <td className="p-2">{movie?.title || review.movieIdx}</td>
+                  <td className="p-2">{user?.username || review.userId}</td>
+                  <td className="p-2">{review.content}</td>
+                  <td className="p-2">{review.rating}</td>
+                  <td className="p-2">{new Date(review.createdAt).toLocaleDateString()}</td>
+                  <td className="p-2">{new Date(review.updateAt).toLocaleDateString()}</td>
+                  <td className="p-2">
+                    <Button
+                      className="!bg-black !text-white px-3 py-1 rounded hover:!bg-gray-800"
+                      onClick={() => setEditingReview(review)}
+                    >
+                      편집
+                    </Button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+              )
+            })
+          ) : (
+            <tr>
+              <td colSpan={8} className="p-4 text-center text-gray-500">
+                검색 결과가 없습니다.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }

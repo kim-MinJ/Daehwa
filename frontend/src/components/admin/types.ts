@@ -13,13 +13,19 @@ export interface User {
 
 // --- 리뷰 타입 ---
 export interface Review {
-  id: string;
-  movieTitle: string;
-  username: string;
-  rating: number; // 1~5
+  reviewIdx: number;
+  movieIdx: number;
+  userId: string;
   content: string;
-  date: string; // YYYY-MM-DD
-  status: 'approved' | 'pending' | 'rejected';
+  rating: number;
+  createdAt: string;
+  updateAt: string;
+  isBlind: number;
+}
+
+export interface Movie {
+  id: number;
+  title: string;
 }
 
 // --- 게시글 타입 ---
