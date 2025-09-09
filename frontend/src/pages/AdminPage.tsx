@@ -209,52 +209,69 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
         </div>
 
         {/* 통계 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Users className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">총 회원수</p>
-                  <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <MessageSquare className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">총 리뷰수</p>
-                  <p className="text-2xl font-bold text-gray-900">{reviews.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <FileText className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">총 게시글수</p>
-                  <p className="text-2xl font-bold text-gray-900">{posts.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Bell className="h-8 w-8 text-orange-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">공지사항</p>
-                  <p className="text-2xl font-bold text-gray-900">{notices.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  <Card
+    className="cursor-pointer hover:shadow-lg transition-shadow"
+    onClick={() => setActiveTab('users')}
+  >
+    <CardContent className="p-6">
+      <div className="flex items-center">
+        <Users className="h-8 w-8 text-blue-600" />
+        <div className="ml-4">
+          <p className="text-sm font-medium text-gray-600">총 회원수</p>
+          <p className="text-2xl font-bold text-gray-900">{users.length}</p>
         </div>
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card
+    className="cursor-pointer hover:shadow-lg transition-shadow"
+    onClick={() => setActiveTab('reviews')}
+  >
+    <CardContent className="p-6">
+      <div className="flex items-center">
+        <MessageSquare className="h-8 w-8 text-green-600" />
+        <div className="ml-4">
+          <p className="text-sm font-medium text-gray-600">총 리뷰수</p>
+          <p className="text-2xl font-bold text-gray-900">{reviews.length}</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card
+    className="cursor-pointer hover:shadow-lg transition-shadow"
+    onClick={() => setActiveTab('posts')}
+  >
+    <CardContent className="p-6">
+      <div className="flex items-center">
+        <FileText className="h-8 w-8 text-purple-600" />
+        <div className="ml-4">
+          <p className="text-sm font-medium text-gray-600">총 게시글수</p>
+          <p className="text-2xl font-bold text-gray-900">{posts.length}</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card
+    className="cursor-pointer hover:shadow-lg transition-shadow"
+    onClick={() => setActiveTab('notices')}
+  >
+    <CardContent className="p-6">
+      <div className="flex items-center">
+        <Bell className="h-8 w-8 text-orange-600" />
+        <div className="ml-4">
+          <p className="text-sm font-medium text-gray-600">공지사항</p>
+          <p className="text-2xl font-bold text-gray-900">{notices.length}</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+</div>
+
+
 
         {/* 검색바 */}
         <div className="mb-6">
@@ -482,7 +499,7 @@ export function AdminPage({ onNavigation, onBack }: AdminPageProps) {
                       checked={newNotice.isImportant}
                       onChange={(e) => setNewNotice({ ...newNotice, isImportant: e.target.checked })}
                     />
-                    <Label htmlFor="important">중요 공��사항</Label>
+                    <Label htmlFor="important">중요 공지사항</Label>
                   </div>
                   <Button onClick={createNotice} className="w-full">
                     <Plus className="h-4 w-4 mr-2" />

@@ -64,15 +64,15 @@ export function MyPage({ onNavigate }: MyPageProps) {
 
   // 추천 영화 가져오기
   const fetchRecommendMovies = () => {
-    if (!token) return;
-    axios
-      .get("http://localhost:8080/api/movies/random", {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { count: 8 },
-      })
-      .then((res) => setRecommendMovies(res.data))
-      .catch(console.error);
-  };
+  if (!token) return;
+  axios
+    .get("http://localhost:8080/api/movies/popular", { // 인기영화 엔드포인트
+      headers: { Authorization: `Bearer ${token}` },
+      params: { count: 8 }, // Top20
+    })
+    .then((res) => setRecommendMovies(res.data))
+    .catch(console.error);
+};
 
   useEffect(() => {
     fetchBookmarks();

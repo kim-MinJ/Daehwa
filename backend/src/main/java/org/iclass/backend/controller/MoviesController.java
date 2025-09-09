@@ -2,11 +2,15 @@ package org.iclass.backend.controller;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.iclass.backend.Entity.MovieInfoEntity;
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.service.MoviesService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +28,22 @@ public class MoviesController {
   public String fetchMovies() {
     moviesService.fetchAndSaveMovies();
     return "Movies fetched!";
+  }
+
+  @GetMapping("/popular")
+  public ResponseEntity<List<MovieInfoDto>> getPopularMovies(@RequestParam(defaultValue = "20") int count) {
+    // 인기순으로 정렬하고 페이지 요청
+    Pageable pageable = PageRequest.of(0, count, Sort.by(Sort.Direction.DESC, "popularity"));
+
+    // 페이지 요청으로 인기 영화 가져오기
+    List<MovieInfoEntity> movies = movieInfoRepository.findAll(pageable).getContent();
+
+    // Entity → DTO 변환
+    List<MovieInfoDto> dtos = movies.stream()
+        .map(MovieInfoDto::of) // DTO 변환 메서드 사용
+        .collect(Collectors.toList());
+
+    return ResponseEntity.ok(dtos);
   }
 
   @GetMapping("/random")
