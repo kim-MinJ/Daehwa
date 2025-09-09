@@ -15,7 +15,7 @@ public class MoviesService {
 
   private final MovieInfoRepository movieInfoRepository;
   private final String API_KEY = "302b783e860b19b6822ef0a445e7ae53";
-  private final String API_URL = "https://api.themoviedb.org/3/movie/popular?language=ko-KR&page=1&api_key=" + API_KEY;
+  private final String API_URL = "https://api.themoviedb.org/3/movie/popular?language=ko-KR&page=10&api_key=" + API_KEY;
 
   public MoviesService(MovieInfoRepository movieInfoRepository) {
     this.movieInfoRepository = movieInfoRepository;

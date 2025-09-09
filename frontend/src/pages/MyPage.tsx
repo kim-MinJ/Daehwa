@@ -118,14 +118,15 @@ export function MyPage({ onNavigate }: MyPageProps) {
     </Button>
     <div className="flex items-center space-x-4">
       {/* 관리자 페이지 이동 버튼 */}
-      {userInfo?.role === "admin" && (
-        <Button variant="default" size="sm" onClick={() => onNavigate("admin")}>
-          관리자 페이지
-        </Button>
-      )}
+      {/* 관리자 페이지 이동 버튼 */}
+{userInfo?.role === "admin" && (
+  <Button variant="default" size="sm" onClick={() => onNavigate("admin")}>
+    관리자 모드
+  </Button>
+)}
 
       <Button variant="outline" size="sm" onClick={() => setIsAdminModalOpen(true)}>
-        <Edit3 className="w-4 h-4 mr-2" /> 관리자 모드
+        <Edit3 className="w-4 h-4 mr-2" /> 관리자 코드
       </Button>
       <Button
         variant="outline"

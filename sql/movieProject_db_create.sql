@@ -81,6 +81,10 @@ CREATE TABLE Movie_Info
   CONSTRAINT PK_Movie_Info PRIMARY KEY (movie_idx)
 );
 
+SELECT *
+FROM Users AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '10' MINUTE);
+
+
 ALTER TABLE Movie_Info
   ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
 
