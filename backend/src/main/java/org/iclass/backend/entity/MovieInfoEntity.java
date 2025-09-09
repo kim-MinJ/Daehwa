@@ -36,7 +36,7 @@ public class MovieInfoEntity {
     @Column(length = 500)
     private String title;
 
-    @Column
+    @Column(columnDefinition = "binary_double")
     @Builder.Default
     private Double popularity = 0.0;
 
@@ -44,7 +44,7 @@ public class MovieInfoEntity {
     @Builder.Default
     private Integer voteCount = 0;
 
-    @Column(name = "vote_average")
+    @Column(name = "vote_average", columnDefinition = "binary_double")
     @Builder.Default
     private Double voteAverage = 0.0;
 

@@ -36,7 +36,7 @@ public class RankingEntity {
   @JoinColumn(name = "movie_idx", nullable = false)
   private MovieInfoEntity movie;
 
-  @Column(name = "ranking_count")
+  @Column(name = "ranking_count", columnDefinition = "binary_double")
   private Double rankingCount;
 
   @Column(name = "created_date")

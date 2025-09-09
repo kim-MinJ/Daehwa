@@ -1,7 +1,7 @@
 package org.iclass.backend.dto;
 
-import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.VideosEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -25,7 +25,7 @@ public class VideosDto {
     private String title;
     private String videoType;
     private String videoUrl;
-    private String thumnailUrl;
+    private String thumbnailUrl;
 
     // ✅ Entity → DTO 변환
     public static VideosDto of(VideosEntity entity) {
@@ -35,7 +35,7 @@ public class VideosDto {
                 .title(entity.getTitle())
                 .videoType(entity.getVideoType())
                 .videoUrl(entity.getVideoUrl())
-                .thumnailUrl(entity.getThumnailUrl())
+                .thumbnailUrl(entity.getThumbnailUrl())
                 .build();
     }
 
@@ -47,7 +47,7 @@ public class VideosDto {
                 .title(this.title)
                 .videoType(this.videoType)
                 .videoUrl(this.videoUrl)
-                .thumnailUrl(this.thumnailUrl)
+                .thumbnailUrl(this.thumbnailUrl)
                 .build();
     }
 }

@@ -56,7 +56,7 @@ public class ReviewEntity {
   @Builder.Default
   private LocalDateTime updateAt = LocalDateTime.now();
 
-  @Column
+  @Column(name = "ISBlind")
   @Builder.Default
   private Integer isBlind = 0;  // 0: off, 1: on
 }

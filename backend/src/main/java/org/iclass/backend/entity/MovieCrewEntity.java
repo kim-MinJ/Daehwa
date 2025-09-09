@@ -32,12 +32,12 @@ public class MovieCrewEntity {
     @Column(name = "TMDB_CREW_ID")
     private Long tmdbCrewId;
 
-    @Column(name = "CREW_NAME", length = 255)
+    @Column(name = "CREW_NAME", length = 1000)
     private String crewName;
 
-    @Column(name = "CREW_PROFILE_PATH", length = 255)
+    @Column(name = "CREW_PROFILE_PATH", length = 1000)
     private String crewProfilePath;
 
-    @Column(name = "JOB", length = 255)
+    @Column(name = "JOB", length = 1000)
     private String job;
 }

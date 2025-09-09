@@ -42,6 +42,6 @@ public class VideosEntity {
     @Column(name = "video_url")
     private String videoUrl;
 
-    @Column(name = "thumnail_url")
-    private String thumnailUrl;
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 }
