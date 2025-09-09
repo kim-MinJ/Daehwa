@@ -1,5 +1,7 @@
 package org.iclass.backend.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +22,7 @@ public class UsersController {
     this.usersService = usersService;
   }
 
+  // --- 사용자 정보 수정 ---
   @PutMapping("/update")
   public ResponseEntity<UsersDto> updateUser(@RequestBody UsersDto dto, HttpServletRequest request) {
     UsersDto user = usersService.getUserFromToken(request);
@@ -31,7 +34,7 @@ public class UsersController {
     return ResponseEntity.ok(updated);
   }
 
-  // JWT 토큰으로 현재 사용자 정보 확인
+  // --- JWT 토큰으로 현재 사용자 정보 확인 ---
   @GetMapping("/me")
   public ResponseEntity<UsersDto> getCurrentUser(HttpServletRequest request) {
     UsersDto user = usersService.getUserFromToken(request);
@@ -41,7 +44,7 @@ public class UsersController {
     return ResponseEntity.ok(user);
   }
 
-  // 마이페이지 데이터
+  // --- 마이페이지 데이터 ---
   @GetMapping("/mypage")
   public ResponseEntity<?> myPage(HttpServletRequest request) {
     UsersDto user = usersService.getUserFromToken(request);
@@ -51,13 +54,13 @@ public class UsersController {
     return ResponseEntity.ok(usersService.getMyPageData(user.getUserId()));
   }
 
-  // 메인페이지 데이터
+  // --- 메인페이지 데이터 ---
   @GetMapping("/main")
   public ResponseEntity<?> mainPage() {
     return ResponseEntity.ok(usersService.getMainPageData());
   }
 
-  // 비밀번호 변경
+  // --- 비밀번호 변경 ---
   @PutMapping("/password")
   public ResponseEntity<?> updatePassword(@RequestBody PasswordChangeRequest requestDto, HttpServletRequest request) {
     UsersDto user = usersService.getUserFromToken(request);
@@ -74,17 +77,32 @@ public class UsersController {
     return ResponseEntity.ok("비밀번호 변경 완료");
   }
 
+  // --- 관리자: 모든 사용자 조회 (DTO 건드리지 않고 regDate 문자열로 변환) ---
   @GetMapping
-public ResponseEntity<List<UsersDto>> getAllUsers(HttpServletRequest request) {
+  public ResponseEntity<List<Map<String, Object>>> getAllUsers(HttpServletRequest request) {
     UsersDto currentUser = usersService.getUserFromToken(request);
     if (currentUser == null || !"admin".equals(currentUser.getRole())) {
-        return ResponseEntity.status(403).build(); // 관리자 아니면 접근 불가
+      return ResponseEntity.status(403).build(); // 관리자 아니면 접근 불가
     }
-    List<UsersDto> users = usersService.getAllUsers();
-    return ResponseEntity.ok(users);
-}
 
-  // DTO 클래스 (컨트롤러 내부)
+    List<UsersDto> users = usersService.getAllUsers();
+    List<Map<String, Object>> result = new ArrayList<>();
+
+    for (UsersDto u : users) {
+      Map<String, Object> map = new HashMap<>();
+      map.put("userId", u.getUserId());
+      map.put("username", u.getUsername());
+      map.put("password", u.getPassword());
+      map.put("role", u.getRole());
+      map.put("status", u.getStatus());
+      map.put("regDate", u.getRegDate() != null ? u.getRegDate().toString() : null);
+      result.add(map);
+    }
+
+    return ResponseEntity.ok(result);
+  }
+
+  // --- DTO 클래스 (컨트롤러 내부) ---
   public static class PasswordChangeRequest {
     private String currentPassword;
     private String newPassword;
@@ -105,5 +123,4 @@ public ResponseEntity<List<UsersDto>> getAllUsers(HttpServletRequest request) {
       this.newPassword = newPassword;
     }
   }
-
 }

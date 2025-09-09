@@ -111,6 +111,7 @@ public class UsersService {
             .username(user.getUsername())
             .role(user.getRole())
             .status(user.getStatus())
+            .regDate(user.getRegDate()) // ← 이 한 줄 추가
             .build())
         .collect(Collectors.toList());
   }

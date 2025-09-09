@@ -34,13 +34,13 @@ export function AdminPage() {
   // --- Users API 호출 ---
 useEffect(() => {
   const fetchUsers = async () => {
-    if (!token) return; // 토큰 없으면 호출하지 않음
+    if (!token) return;
+
     try {
       const res = await api.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // regDate를 YYYY-MM-DD 형식으로 변환
       const formattedUsers: User[] = res.data.map((u: any) => ({
         id: u.userId,
         username: u.username,
@@ -50,23 +50,26 @@ useEffect(() => {
             : u.status === 1
             ? "inactive"
             : "banned",
-        regDate: u.regDate
-          ? new Date(u.regDate).toLocaleDateString("ko-KR", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-            })
-          : "-",
+        regDate:
+          u.regDate && !isNaN(Date.parse(u.regDate))
+            ? new Date(u.regDate).toLocaleDateString("ko-KR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              })
+            : "-", // null/잘못된 값도 안전하게 처리
       }));
 
       setUsers(formattedUsers);
     } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
+      console.error(err);
       alert("회원 목록을 가져오는 데 실패했습니다.");
     }
   };
+
   fetchUsers();
 }, [token]);
+
 
   // --- 삭제 ---
   const deleteUser = async (id: string) => {

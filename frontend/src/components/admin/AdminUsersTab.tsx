@@ -22,21 +22,21 @@ export default function AdminUsersTab({ users, searchQuery, setEditingUser, dele
         </tr>
       </thead>
       <tbody>
-        {users
-          .filter(u => u.username.includes(searchQuery))
-          .map(user => (
-            <tr key={user.id} className="border-t">
-              <td className="p-2">{user.id}</td>
-              <td className="p-2">{user.username}</td>
-              <td className="p-2">{user.regDate?.slice(0, 10) || "-"}</td>
-              <td className="p-2">{user.status}</td>
-              <td className="p-2 space-x-2">
-                <button onClick={() => setEditingUser(user)}>편집</button>
-                <button onClick={() => deleteUser(user.id)}>삭제</button>
-              </td>
-            </tr>
-          ))}
-      </tbody>
+  {users
+    .filter(u => u.username.includes(searchQuery))
+    .map(user => (
+      <tr key={user.id} className="border-t">
+        <td className="p-2">{user.id}</td>
+        <td className="p-2">{user.username}</td>
+        <td className="p-2">{user.regDate}</td> {/* slice 제거 */}
+        <td className="p-2">{user.status}</td>
+        <td className="p-2 space-x-2">
+          <button onClick={() => setEditingUser(user)}>편집</button>
+          <button onClick={() => deleteUser(user.id)}>삭제</button>
+        </td>
+      </tr>
+    ))}
+</tbody>
     </table>
   );
 }
