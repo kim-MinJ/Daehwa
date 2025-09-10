@@ -43,7 +43,7 @@ public class VideosDto {
     public VideosEntity toEntity(MovieInfoEntity movie) {
         return VideosEntity.builder()
                 .videoIdx(this.videoIdx)
-                .movie(movie)  // 연관관계 매핑 (MovieInfoEntity)
+                .movie(movie) // 연관관계 매핑 (MovieInfoEntity)
                 .title(this.title)
                 .videoType(this.videoType)
                 .videoUrl(this.videoUrl)

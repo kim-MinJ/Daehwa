@@ -19,13 +19,13 @@ import lombok.ToString;
 @Table(name = "Movie_Cast")
 public class MovieCastDto {
 
-    private Long castIdx;          // 캐스 인덱스 (PK, 트리거로 생성)
-    private Long tmdbMovieId;      // TMDB 영화 ID
-    private Long tmdbCastId;       // TMDB 배우 ID
-    private String character;      // 배역 이름
-    private String castName;       // 배우 이름
+    private Long castIdx; // 캐스 인덱스 (PK, 트리거로 생성)
+    private Long tmdbMovieId; // TMDB 영화 ID
+    private Long tmdbCastId; // TMDB 배우 ID
+    private String character; // 배역 이름
+    private String castName; // 배우 이름
     private String castProfilePath;// 배우 프로필 경로
-    private Integer creditOrder;   // 배우 순서
+    private Integer creditOrder; // 배우 순서
 
     // ✅ Entity -> DTO 변환
     public static MovieCastDto of(MovieCastEntity entity) {

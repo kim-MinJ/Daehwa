@@ -39,7 +39,7 @@ public class MovieVideoResponse {
         private String name;
 
         @JsonProperty("key")
-        private String key;         // YouTube key
+        private String key; // YouTube key
 
         private String site;
         private Integer size;

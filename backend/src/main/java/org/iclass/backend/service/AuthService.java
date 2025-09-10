@@ -55,6 +55,6 @@ public class AuthService {
 
     String token = jwtTokenProvider.generateToken(entity.getUserId());
     return UsersDto.of(entity, token);
-        // 커밋용
+    // 커밋용
   }
 }
