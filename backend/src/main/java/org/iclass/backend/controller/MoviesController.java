@@ -77,6 +77,7 @@
 package org.iclass.backend.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.entity.MovieInfoEntity;
@@ -118,6 +119,22 @@ public class MoviesController {
     if (tmdbId == null)
       return ResponseEntity.badRequest().build();
     return ResponseEntity.ok(movieService.getMovieByTmdbId(tmdbId));
+  }
+
+  @GetMapping("/popular")
+  public ResponseEntity<List<MovieInfoDto>> getPopularMovies(@RequestParam(defaultValue = "20") int count) {
+    // 인기순으로 정렬하고 페이지 요청
+    Pageable pageable = PageRequest.of(0, count, Sort.by(Sort.Direction.DESC, "popularity"));
+
+    // 페이지 요청으로 인기 영화 가져오기
+    List<MovieInfoEntity> movies = movieInfoRepository.findAll(pageable).getContent();
+
+    // Entity → DTO 변환
+    List<MovieInfoDto> dtos = movies.stream()
+        .map(MovieInfoDto::of) // DTO 변환 메서드 사용
+        .collect(Collectors.toList());
+
+    return ResponseEntity.ok(dtos);
   }
 
   // 목록/검색

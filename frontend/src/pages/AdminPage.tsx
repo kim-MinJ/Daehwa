@@ -63,7 +63,7 @@ export function AdminPage() {
                   month: "2-digit",
                   day: "2-digit",
                 })
-              : "-",
+              : "-",  
         }));
 
         setUsers(formattedUsers);
