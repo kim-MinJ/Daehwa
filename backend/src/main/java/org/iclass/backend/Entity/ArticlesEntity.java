@@ -1,6 +1,6 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,8 +28,8 @@ import lombok.ToString;
 public class ArticlesEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "articles_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long articlesIdx;
 
   @ManyToOne
@@ -45,5 +45,5 @@ public class ArticlesEntity {
   private String articleUrl;
 
   @Column(name = "published_at")
-  private LocalDateTime publishedAt;
+  private LocalDate publishedAt;
 }

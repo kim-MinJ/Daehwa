@@ -1,4 +1,4 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,8 +26,8 @@ import lombok.ToString;
 public class MovieVoteEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "vote_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long voteIdx;
 
   @ManyToOne
@@ -35,7 +35,7 @@ public class MovieVoteEntity {
   private MovieInfoEntity movie;
 
   @ManyToOne
-  @JoinColumn(name = "userid", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 
   @ManyToOne

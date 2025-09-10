@@ -1,9 +1,12 @@
 package org.iclass.backend.repository;
 
-import org.iclass.backend.Entity.*;
+import org.iclass.backend.entity.GenresEntity;
+import org.iclass.backend.entity.MovieGenresEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface MovieGenresRepository extends JpaRepository<MovieGenresEntity, Long> {
-  List<MovieGenresEntity> findByMovie(MovieInfoEntity movie);
+  boolean existsByMovieAndGenre(MovieInfoEntity movie, GenresEntity genre);
 }

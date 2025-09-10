@@ -1,6 +1,6 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,32 +21,46 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Entity
+@Builder
 @Table(name = "MOVIE_INFO")
 public class MovieInfoEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "movie_idx")
-  private Long movieIdx;
+    @Id
+    @Column(name = "movie_idx")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long movieIdx;
 
-  @Column(name = "tmdb_movie_id")
-  private Long tmdbMovieId;
+    @Column(name = "tmdb_movie_id")
+    private Long tmdbMovieId;
 
-  private String title;
-  private Double popularity = 0.0;
-  private Integer voteCount = 0;
-  private Double voteAverage = 0.0;
-  private Integer adult = 0;
+    @Column(length = 500)
+    private String title;
 
-  @Column(nullable = false, length = 500)
-  private String overview;
+    @Column(columnDefinition = "binary_double")
+    @Builder.Default
+    private Double popularity = 0.0;
 
-  @Column(name = "backdrop_path")
-  private String backdropPath;
+    @Column(name = "vote_count")
+    @Builder.Default
+    private Integer voteCount = 0;
 
-  @Column(name = "poster_path")
-  private String posterPath;
+    @Column(name = "vote_average", columnDefinition = "binary_double")
+    @Builder.Default
+    private Double voteAverage = 0.0;
 
-  @Column(name = "release_date")
-  private LocalDateTime releaseDate;
+    @Column(name = "ADULT", nullable = false)
+    @Builder.Default
+    private Boolean adult = false; // 0: false, 1: true
+
+    @Column(length = 2000)
+    private String overview;
+
+    @Column(name = "backdrop_path")
+    private String backdropPath;
+
+    @Column(name = "poster_path")
+    private String posterPath;
+
+    @Column(name = "release_date")
+    private LocalDate releaseDate; // 시간 정보는 필요 없으므로 LocalDate 사용
 }

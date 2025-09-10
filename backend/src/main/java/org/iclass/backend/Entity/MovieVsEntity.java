@@ -1,4 +1,4 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,13 +20,14 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Builder
 @Entity
 @Table(name = "MOVIE_VS")
 public class MovieVsEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "VS_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long vsIdx;
 
   @ManyToOne
@@ -36,5 +38,7 @@ public class MovieVsEntity {
   @JoinColumn(name = "movie_VS2", nullable = false)
   private MovieInfoEntity movieVs2;
 
-  private Integer actice = 0;
+  @Column
+  @Builder.Default
+  private Integer active = 0;
 }
