@@ -1,4 +1,4 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import java.time.LocalDate;
 
@@ -26,8 +26,8 @@ import lombok.ToString;
 public class MovieInfoEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "movie_idx")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long movieIdx;
 
     @Column(name = "tmdb_movie_id")
@@ -36,7 +36,7 @@ public class MovieInfoEntity {
     @Column(length = 500)
     private String title;
 
-    @Column
+    @Column(columnDefinition = "binary_double")
     @Builder.Default
     private Double popularity = 0.0;
 
@@ -44,7 +44,7 @@ public class MovieInfoEntity {
     @Builder.Default
     private Integer voteCount = 0;
 
-    @Column(name = "vote_average")
+    @Column(name = "vote_average", columnDefinition = "binary_double")
     @Builder.Default
     private Double voteAverage = 0.0;
 

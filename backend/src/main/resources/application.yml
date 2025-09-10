@@ -3,16 +3,14 @@ spring:
     name: backend
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASS}
+    url: jdbc:oracle:thin:@//localhost:1521/xe
+    username: c##idev
+    password: 1234
   jpa:
     hibernate:
-      ddl-auto:  update
+      ddl-auto: validate
     properties:
       hibernate:
-
-
         '[format_sql]': true
         '[show_sql]': true
   h2:
@@ -22,9 +20,9 @@ spring:
 
 tmdb:
   api:
-    key: ${TMDB_API_KEY}
+    key: 302b783e860b19b6822ef0a445e7ae53
   
 jwt:
-  secret: ${JWT_SECRET}
+  secret: nR8vP6uQx2sLz9F1tYhJkVm3bCeGdHwR
   expiration: 3600000 # 1 hour in milliseconds
   #깃 저장용

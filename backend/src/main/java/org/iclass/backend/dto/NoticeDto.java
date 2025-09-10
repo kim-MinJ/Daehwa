@@ -2,7 +2,8 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDateTime;
 
-import org.iclass.backend.Entity.NoticeEntity;
+import org.iclass.backend.entity.NoticeEntity;
+import org.iclass.backend.entity.UsersEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -26,7 +27,7 @@ public class NoticeDto {
     private String content;
     private LocalDateTime createdDate;
 
-    // Entity → DTO 변환 메서드
+    // ✅ Entity → DTO 변환
     public static NoticeDto of(NoticeEntity entity) {
         return NoticeDto.builder()
                 .noticeIdx(entity.getNoticeIdx())
@@ -34,6 +35,17 @@ public class NoticeDto {
                 .title(entity.getTitle())
                 .content(entity.getContent())
                 .createdDate(entity.getCreatedDate())
+                .build();
+    }
+
+    // ✅ DTO → Entity 변환
+    public NoticeEntity toEntity(UsersEntity user) {
+        return NoticeEntity.builder()
+                .noticeIdx(this.noticeIdx)
+                .user(user)   // 연관관계 매핑 (UsersEntity)
+                .title(this.title)
+                .content(this.content)
+                .createdDate(this.createdDate)
                 .build();
     }
 }

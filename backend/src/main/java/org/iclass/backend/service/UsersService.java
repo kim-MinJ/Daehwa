@@ -1,15 +1,15 @@
 package org.iclass.backend.service;
 
+import java.util.List;
+
 import org.iclass.backend.dto.UsersDto;
-import org.iclass.backend.Entity.UsersEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class UsersService {

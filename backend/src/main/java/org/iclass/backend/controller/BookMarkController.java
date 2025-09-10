@@ -13,9 +13,7 @@ import org.iclass.backend.repository.UsersRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
 
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/bookmarks")

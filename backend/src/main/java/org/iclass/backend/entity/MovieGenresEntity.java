@@ -1,6 +1,4 @@
-package org.iclass.backend.Entity;
-
-import java.time.LocalDateTime;
+package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,22 +20,21 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Builder
 @Entity
-@Table(name = "RANKING")
-public class RankingEntity {
+@Table(name = "MOVIE_GENRES")
+public class MovieGenresEntity {
 
   @Id
+  @Column(name = "MG_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "ranking_idx")
-  private Long rankingIdx;
+  private Long mgIdx;
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
   private MovieInfoEntity movie;
 
-  @Column(name = "ranking_count")
-  private Integer rankingCount;
-
-  @Column(name = "created_date")
-  private LocalDateTime createdDate = LocalDateTime.now();
+  @ManyToOne
+  @JoinColumn(name = "genre_id", referencedColumnName = "genre_idx", nullable = false)
+  private GenresEntity genre;
 }

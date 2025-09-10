@@ -1,6 +1,7 @@
 package org.iclass.backend.dto;
 
-import org.iclass.backend.Entity.SoundTrackEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.entity.SoundTrackEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -25,7 +26,7 @@ public class SoundTrackDto {
     private String artist;
     private String playbackUrl;
 
-    // Entity → DTO 변환 메서드
+    // ✅ Entity → DTO 변환
     public static SoundTrackDto of(SoundTrackEntity entity) {
         return SoundTrackDto.builder()
                 .soundtrackIdx(entity.getSoundtrackIdx())
@@ -33,6 +34,17 @@ public class SoundTrackDto {
                 .title(entity.getTitle())
                 .artist(entity.getArtist())
                 .playbackUrl(entity.getPlaybackUrl())
+                .build();
+    }
+
+    // ✅ DTO → Entity 변환
+    public SoundTrackEntity toEntity(MovieInfoEntity movie) {
+        return SoundTrackEntity.builder()
+                .soundtrackIdx(this.soundtrackIdx)
+                .movieInfo(movie) // 연관관계 매핑 (MovieInfoEntity)
+                .title(this.title)
+                .artist(this.artist)
+                .playbackUrl(this.playbackUrl)
                 .build();
     }
 }

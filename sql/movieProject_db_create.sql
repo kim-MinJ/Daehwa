@@ -14,9 +14,6 @@ CREATE TABLE Users
   CONSTRAINT PK_Users PRIMARY KEY (user_id)
 );
 
-ALTER TABLE Users
-  ADD CONSTRAINT UQ_user_id UNIQUE (user_id);
-
 COMMENT ON TABLE Users IS '회원관리';
 
 COMMENT ON COLUMN Users.user_id IS '이메일주소';
@@ -31,48 +28,84 @@ COMMENT ON COLUMN Users.reg_date IS '회원가입 날짜';
 
 COMMENT ON COLUMN Users.status IS '로그인(0: off, 1: on)';
 
--- 1-2. People
-CREATE TABLE People
+-- 1-2. Articles
+CREATE TABLE Articles
 (
-  person_idx     NUMBER        NOT NULL,
-  tmdb_person_id NUMBER       ,
-  name           VARCHAR2(100) NOT NULL,
-  gender         NUMBER(1)     NOT NULL,
-  profile_path   VARCHAR2(255),
-  popularity     NUMBER       ,
-  CONSTRAINT PK_People PRIMARY KEY (person_idx)
+  articles_idx NUMBER        NOT NULL,
+  movie_idx    NUMBER        NOT NULL,
+  title        VARCHAR2(255),
+  source_name  VARCHAR2(255),
+  article_url  VARCHAR2(255),
+  published_at DATE         ,
+  CONSTRAINT PK_Articles PRIMARY KEY (articles_idx)
 );
 
-ALTER TABLE People
-  ADD CONSTRAINT UQ_person_idx UNIQUE (person_idx);
+COMMENT ON TABLE Articles IS '관련 기사';
 
-ALTER TABLE People
-  ADD CONSTRAINT UQ_tmdb_person_id UNIQUE (tmdb_person_id);
+COMMENT ON COLUMN Articles.articles_idx IS '기사 인덱스';
 
-COMMENT ON TABLE People IS '인물 정보';
+COMMENT ON COLUMN Articles.movie_idx IS '영화 인덱스';
 
-COMMENT ON COLUMN People.person_idx IS '인물정보 인덱스';
+COMMENT ON COLUMN Articles.title IS '기사 제목';
 
-COMMENT ON COLUMN People.tmdb_person_id IS 'tmdb_person_id';
+COMMENT ON COLUMN Articles.source_name IS '출처';
 
-COMMENT ON COLUMN People.name IS '인물 이름';
+COMMENT ON COLUMN Articles.article_url IS '기사 링크';
 
-COMMENT ON COLUMN People.gender IS '성별 (0: 남, 1: 여)';
+COMMENT ON COLUMN Articles.published_at IS '기사 발행일';
 
-COMMENT ON COLUMN People.profile_path IS '프로필 이미지 경로';
+-- 1-3. Bookmark
+CREATE TABLE Bookmark
+(
+  bookmark_idx NUMBER        NOT NULL,
+  user_id      VARCHAR2(100) NOT NULL,
+  movie_idx    NUMBER        NOT NULL,
+  CONSTRAINT PK_Bookmark PRIMARY KEY (bookmark_idx)
+);
 
-COMMENT ON COLUMN People.popularity IS '인물 인기도';
+COMMENT ON TABLE Bookmark IS '북마크';
 
+COMMENT ON COLUMN Bookmark.bookmark_idx IS '북마크 인덱스';
 
--- 1-3. Movie_Info
+COMMENT ON COLUMN Bookmark.user_id IS '이메일주소';
+
+COMMENT ON COLUMN Bookmark.movie_idx IS '영화 인덱스';
+
+-- 1-4. Comments
+CREATE TABLE Comments
+(
+  comment_idx NUMBER              NOT NULL,
+  user_id     VARCHAR2(100)       NOT NULL,
+  review_idx  NUMBER              NOT NULL,
+  content     VARCHAR2(2000 CHAR) NOT NULL,
+  created_at  DATE                DEFAULT sysdate,
+  update_at   DATE                DEFAULT sysdate,
+  CONSTRAINT PK_Comments PRIMARY KEY (comment_idx)
+);
+
+COMMENT ON TABLE Comments IS '댓글';
+
+COMMENT ON COLUMN Comments.comment_idx IS '댓글 인덱스';
+
+COMMENT ON COLUMN Comments.user_id IS '이메일주소';
+
+COMMENT ON COLUMN Comments.review_idx IS '리뷰 인덱스';
+
+COMMENT ON COLUMN Comments.content IS '댓글 내용';
+
+COMMENT ON COLUMN Comments.created_at IS '작성 날짜';
+
+COMMENT ON COLUMN Comments.update_at IS '수정 날짜';
+
+-- 1-5. Movie_Info
 CREATE TABLE Movie_Info
 (
   movie_idx     NUMBER              NOT NULL,
   tmdb_movie_id NUMBER              NOT NULL,
   title         VARCHAR2(500 CHAR) ,
-  popularity    NUMBER              DEFAULT 0,
+  popularity    BINARY_DOUBLE       DEFAULT 0,
   vote_count    NUMBER              DEFAULT 0,
-  vote_average  NUMBER              DEFAULT 0,
+  vote_average  BINARY_DOUBLE       DEFAULT 0,
   adult         NUMBER(1)           DEFAULT 0 NOT NULL,
   overview      VARCHAR2(2000 CHAR),
   backdrop_path VARCHAR2(255)      ,
@@ -86,7 +119,7 @@ FROM Users AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '10' MINUTE);
 
 
 ALTER TABLE Movie_Info
-  ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
+  ADD CONSTRAINT UQ_tmdb_movie_id UNIQUE (tmdb_movie_id);
 
 COMMENT ON TABLE Movie_Info IS '영화 정보';
 
@@ -112,11 +145,12 @@ COMMENT ON COLUMN Movie_Info.poster_path IS '영화 상세 포스터 경로';
 
 COMMENT ON COLUMN Movie_Info.release_date IS '영화 개봉일';
 
--- 1-4. Review
+-- 1-6. Review
 CREATE TABLE Review
 (
   review_idx NUMBER              NOT NULL,
-  userid     VARCHAR2(100)       NOT NULL,
+  movie_idx  NUMBER              NOT NULL,
+  user_id     VARCHAR2(100)       NOT NULL,
   content    VARCHAR2(2000 CHAR) NOT NULL,
   rating     NUMBER              DEFAULT 10 CHECK (rating BETWEEN 1 AND 10),
   created_at DATE                DEFAULT sysdate,
@@ -125,14 +159,13 @@ CREATE TABLE Review
   CONSTRAINT PK_Review PRIMARY KEY (review_idx)
 );
 
-ALTER TABLE Review
-  ADD CONSTRAINT UQ_review_idx UNIQUE (review_idx);
-
 COMMENT ON TABLE Review IS '리뷰';
 
 COMMENT ON COLUMN Review.review_idx IS '리뷰 인덱스';
 
-COMMENT ON COLUMN Review.userid IS '이메일주소';
+COMMENT ON COLUMN Review.movie_idx IS '영화 인덱스';
+
+COMMENT ON COLUMN Review.user_id IS '이메일주소';
 
 COMMENT ON COLUMN Review.content IS '리뷰 내용';
 
@@ -144,102 +177,22 @@ COMMENT ON COLUMN Review.update_at IS '수정 날짜';
 
 COMMENT ON COLUMN Review.isBlind IS '블라인드 (0: off, 1: on)';
 
--- 1-5. Articles
-CREATE TABLE Articles
-(
-  articles_idx NUMBER        NOT NULL,
-  movie_idx    NUMBER        NOT NULL,
-  title        VARCHAR2(255),
-  source_name  VARCHAR2(255),
-  article_url  VARCHAR2(255),
-  published_at DATE         ,
-  CONSTRAINT PK_Articles PRIMARY KEY (articles_idx)
-);
-
-ALTER TABLE Articles
-  ADD CONSTRAINT UQ_articles_idx UNIQUE (articles_idx);
-
-COMMENT ON TABLE Articles IS '관련 기사';
-
-COMMENT ON COLUMN Articles.articles_idx IS '기사 인덱스';
-
-COMMENT ON COLUMN Articles.movie_idx IS '영화 인덱스';
-
-COMMENT ON COLUMN Articles.title IS '기사 제목';
-
-COMMENT ON COLUMN Articles.source_name IS '출처';
-
-COMMENT ON COLUMN Articles.article_url IS '기사 링크';
-
-COMMENT ON COLUMN Articles.published_at IS '기사 발행일';
-
--- 1-6. Bookmark
-CREATE TABLE Bookmark
-(
-  bookmark_idx NUMBER        NOT NULL,
-  userid       VARCHAR2(100) NOT NULL,
-  CONSTRAINT PK_Bookmark PRIMARY KEY (bookmark_idx)
-);
-
-ALTER TABLE Bookmark
-  ADD CONSTRAINT UQ_bookmark_idx UNIQUE (bookmark_idx);
-
-COMMENT ON TABLE Bookmark IS '북마크';
-
-COMMENT ON COLUMN Bookmark.bookmark_idx IS '북마크 인덱스';
-
-COMMENT ON COLUMN Bookmark.userid IS '이메일주소';
-
-
--- 1-7. Comments
-CREATE TABLE Comments
-(
-  comment_idx NUMBER              NOT NULL,
-  userid      VARCHAR2(100)       NOT NULL,
-  review_idx  NUMBER              NOT NULL,
-  content     VARCHAR2(2000 CHAR) NOT NULL,
-  created_at  DATE                DEFAULT sysdate,
-  update_at   DATE                DEFAULT sysdate,
-  CONSTRAINT PK_Comments PRIMARY KEY (comment_idx)
-);
-
-ALTER TABLE Comments
-  ADD CONSTRAINT UQ_comment_idx UNIQUE (comment_idx);
-
-COMMENT ON TABLE Comments IS '댓글';
-
-COMMENT ON COLUMN Comments.comment_idx IS '댓글 인덱스';
-
-COMMENT ON COLUMN Comments.userid IS '이메일주소';
-
-COMMENT ON COLUMN Comments.review_idx IS '리뷰 인덱스';
-
-COMMENT ON COLUMN Comments.content IS '댓글 내용';
-
-COMMENT ON COLUMN Comments.created_at IS '작성 날짜';
-
-COMMENT ON COLUMN Comments.update_at IS '수정 날짜';
-
-
--- 1-8. Notice
+-- 1-7. Notice
 CREATE TABLE Notice
 (
   notice_idx   NUMBER              NOT NULL,
-  userid       VARCHAR2(100)       NOT NULL,
+  user_id       VARCHAR2(100)       NOT NULL,
   title        VARCHAR2(255)       NOT NULL,
   content      VARCHAR2(2000 CHAR) NOT NULL,
   created_date DATE                DEFAULT sysdate,
   CONSTRAINT PK_Notice PRIMARY KEY (notice_idx)
 );
 
-ALTER TABLE Notice
-  ADD CONSTRAINT UQ_notice_idx UNIQUE (notice_idx);
-
 COMMENT ON TABLE Notice IS '공지사항';
 
 COMMENT ON COLUMN Notice.notice_idx IS '공지사항 인덱스';
 
-COMMENT ON COLUMN Notice.userid IS '이메일주소';
+COMMENT ON COLUMN Notice.user_id IS '이메일주소';
 
 COMMENT ON COLUMN Notice.title IS '공지 제목';
 
@@ -247,7 +200,7 @@ COMMENT ON COLUMN Notice.content IS '공지 내용';
 
 COMMENT ON COLUMN Notice.created_date IS '작성 날짜';
 
--- 1-9. Genres
+-- 1-8. Genres
 CREATE TABLE Genres
 (
   genre_idx NUMBER       NOT NULL,
@@ -255,9 +208,6 @@ CREATE TABLE Genres
   name      VARCHAR2(50) NOT NULL,
   CONSTRAINT PK_Genres PRIMARY KEY (genre_idx)
 );
-
-ALTER TABLE Genres
-  ADD CONSTRAINT UQ_genre_idx UNIQUE (genre_idx);
 
 ALTER TABLE Genres
   ADD CONSTRAINT UQ_genre_id UNIQUE (genre_id);
@@ -273,7 +223,62 @@ COMMENT ON COLUMN Genres.genre_id IS '장르 아이디';
 
 COMMENT ON COLUMN Genres.name IS '장르명';
 
--- 1-10. Movie_Genres
+-- 1-9. Movie_Cast
+CREATE TABLE Movie_Cast
+(
+  cast_idx          NUMBER        NOT NULL,
+  tmdb_movie_id     NUMBER        NOT NULL,
+  tmdb_cast_id      NUMBER        NOT NULL,
+  character         VARCHAR2(1000),
+  cast_name         VARCHAR2(1000),
+  cast_profile_path VARCHAR2(1000),
+  credit_order      NUMBER       ,
+  CONSTRAINT PK_Movie_Cast PRIMARY KEY (cast_idx)
+);
+
+COMMENT ON TABLE Movie_Cast IS '배우 정보';
+
+COMMENT ON COLUMN Movie_Cast.cast_idx IS '캐스 인덱스';
+
+COMMENT ON COLUMN Movie_Cast.tmdb_movie_id IS 'tmdb_movie_id';
+
+COMMENT ON COLUMN Movie_Cast.tmdb_cast_id IS '(CAST) tmdb_cast_id';
+
+COMMENT ON COLUMN Movie_Cast.character IS '(CAST) 배역 이름';
+
+COMMENT ON COLUMN Movie_Cast.cast_name IS '(CAST) 배우 이름';
+
+COMMENT ON COLUMN Movie_Cast.cast_profile_path IS '(CAST) 배우 프로필';
+
+COMMENT ON COLUMN Movie_Cast.credit_order IS '(CAST) 배우 순서';
+
+-- 1-10. Movie_Crew
+CREATE TABLE Movie_Crew
+(
+  credit_idx        NUMBER        NOT NULL,
+  tmdb_movie_id     NUMBER        NOT NULL,
+  tmdb_crew_id      NUMBER       ,
+  crew_name         VARCHAR2(1000),
+  crew_profile_path VARCHAR2(1000),
+  job               VARCHAR2(1000),
+  CONSTRAINT PK_Movie_Crew PRIMARY KEY (credit_idx)
+);
+
+COMMENT ON TABLE Movie_Crew IS '감독 정보';
+
+COMMENT ON COLUMN Movie_Crew.credit_idx IS '크루 인덱스';
+
+COMMENT ON COLUMN Movie_Crew.tmdb_movie_id IS 'tmdb_movie_id';
+
+COMMENT ON COLUMN Movie_Crew.tmdb_crew_id IS '(CREW) tmdb_crew_id';
+
+COMMENT ON COLUMN Movie_Crew.crew_name IS '(CREW) 감독이름';
+
+COMMENT ON COLUMN Movie_Crew.crew_profile_path IS '(CREW) 감독 프로필';
+
+COMMENT ON COLUMN Movie_Crew.job IS '(CREW) 직무(Director)';
+
+-- 1-11. Movie_Genres
 CREATE TABLE Movie_Genres
 (
   MG_idx    NUMBER NOT NULL,
@@ -290,42 +295,6 @@ COMMENT ON COLUMN Movie_Genres.movie_idx IS '영화 인덱스';
 
 COMMENT ON COLUMN Movie_Genres.genre_id IS '장르 아이디';
 
--- 1-11. Movie_Credits
-CREATE TABLE Movie_Credits
-(
-  credit_idx   NUMBER        NOT NULL,
-  movie_idx    NUMBER        NOT NULL,
-  person_idx   NUMBER        NOT NULL,
-  role_type    VARCHAR2(10) ,
-  character    VARCHAR2(255),
-  credit_order NUMBER       ,
-  department   VARCHAR2(255),
-  job          VARCHAR2(255),
-  CONSTRAINT PK_Movie_Credits PRIMARY KEY (credit_idx)
-);
-
-ALTER TABLE Movie_Credits
-  ADD CONSTRAINT UQ_credit_idx UNIQUE (credit_idx);
-
-COMMENT ON TABLE Movie_Credits IS '영화 참여 정보';
-
-COMMENT ON COLUMN Movie_Credits.credit_idx IS '크레딧 인덱스';
-
-COMMENT ON COLUMN Movie_Credits.movie_idx IS '영화 인덱스';
-
-COMMENT ON COLUMN Movie_Credits.person_idx IS '인물정보 인덱스';
-
-COMMENT ON COLUMN Movie_Credits.role_type IS 'CAST or CREW 구분';
-
-COMMENT ON COLUMN Movie_Credits.character IS '(CAST) 배역 이름';
-
-COMMENT ON COLUMN Movie_Credits.credit_order IS '(CAST) 크레딧 순서';
-
-COMMENT ON COLUMN Movie_Credits.department IS '(CREW) 소속 부서';
-
-COMMENT ON COLUMN Movie_Credits.job IS '(CREW) 직무';
-
-
 -- 1-12. Movie_VS
 CREATE TABLE Movie_VS
 (
@@ -335,9 +304,6 @@ CREATE TABLE Movie_VS
   active    NUMBER(1) DEFAULT 0,
   CONSTRAINT PK_Movie_VS PRIMARY KEY (VS_idx)
 );
-
-ALTER TABLE Movie_VS
-  ADD CONSTRAINT UQ_VS_idx UNIQUE (VS_idx);
 
 COMMENT ON TABLE Movie_VS IS 'VS 투표하는 영화';
 
@@ -354,19 +320,16 @@ CREATE TABLE Movie_Vote
 (
   vote_idx  NUMBER        NOT NULL,
   movie_idx NUMBER        NOT NULL,
-  userid    VARCHAR2(100) NOT NULL,
+  user_id    VARCHAR2(100) NOT NULL,
   VS_idx    NUMBER        NOT NULL,
   CONSTRAINT PK_Movie_Vote PRIMARY KEY (vote_idx)
 );
 
 ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_vote_idx UNIQUE (vote_idx);
-
-ALTER TABLE Movie_Vote
   ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
 
 ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_userid UNIQUE (userid);
+  ADD CONSTRAINT UQ_user_id UNIQUE (user_id);
 
 ALTER TABLE Movie_Vote
   ADD CONSTRAINT UQ_VS_idx UNIQUE (VS_idx);
@@ -377,7 +340,7 @@ COMMENT ON COLUMN Movie_Vote.vote_idx IS '투표 인덱스';
 
 COMMENT ON COLUMN Movie_Vote.movie_idx IS '투표하는 영화 인덱스';
 
-COMMENT ON COLUMN Movie_Vote.userid IS '투표한 사용자';
+COMMENT ON COLUMN Movie_Vote.user_id IS '투표한 사용자';
 
 COMMENT ON COLUMN Movie_Vote.VS_idx IS '중복 투표 확인';
 
@@ -386,13 +349,10 @@ CREATE TABLE Ranking
 (
   ranking_idx   NUMBER NOT NULL,
   movie_idx     NUMBER NOT NULL,
-  ranking_count NUMBER,
+  ranking_count BINARY_DOUBLE,
   created_date  DATE   DEFAULT sysdate,
   CONSTRAINT PK_Ranking PRIMARY KEY (ranking_idx)
 );
-
-ALTER TABLE Ranking
-  ADD CONSTRAINT UQ_ranking_idx UNIQUE (ranking_idx);
 
 COMMENT ON TABLE Ranking IS '영화 랭킹';
 
@@ -400,10 +360,9 @@ COMMENT ON COLUMN Ranking.ranking_idx IS '영화 랭킹 인덱스';
 
 COMMENT ON COLUMN Ranking.movie_idx IS '영화 인덱스';
 
-COMMENT ON COLUMN Ranking.ranking_count IS 'Movie_Info의 popularity 값 (트리거로 연동)';
+COMMENT ON COLUMN Ranking.ranking_count IS '영화 평균 별점';
 
 COMMENT ON COLUMN Ranking.created_date IS '랭킹 기준 날짜';
-
 
 -- 1-15. Videos
 CREATE TABLE Videos
@@ -413,7 +372,7 @@ CREATE TABLE Videos
   title        VARCHAR2(255),
   video_type   VARCHAR2(50) ,
   video_url    VARCHAR2(255),
-  thumnail_url VARCHAR2(255),
+  thumbnail_url VARCHAR2(255),
   CONSTRAINT PK_Videos PRIMARY KEY (video_idx)
 );
 
@@ -429,7 +388,7 @@ COMMENT ON COLUMN Videos.video_type IS '트레일러, 티저, 메이킹 영상 �
 
 COMMENT ON COLUMN Videos.video_url IS '영상 링크';
 
-COMMENT ON COLUMN Videos.thumnail_url IS '영상 썸네일 이미지 주소';
+COMMENT ON COLUMN Videos.thumbnail_url IS '영상 썸네일 이미지 주소';
 
 -- 1-16. SoundTrack
 CREATE TABLE Sound_Track
@@ -441,9 +400,6 @@ CREATE TABLE Sound_Track
   playback_url   VARCHAR2(255),
   CONSTRAINT PK_Sound_Track PRIMARY KEY (soundtrack_idx)
 );
-
-ALTER TABLE Sound_Track
-  ADD CONSTRAINT UQ_soundtrack_idx UNIQUE (soundtrack_idx);
 
 COMMENT ON TABLE Sound_Track IS 'OST정보';
 
@@ -463,17 +419,17 @@ COMMENT ON COLUMN Sound_Track.playback_url IS 'ost 링크';
 
 ALTER TABLE Review
   ADD CONSTRAINT FK_Users_TO_Review
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Bookmark
   ADD CONSTRAINT FK_Users_TO_Bookmark
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Comments
   ADD CONSTRAINT FK_Users_TO_Comments
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Comments
@@ -483,7 +439,7 @@ ALTER TABLE Comments
 
 ALTER TABLE Notice
   ADD CONSTRAINT FK_Users_TO_Notice
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Ranking
@@ -493,11 +449,6 @@ ALTER TABLE Ranking
 
 ALTER TABLE Movie_VS
   ADD CONSTRAINT FK_Movie_Info_TO_Movie_VS
-    FOREIGN KEY (movie_VS1)
-    REFERENCES Movie_Info (movie_idx);
-
-ALTER TABLE Movie_VS
-  ADD CONSTRAINT FK_Movie_Info_TO_Movie_VS1
     FOREIGN KEY (movie_VS2)
     REFERENCES Movie_Info (movie_idx);
 
@@ -508,23 +459,13 @@ ALTER TABLE Movie_Vote
 
 ALTER TABLE Movie_Vote
   ADD CONSTRAINT FK_Users_TO_Movie_Vote
-    FOREIGN KEY (userid)
+    FOREIGN KEY (user_id)
     REFERENCES Users (user_id);
 
 ALTER TABLE Movie_Vote
   ADD CONSTRAINT FK_Movie_VS_TO_Movie_Vote
     FOREIGN KEY (VS_idx)
     REFERENCES Movie_VS (VS_idx);
-
-ALTER TABLE Movie_Credits
-  ADD CONSTRAINT FK_Movie_Info_TO_Movie_Credits
-    FOREIGN KEY (movie_idx)
-    REFERENCES Movie_Info (movie_idx);
-
-ALTER TABLE Movie_Credits
-  ADD CONSTRAINT FK_People_TO_Movie_Credits
-    FOREIGN KEY (person_idx)
-    REFERENCES People (person_idx);
 
 ALTER TABLE Videos
   ADD CONSTRAINT FK_Movie_Info_TO_Videos
@@ -546,8 +487,33 @@ ALTER TABLE Movie_Genres
     FOREIGN KEY (movie_idx)
     REFERENCES Movie_Info (movie_idx);
 
+ALTER TABLE Movie_VS
+  ADD CONSTRAINT FK_Movie_Info_TO_Movie_VS1
+    FOREIGN KEY (movie_VS1)
+    REFERENCES Movie_Info (movie_idx);
+
 ALTER TABLE Sound_Track
   ADD CONSTRAINT FK_Movie_Info_TO_Sound_Track
+    FOREIGN KEY (movie_idx)
+    REFERENCES Movie_Info (movie_idx);
+
+ALTER TABLE Movie_Cast
+  ADD CONSTRAINT FK_Movie_Info_TO_Movie_Cast
+    FOREIGN KEY (tmdb_movie_id)
+    REFERENCES Movie_Info (tmdb_movie_id);
+
+ALTER TABLE Movie_Crew
+  ADD CONSTRAINT FK_Movie_Info_TO_Movie_Crew
+    FOREIGN KEY (tmdb_movie_id)
+    REFERENCES Movie_Info (tmdb_movie_id);
+
+ALTER TABLE Review
+  ADD CONSTRAINT FK_Movie_Info_TO_Review
+    FOREIGN KEY (movie_idx)
+    REFERENCES Movie_Info (movie_idx);
+
+ALTER TABLE Bookmark
+  ADD CONSTRAINT FK_Movie_Info_TO_Bookmark
     FOREIGN KEY (movie_idx)
     REFERENCES Movie_Info (movie_idx);
 
@@ -555,21 +521,21 @@ ALTER TABLE Sound_Track
 -- 3. 시퀀스 생성
 -- ===========================
 
-CREATE SEQUENCE SEQ_Articles START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Bookmark START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Comments START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Genres START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Movie_Genres START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Movie_Credits START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Movie_Info START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Movie_Vote START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Movie_VS START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Notice START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_People START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Ranking START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Review START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_Videos START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE SEQ_SoundTrack START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE SEQ_Articles START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Bookmark START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Comments START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Movie_Info START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Review START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Notice START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Genres START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Movie_Cast START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Movie_Crew START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Movie_Genres START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Movie_VS START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Movie_Vote START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Ranking START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Videos START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Sound_Track START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
 -- ===========================
 -- 4. 트리거 생성 (PK 자동 증가)
@@ -580,9 +546,9 @@ CREATE OR REPLACE TRIGGER TRG_Articles
 BEFORE INSERT ON Articles
 FOR EACH ROW
 BEGIN
-    IF :NEW.articles_idx IS NULL THEN
-        SELECT SEQ_Articles.NEXTVAL INTO :NEW.articles_idx FROM dual;
-    END IF;
+  IF :NEW.articles_idx IS NULL THEN
+    :NEW.articles_idx := SEQ_Articles.NEXTVAL;
+  END IF;
 END;
 /
 
@@ -591,9 +557,9 @@ CREATE OR REPLACE TRIGGER TRG_Bookmark
 BEFORE INSERT ON Bookmark
 FOR EACH ROW
 BEGIN
-    IF :NEW.bookmark_idx IS NULL THEN
-        SELECT SEQ_Bookmark.NEXTVAL INTO :NEW.bookmark_idx FROM dual;
-    END IF;
+  IF :NEW.bookmark_idx IS NULL THEN
+    :NEW.bookmark_idx := SEQ_Bookmark.NEXTVAL;
+  END IF;
 END;
 /
 
@@ -602,42 +568,9 @@ CREATE OR REPLACE TRIGGER TRG_Comments
 BEFORE INSERT ON Comments
 FOR EACH ROW
 BEGIN
-    IF :NEW.comment_idx IS NULL THEN
-        SELECT SEQ_Comments.NEXTVAL INTO :NEW.comment_idx FROM dual;
-    END IF;
-END;
-/
-
--- Genres
-CREATE OR REPLACE TRIGGER TRG_Genres
-BEFORE INSERT ON Genres
-FOR EACH ROW
-BEGIN
-    IF :NEW.genre_idx IS NULL THEN
-        SELECT SEQ_Genres.NEXTVAL INTO :NEW.genre_idx FROM dual;
-    END IF;
-END;
-/
-
--- Movie_Genres
-CREATE OR REPLACE TRIGGER TRG_Movie_Genres
-BEFORE INSERT ON Movie_Genres
-FOR EACH ROW
-BEGIN
-    IF :NEW.MG_idx IS NULL THEN
-        SELECT SEQ_Movie_Genres.NEXTVAL INTO :NEW.MG_idx FROM dual;
-    END IF;
-END;
-/
-
--- Movie_Credits
-CREATE OR REPLACE TRIGGER TRG_Movie_Credits
-BEFORE INSERT ON Movie_Credits
-FOR EACH ROW
-BEGIN
-    IF :NEW.credit_idx IS NULL THEN
-        SELECT SEQ_Movie_Credits.NEXTVAL INTO :NEW.credit_idx FROM dual;
-    END IF;
+  IF :NEW.comment_idx IS NULL THEN
+    :NEW.comment_idx := SEQ_Comments.NEXTVAL;
+  END IF;
 END;
 /
 
@@ -646,64 +579,9 @@ CREATE OR REPLACE TRIGGER TRG_Movie_Info
 BEFORE INSERT ON Movie_Info
 FOR EACH ROW
 BEGIN
-    IF :NEW.movie_idx IS NULL THEN
-        SELECT SEQ_Movie_Info.NEXTVAL INTO :NEW.movie_idx FROM dual;
-    END IF;
-END;
-/
-
--- Movie_Vote
-CREATE OR REPLACE TRIGGER TRG_Movie_Vote
-BEFORE INSERT ON Movie_Vote
-FOR EACH ROW
-BEGIN
-    IF :NEW.vote_idx IS NULL THEN
-        SELECT SEQ_Movie_Vote.NEXTVAL INTO :NEW.vote_idx FROM dual;
-    END IF;
-END;
-/
-
--- Movie_VS
-CREATE OR REPLACE TRIGGER TRG_Movie_VS
-BEFORE INSERT ON Movie_VS
-FOR EACH ROW
-BEGIN
-    IF :NEW.VS_idx IS NULL THEN
-        SELECT SEQ_Movie_VS.NEXTVAL INTO :NEW.VS_idx FROM dual;
-    END IF;
-END;
-/
-
--- Notice
-CREATE OR REPLACE TRIGGER TRG_Notice
-BEFORE INSERT ON Notice
-FOR EACH ROW
-BEGIN
-    IF :NEW.notice_idx IS NULL THEN
-        SELECT SEQ_Notice.NEXTVAL INTO :NEW.notice_idx FROM dual;
-    END IF;
-END;
-/
-
--- People
-CREATE OR REPLACE TRIGGER TRG_People
-BEFORE INSERT ON People
-FOR EACH ROW
-BEGIN
-    IF :NEW.person_idx IS NULL THEN
-        SELECT SEQ_People.NEXTVAL INTO :NEW.person_idx FROM dual;
-    END IF;
-END;
-/
-
--- Ranking
-CREATE OR REPLACE TRIGGER TRG_Ranking
-BEFORE INSERT ON Ranking
-FOR EACH ROW
-BEGIN
-    IF :NEW.ranking_idx IS NULL THEN
-        SELECT SEQ_Ranking.NEXTVAL INTO :NEW.ranking_idx FROM dual;
-    END IF;
+  IF :NEW.movie_idx IS NULL THEN
+    :NEW.movie_idx := SEQ_Movie_Info.NEXTVAL;
+  END IF;
 END;
 /
 
@@ -712,9 +590,97 @@ CREATE OR REPLACE TRIGGER TRG_Review
 BEFORE INSERT ON Review
 FOR EACH ROW
 BEGIN
-    IF :NEW.review_idx IS NULL THEN
-        SELECT SEQ_Review.NEXTVAL INTO :NEW.review_idx FROM dual;
-    END IF;
+  IF :NEW.review_idx IS NULL THEN
+    :NEW.review_idx := SEQ_Review.NEXTVAL;
+  END IF;
+END;
+/
+
+-- Notice
+CREATE OR REPLACE TRIGGER TRG_Notice
+BEFORE INSERT ON Notice
+FOR EACH ROW
+BEGIN
+  IF :NEW.notice_idx IS NULL THEN
+    :NEW.notice_idx := SEQ_Notice.NEXTVAL;
+  END IF;
+END;
+/
+
+-- Genres
+CREATE OR REPLACE TRIGGER TRG_Genres
+BEFORE INSERT ON Genres
+FOR EACH ROW
+BEGIN
+  IF :NEW.genre_idx IS NULL THEN
+    :NEW.genre_idx := SEQ_Genres.NEXTVAL;
+  END IF;
+END;
+/
+
+-- Movie_Cast
+CREATE OR REPLACE TRIGGER TRG_Movie_Cast
+BEFORE INSERT ON Movie_Cast
+FOR EACH ROW
+BEGIN
+  IF :NEW.cast_idx IS NULL THEN
+    :NEW.cast_idx := SEQ_Movie_Cast.NEXTVAL;
+  END IF;
+END;
+/
+
+-- Movie_Crew
+CREATE OR REPLACE TRIGGER TRG_Movie_Crew
+BEFORE INSERT ON Movie_Crew
+FOR EACH ROW
+BEGIN
+  IF :NEW.credit_idx IS NULL THEN
+    :NEW.credit_idx := SEQ_Movie_Crew.NEXTVAL;
+  END IF;
+END;
+/
+
+-- Movie_Genres
+CREATE OR REPLACE TRIGGER TRG_Movie_Genres
+BEFORE INSERT ON Movie_Genres
+FOR EACH ROW
+BEGIN
+  IF :NEW.MG_idx IS NULL THEN
+    :NEW.MG_idx := SEQ_Movie_Genres.NEXTVAL;
+  END IF;
+END;
+/
+
+-- Movie_VS
+CREATE OR REPLACE TRIGGER TRG_Movie_VS
+BEFORE INSERT ON Movie_VS
+FOR EACH ROW
+BEGIN
+  IF :NEW.VS_idx IS NULL THEN
+    :NEW.VS_idx := SEQ_Movie_VS.NEXTVAL;
+  END IF;
+END;
+/
+
+-- Movie_Vote
+CREATE OR REPLACE TRIGGER TRG_Movie_Vote
+BEFORE INSERT ON Movie_Vote
+FOR EACH ROW
+BEGIN
+  IF :NEW.vote_idx IS NULL THEN
+    :NEW.vote_idx := SEQ_Movie_Vote.NEXTVAL;
+  END IF;
+END;
+/
+
+-- Ranking
+CREATE OR REPLACE TRIGGER TRG_Ranking
+BEFORE INSERT ON Ranking
+FOR EACH ROW
+BEGIN
+  IF :NEW.ranking_idx IS NULL THEN
+    :NEW.ranking_idx := SEQ_Ranking.NEXTVAL;
+  END IF;
 END;
 /
 
@@ -723,22 +689,20 @@ CREATE OR REPLACE TRIGGER TRG_Videos
 BEFORE INSERT ON Videos
 FOR EACH ROW
 BEGIN
-    IF :NEW.video_idx IS NULL THEN
-        SELECT SEQ_Videos.NEXTVAL INTO :NEW.video_idx FROM dual;
-    END IF;
+  IF :NEW.video_idx IS NULL THEN
+    :NEW.video_idx := SEQ_Videos.NEXTVAL;
+  END IF;
 END;
 /
 
--- SoundTrack
-CREATE OR REPLACE TRIGGER TRG_SoundTrack
-BEFORE INSERT ON SoundTrack
+-- Sound_Track
+CREATE OR REPLACE TRIGGER TRG_Sound_Track
+BEFORE INSERT ON Sound_Track
 FOR EACH ROW
 BEGIN
-    IF :NEW.soundtrack_idx IS NULL THEN
-        SELECT SEQ_SoundTrack.NEXTVAL 
-        INTO :NEW.soundtrack_idx 
-        FROM dual;
-    END IF;
+  IF :NEW.soundtrack_idx IS NULL THEN
+    :NEW.soundtrack_idx := SEQ_Sound_Track.NEXTVAL;
+  END IF;
 END;
 /
 

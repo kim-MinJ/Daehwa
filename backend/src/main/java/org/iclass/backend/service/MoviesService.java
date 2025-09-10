@@ -1,14 +1,16 @@
 package org.iclass.backend.service;
 
-import org.iclass.backend.Entity.MovieInfoEntity;
-import org.iclass.backend.repository.MovieInfoRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.ResponseEntity;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.repository.MovieInfoRepository;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class MoviesService {

@@ -1,4 +1,6 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
+
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,30 +24,26 @@ import lombok.ToString;
 @ToString
 @Builder
 @Entity
-@Table(name = "MOVIE_CREDITS")
-public class MovieCreditsEntity {
+@Table(name = "ARTICLES")
+public class ArticlesEntity {
 
   @Id
+  @Column(name = "articles_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "credit_idx")
-  private Long creditIdx;
+  private Long articlesIdx;
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
   private MovieInfoEntity movie;
 
-  @ManyToOne
-  @JoinColumn(name = "person_idx", nullable = false)
-  private PeopleEntity person;
+  private String title;
 
-  @Column(name = "role_type", length = 10)
-  private String roleType;
+  @Column(name = "source_name")
+  private String sourceName;
 
-  private String character;
+  @Column(name = "article_url")
+  private String articleUrl;
 
-  @Column(name = "credit_order")
-  private Integer creditOrder;
-
-  private String department;
-  private String job;
+  @Column(name = "published_at")
+  private LocalDate publishedAt;
 }

@@ -1,6 +1,7 @@
 package org.iclass.backend.dto;
 
-import org.iclass.backend.Entity.VideosEntity;
+import org.iclass.backend.entity.VideosEntity;
+import org.iclass.backend.entity.MovieInfoEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -24,17 +25,29 @@ public class VideosDto {
     private String title;
     private String videoType;
     private String videoUrl;
-    private String thumnailUrl;
+    private String thumbnailUrl;
 
-    // Entity → DTO 변환 메서드
+    // ✅ Entity → DTO 변환
     public static VideosDto of(VideosEntity entity) {
         return VideosDto.builder()
                 .videoIdx(entity.getVideoIdx())
-                .movieIdx(entity.getMovie().getMovieIdx()) // 외래키 참조
+                .movieIdx(entity.getMovie() != null ? entity.getMovie().getMovieIdx() : null) // 외래키 참조
                 .title(entity.getTitle())
                 .videoType(entity.getVideoType())
                 .videoUrl(entity.getVideoUrl())
-                .thumnailUrl(entity.getThumnailUrl())
+                .thumbnailUrl(entity.getThumbnailUrl())
+                .build();
+    }
+
+    // ✅ DTO → Entity 변환
+    public VideosEntity toEntity(MovieInfoEntity movie) {
+        return VideosEntity.builder()
+                .videoIdx(this.videoIdx)
+                .movie(movie)  // 연관관계 매핑 (MovieInfoEntity)
+                .title(this.title)
+                .videoType(this.videoType)
+                .videoUrl(this.videoUrl)
+                .thumbnailUrl(this.thumbnailUrl)
                 .build();
     }
 }

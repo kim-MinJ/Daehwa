@@ -1,6 +1,4 @@
-package org.iclass.backend.Entity;
-
-import java.time.LocalDateTime;
+package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,40 +9,36 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Builder
 @Entity
-@Table(name = "REVIEW")
-public class ReviewEntity {
+@Table(name = "MOVIE_VOTE")
+public class MovieVoteEntity {
 
   @Id
+  @Column(name = "vote_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "review_idx")
-  private Long reviewIdx;
+  private Long voteIdx;
+
+  @ManyToOne
+  @JoinColumn(name = "movie_idx", nullable = false)
+  private MovieInfoEntity movie;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 
-  @Column(nullable = false, length = 2000)
-  private String content;
-
-  @Column(name = "rating")
-  private Integer rating = 10;
-
-  @Column(name = "created_at")
-  private LocalDateTime createdAt = LocalDateTime.now();
-
-  @Column(name = "update_at")
-  private LocalDateTime updateAt = LocalDateTime.now();
-
-  private Integer isBlind = 0;  // 0: off, 1: on
+  @ManyToOne
+  @JoinColumn(name = "VS_idx", nullable = false)
+  private MovieVsEntity movieVS;
 }

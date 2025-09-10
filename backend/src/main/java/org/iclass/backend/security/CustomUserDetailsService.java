@@ -1,7 +1,8 @@
 package org.iclass.backend.security;
 
 import lombok.RequiredArgsConstructor;
-import org.iclass.backend.Entity.UsersEntity;
+
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;

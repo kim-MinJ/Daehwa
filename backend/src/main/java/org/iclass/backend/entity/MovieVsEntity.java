@@ -1,10 +1,12 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,25 +22,23 @@ import lombok.ToString;
 @ToString
 @Builder
 @Entity
-@Table(name = "PEOPLE")
-public class PeopleEntity {
+@Table(name = "MOVIE_VS")
+public class MovieVsEntity {
 
   @Id
+  @Column(name = "VS_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "person_idx")
-  private Long personIdx;
+  private Long vsIdx;
 
-  @Column(name = "tmdb_person_id")
-  private Long tmdbPersonId;
+  @ManyToOne
+  @JoinColumn(name = "movie_VS1", nullable = false)
+  private MovieInfoEntity movieVs1;
 
-  @Column(nullable = false, length = 100)
-  private String name;
+  @ManyToOne
+  @JoinColumn(name = "movie_VS2", nullable = false)
+  private MovieInfoEntity movieVs2;
 
-  @Column(nullable = false)
-  private Integer gender;
-
-  @Column(name = "profile_path")
-  private String profilePath;
-
-  private int popularity;
+  @Column
+  @Builder.Default
+  private Integer active = 0;
 }

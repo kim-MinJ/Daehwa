@@ -1,18 +1,17 @@
 package org.iclass.backend.controller;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.iclass.backend.Entity.MovieInfoEntity;
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.repository.MovieInfoRepository;
+import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.service.MoviesService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
