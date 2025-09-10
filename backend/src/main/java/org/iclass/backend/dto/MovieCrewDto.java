@@ -19,12 +19,12 @@ import lombok.ToString;
 @Table(name = "Movie_Crew")
 public class MovieCrewDto {
 
-    private Long creditIdx;        // 크루 인덱스 (PK, 트리거로 생성)
-    private Long tmdbMovieId;      // TMDB 영화 ID
-    private Long tmdbCrewId;       // TMDB 크루 ID
-    private String crewName;       // 감독 이름
+    private Long creditIdx; // 크루 인덱스 (PK, 트리거로 생성)
+    private Long tmdbMovieId; // TMDB 영화 ID
+    private Long tmdbCrewId; // TMDB 크루 ID
+    private String crewName; // 감독 이름
     private String crewProfilePath;// 감독 프로필 경로
-    private String job;            // 직무 (ex: Director)
+    private String job; // 직무 (ex: Director)
 
     // ✅ Entity -> DTO 변환
     public static MovieCrewDto of(MovieCrewEntity entity) {

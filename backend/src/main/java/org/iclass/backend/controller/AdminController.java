@@ -2,7 +2,7 @@ package org.iclass.backend.controller;
 
 import java.util.Map;
 
-import org.iclass.backend.Entity.UsersEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -44,6 +44,6 @@ public class AdminController {
 
     return ResponseEntity.ok(Map.of(
         "message", "관리자 권한이 부여되었습니다.",
-        "role", user.getRole())); 
+        "role", user.getRole()));
   }
 }

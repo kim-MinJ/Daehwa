@@ -22,7 +22,7 @@ import lombok.ToString;
 @Table(name = "NOTICE")
 public class NoticeDto {
     private Long noticeIdx;
-    private String userId;      // UsersEntity의 userId
+    private String userId; // UsersEntity의 userId
     private String title;
     private String content;
     private LocalDateTime createdDate;
@@ -42,7 +42,7 @@ public class NoticeDto {
     public NoticeEntity toEntity(UsersEntity user) {
         return NoticeEntity.builder()
                 .noticeIdx(this.noticeIdx)
-                .user(user)   // 연관관계 매핑 (UsersEntity)
+                .user(user) // 연관관계 매핑 (UsersEntity)
                 .title(this.title)
                 .content(this.content)
                 .createdDate(this.createdDate)

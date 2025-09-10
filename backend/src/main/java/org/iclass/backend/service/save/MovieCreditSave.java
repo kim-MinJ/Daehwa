@@ -35,8 +35,8 @@ public class MovieCreditSave {
     private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4";
 
     public MovieCreditSave(MovieCastRepository castRepository,
-                           MovieCrewRepository crewRepository,
-                           MovieInfoRepository movieInfoRepository) {
+            MovieCrewRepository crewRepository,
+            MovieInfoRepository movieInfoRepository) {
         this.castRepository = castRepository;
         this.crewRepository = crewRepository;
         this.movieInfoRepository = movieInfoRepository;
@@ -54,7 +54,8 @@ public class MovieCreditSave {
 
         for (MovieInfoEntity movie : movies) {
             Long tmdbMovieId = movie.getTmdbMovieId();
-            if (tmdbMovieId == null) continue;
+            if (tmdbMovieId == null)
+                continue;
 
             String url = "https://api.themoviedb.org/3/movie/" + tmdbMovieId + "/credits?language=ko-KR";
 
@@ -77,7 +78,6 @@ public class MovieCreditSave {
                 try {
                     creditResponse = mapper.readValue(jsonData, MovieCreditResponse.class);
 
-                    
                 } catch (Exception e) {
                     System.err.println("JSON 파싱 오류: " + e.getMessage());
                     e.printStackTrace();
@@ -88,7 +88,7 @@ public class MovieCreditSave {
                         .filter(c -> c.getTmdbCastId() != null && !processedCastIds.contains(c.getTmdbCastId()))
                         .peek(c -> processedCastIds.add(c.getTmdbCastId()))
                         .forEach(c -> {
-                            
+
                             MovieCastEntity entity = MovieCastEntity.builder()
                                     .tmdbMovieId(tmdbMovieId)
                                     .tmdbCastId(c.getTmdbCastId())

@@ -23,8 +23,8 @@ import lombok.ToString;
 @Table(name = "COMMENTS")
 public class CommentsDto {
     private Long commentIdx;
-    private String userId;    // UsersEntity의 userId
-    private Long reviewIdx;   // ReviewEntity의 reviewIdx
+    private String userId; // UsersEntity의 userId
+    private Long reviewIdx; // ReviewEntity의 reviewIdx
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
@@ -45,8 +45,8 @@ public class CommentsDto {
     public CommentsEntity toEntity(UsersEntity user, ReviewEntity review) {
         return CommentsEntity.builder()
                 .commentIdx(this.commentIdx)
-                .user(user)       // 연관관계 매핑 (UsersEntity)
-                .review(review)   // 연관관계 매핑 (ReviewEntity)
+                .user(user) // 연관관계 매핑 (UsersEntity)
+                .review(review) // 연관관계 매핑 (ReviewEntity)
                 .content(this.content)
                 .createdAt(this.createdAt)
                 .updateAt(this.updateAt)
