@@ -12,13 +12,14 @@ import ReviewPage from './components/ReviewPage';
 import AdminPage from './components/AdminPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import "./index.css";
 
 // 영화 데이터 타입
 interface Movie {
   id: string;
   title: string;
   director: string;
-  actors: string;
+  actors?: string;
   poster: string;
   year: number;
   genre: string;
