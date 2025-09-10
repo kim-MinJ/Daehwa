@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CommentsRepository extends JpaRepository<CommentsEntity, Long> {
   List<CommentsEntity> findByReview(ReviewEntity review);
+
+  List<CommentsEntity> findByReviewReviewIdx(Long reviewIdx);
 }
