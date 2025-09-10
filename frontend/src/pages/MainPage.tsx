@@ -127,10 +127,16 @@ function MainPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header
-        currentPage="home"
-        onNavigation={(page) => navigate(`/${page}`)}
-        onSearch={(q) => navigate(`/search?q=${encodeURIComponent(q)}`)}
-      />
+  currentPage="home"
+  onNavigation={(page) => {
+    if (page === "admin") {
+      navigate("/mypage"); // admin 대신 mypage로 이동
+    } else {
+      navigate(`/${page}`);
+    }
+  }}
+  onSearch={(q) => navigate(`/search?q=${encodeURIComponent(q)}`)}
+/>
 
       <main className="relative">
         {/* 히어로 섹션 */}
