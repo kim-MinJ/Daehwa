@@ -22,28 +22,31 @@ export function LoginPage() {
     setIsLogin(!isLoggedIn);
   }, [isLoggedIn]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage("");
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setMessage("");
 
-    try {
-      if (isLogin) {
-        await login(userId, password);
-        setMessage("로그인 성공!");
-      } else {
-        await register(userId, username, password);
-        await login(userId, password); // 회원가입 후 자동 로그인
-        setMessage("회원가입 후 로그인 완료!");
-      }
-
-      setUserId("");
-      setPassword("");
-      setUsername("");
-    } catch (e: any) {
-      // useAuth에서 던진 에러 메시지 그대로 표시
-      setMessage(e.message || "오류가 발생했습니다.");
+  try {
+    if (isLogin) {
+      await login(userId, password);
+      setMessage("로그인 성공!");
+    } else {
+      await register(userId, username, password);
+      await login(userId, password);
+      setMessage("회원가입 후 로그인 완료!");
     }
-  };
+
+    setUserId("");
+    setPassword("");
+    setUsername("");
+
+    // 로그인 성공 후 MainPage로 이동
+    navigate("/main");
+
+  } catch (e: any) {
+    setMessage(e.message || "오류가 발생했습니다.");
+  }
+};
 
   if (loading) {
     return (
