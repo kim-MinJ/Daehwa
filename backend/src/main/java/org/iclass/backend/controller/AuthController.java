@@ -23,6 +23,7 @@ public class AuthController {
         private final JwtTokenProvider jwtTokenProvider;
         private final AuthService authService;
 
+        // 커밋용
         // 회원가입
         @PostMapping("/register")
         public ResponseEntity<?> register(@RequestBody UsersDto dto) {
@@ -46,7 +47,7 @@ public class AuthController {
 
                 usersRepository.save(user);
 
-                String token = jwtTokenProvider.createTokenWithUserId(user.getUserId());
+                String token = jwtTokenProvider.generateToken(user.getUserId());
 
                 return ResponseEntity.ok(Map.of(
                                 "userId", user.getUserId(),
@@ -80,7 +81,7 @@ public class AuthController {
                         return ResponseEntity.status(403).body(Map.of("message", "접속제한 중인 계정입니다."));
                 }
 
-                String token = jwtTokenProvider.createTokenWithUserId(user.getUserId());
+                String token = jwtTokenProvider.generateToken(user.getUserId());
 
                 return ResponseEntity.ok(Map.of(
                                 "userId", user.getUserId(),

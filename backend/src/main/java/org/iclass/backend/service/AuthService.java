@@ -33,7 +33,7 @@ public class AuthService {
 
     usersRepository.save(entity);
 
-    String token = jwtTokenProvider.createTokenWithUserId(entity.getUserId());
+    String token = jwtTokenProvider.generateToken(entity.getUserId());
     return UsersDto.of(entity, token);
   }
 
@@ -52,7 +52,8 @@ public class AuthService {
       throw new RuntimeException("접속제한 중인 계정입니다.");
     }
 
-    String token = jwtTokenProvider.createTokenWithUserId(entity.getUserId());
+    String token = jwtTokenProvider.generateToken(entity.getUserId());
     return UsersDto.of(entity, token);
+        // 커밋용
   }
 }
