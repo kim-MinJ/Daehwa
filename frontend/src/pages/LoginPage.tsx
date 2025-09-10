@@ -132,7 +132,10 @@ useEffect(() => {
       <div className="absolute inset-0 bg-black/70"></div>
 
       {/* 로그인 카드 */}
-      <Card className="w-full max-w-md z-10 p-8 rounded-lg text-white shadow-xl bg-black/30 backdrop-blur-md">
+      <Card
+className="w-full max-w-md z-10 p-8 rounded-lg text-white bg-black/40 backdrop-blur-md
+             shadow-[0_0_8px_2px_rgba(255,255,255,0.5)]"
+>
   <CardContent className="p-0 space-y-4 text-white">
     <div className="text-center mb-6">
       <h1 className="text-3xl font-bold">MovieInfo</h1>
@@ -246,9 +249,7 @@ useEffect(() => {
 />
             로그인 상태 유지
           </label>
-          <a href="#" className="hover:underline text-gray-600">
-            비밀번호를 잊으셨나요?
-          </a>
+          
         </div>
       )}
 

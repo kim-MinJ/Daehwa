@@ -228,14 +228,14 @@ export function MyPage({ onNavigate }: MyPageProps) {
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="grid grid-cols-1 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold">{bookmarks.length}</div>
-                    <div className="text-sm text-muted-foreground">북마크</div>
-                  </div>
-                </div>
-              </div>
+              <div className="flex justify-end">
+  <div className="grid grid-cols-1 gap-4 text-center mr-6">
+    <div>
+      <div className="text-2xl font-bold">{bookmarks.length}</div>
+      <div className="text-sm text-muted-foreground">북마크</div>
+    </div>
+  </div>
+</div>
             </CardContent>
           </Card>
 
