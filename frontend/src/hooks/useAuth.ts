@@ -42,21 +42,30 @@ export function useAuth() {
     fetchUser();
   }, [token]);
 
-  const login = async (userId: string, password: string) => {
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, password }),
-    });
+const login = async (userId: string, password: string, rememberMe: boolean = false) => {
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, password }),
+  });
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.message || "로그인 실패");
-    }
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "로그인 실패");
+  }
 
-    const data = await res.json();
-    setToken(data.token);
-  };
+  const data = await res.json();
+  
+  if (rememberMe) {
+    // localStorage: 브라우저를 닫아도 유지
+    localStorage.setItem("token", data.token);
+  } else {
+    // sessionStorage: 브라우저 세션 동안만 유지
+    sessionStorage.setItem("token", data.token);
+  }
+
+  setToken(data.token);
+};
 
   const register = async (userId: string, username: string, password: string) => {
     const res = await fetch(`${API_URL}/auth/register`, {
