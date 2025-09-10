@@ -7,7 +7,7 @@ CREATE TABLE Users
 (
   user_id  VARCHAR2(100)     NOT NULL,
   username VARCHAR2(50 CHAR) NOT NULL,
-  password VARCHAR2(16 CHAR) NOT NULL,
+  password VARCHAR2(255 CHAR) NOT NULL,
   role     VARCHAR2(20)      DEFAULT 'user',
   reg_date DATE              DEFAULT sysdate,
   status   NUMBER(1)         DEFAULT 0,
@@ -113,6 +113,10 @@ CREATE TABLE Movie_Info
   release_date  DATE               ,
   CONSTRAINT PK_Movie_Info PRIMARY KEY (movie_idx)
 );
+
+SELECT *
+FROM Users AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '10' MINUTE);
+
 
 ALTER TABLE Movie_Info
   ADD CONSTRAINT UQ_tmdb_movie_id UNIQUE (tmdb_movie_id);

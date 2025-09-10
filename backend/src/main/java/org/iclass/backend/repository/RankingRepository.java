@@ -17,6 +17,6 @@ public interface RankingRepository extends JpaRepository<RankingEntity, Long> {
 
     @Modifying
     @Query("UPDATE RankingEntity r SET r.rankingCount = :ratingAvg, r.createdDate = CURRENT_TIMESTAMP " +
-           "WHERE r.movie.movieIdx = :movieId")
+            "WHERE r.movie.movieIdx = :movieId")
     void updateRankingByMovie(@Param("movieId") Long movieId, @Param("ratingAvg") double ratingAvg);
 }

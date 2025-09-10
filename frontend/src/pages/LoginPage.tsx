@@ -1,15 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent } from "../components/ui/card";
-import { Separator } from "../components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
 
 export function LoginPage() {
-  const { login, register, logout, isLoggedIn } = useAuth();
+  const { login, register, logout, isLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
 
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +17,10 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setIsLogin(!isLoggedIn);
+  }, [isLoggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,25 +31,32 @@ export function LoginPage() {
         await login(userId, password);
         setMessage("로그인 성공!");
       } else {
-        await register(userId, password, username);
-        setMessage("회원가입 성공!");
-        setIsLogin(true);
+        await register(userId, username, password);
+        await login(userId, password); // 회원가입 후 자동 로그인
+        setMessage("회원가입 후 로그인 완료!");
       }
 
       setUserId("");
       setPassword("");
       setUsername("");
     } catch (e: any) {
-      setMessage(e.message);
+      // useAuth에서 던진 에러 메시지 그대로 표시
+      setMessage(e.message || "오류가 발생했습니다.");
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
-      {/* 배경 패턴 */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10"></div>
 
-      {/* 메인 페이지로 돌아가기 버튼 */}
       <Button
         variant="ghost"
         size="sm"
@@ -57,10 +67,8 @@ export function LoginPage() {
         메인으로 돌아가기
       </Button>
 
-      {/* 로그인/회원가입 카드 */}
       <Card className="w-full max-w-md relative z-10 shadow-xl border-0 bg-card/80 backdrop-blur">
         <CardContent className="p-8">
-          {/* 로고/제목 */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold mb-2">MovieInfo</h1>
             <p className="text-muted-foreground">
@@ -72,9 +80,8 @@ export function LoginPage() {
             </p>
           </div>
 
-          {!isLoggedIn ? (
+          {!isLoggedIn || isLogin ? (
             <>
-              {/* 로그인/회원가입 토글 */}
               <div className="flex mb-6 bg-muted rounded-lg p-1">
                 <Button
                   type="button"
@@ -98,7 +105,6 @@ export function LoginPage() {
 
               {message && <p className="text-red-600 text-center mb-2">{message}</p>}
 
-              {/* 폼 */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
                   <div className="space-y-2">
@@ -175,39 +181,6 @@ export function LoginPage() {
                   {isLogin ? "로그인" : "계정 만들기"}
                 </Button>
               </form>
-
-              {/* 소셜 로그인 UI */}
-              <div className="mt-6">
-                <div className="relative">
-                  <Separator className="my-6" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="bg-card px-4 text-sm text-muted-foreground">또는</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full" type="button">
-                    Google로 {isLogin ? "로그인" : "가입"}
-                  </Button>
-                  <Button variant="outline" className="w-full" type="button">
-                    GitHub으로 {isLogin ? "로그인" : "가입"}
-                  </Button>
-                </div>
-              </div>
-
-              {!isLogin && (
-                <p className="text-xs text-muted-foreground text-center mt-6">
-                  계정을 만들면{" "}
-                  <a href="#" className="text-primary hover:underline">
-                    이용약관
-                  </a>{" "}
-                 과{" "}
-                  <a href="#" className="text-primary hover:underline">
-                    개인정보처리방침
-                  </a>{" "}
-                 에 동의하는 것입니다.
-                </p>
-              )}
             </>
           ) : (
             <div className="flex flex-col gap-2">

@@ -22,7 +22,7 @@ import lombok.ToString;
 @Table(name = "RANKING")
 public class RankingDto {
     private Long rankingIdx;
-    private Long movieIdx;      // MovieInfoEntity의 movieIdx
+    private Long movieIdx; // MovieInfoEntity의 movieIdx
     private Double rankingCount;
     private LocalDateTime createdDate;
 
@@ -40,7 +40,7 @@ public class RankingDto {
     public RankingEntity toEntity(MovieInfoEntity movie) {
         return RankingEntity.builder()
                 .rankingIdx(this.rankingIdx)
-                .movie(movie)   // 연관관계 매핑 (MovieInfoEntity)
+                .movie(movie) // 연관관계 매핑 (MovieInfoEntity)
                 .rankingCount(this.rankingCount)
                 .createdDate(this.createdDate)
                 .build();

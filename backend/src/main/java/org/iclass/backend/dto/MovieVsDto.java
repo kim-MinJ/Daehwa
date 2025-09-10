@@ -20,9 +20,9 @@ import lombok.ToString;
 @Table(name = "Movie_VS")
 public class MovieVsDto {
     private Long vsIdx;
-    private Long movieVs1Idx;  // MovieInfoEntity의 movieIdx
-    private Long movieVs2Idx;  // MovieInfoEntity의 movieIdx
-    private Integer active;    // 0: 비활성, 1: 활성
+    private Long movieVs1Idx; // MovieInfoEntity의 movieIdx
+    private Long movieVs2Idx; // MovieInfoEntity의 movieIdx
+    private Integer active; // 0: 비활성, 1: 활성
 
     // ✅ Entity → DTO 변환
     public static MovieVsDto of(MovieVsEntity entity) {
@@ -38,8 +38,8 @@ public class MovieVsDto {
     public MovieVsEntity toEntity(MovieInfoEntity movieVs1, MovieInfoEntity movieVs2) {
         return MovieVsEntity.builder()
                 .vsIdx(this.vsIdx)
-                .movieVs1(movieVs1)  // 연관관계 매핑 (MovieInfoEntity)
-                .movieVs2(movieVs2)  // 연관관계 매핑 (MovieInfoEntity)
+                .movieVs1(movieVs1) // 연관관계 매핑 (MovieInfoEntity)
+                .movieVs2(movieVs2) // 연관관계 매핑 (MovieInfoEntity)
                 .active(this.active)
                 .build();
     }

@@ -22,9 +22,9 @@ import lombok.ToString;
 @Table(name = "Movie_Vote")
 public class MovieVoteDto {
     private Long voteIdx;
-    private Long movieIdx;   // MovieInfoEntity의 movieIdx
-    private String userId;   // UsersEntity의 userId
-    private Long vsIdx;      // MovieVsEntity의 VS_idx
+    private Long movieIdx; // MovieInfoEntity의 movieIdx
+    private String userId; // UsersEntity의 userId
+    private Long vsIdx; // MovieVsEntity의 VS_idx
 
     // ✅ Entity → DTO 변환
     public static MovieVoteDto of(MovieVoteEntity entity) {
@@ -40,9 +40,9 @@ public class MovieVoteDto {
     public MovieVoteEntity toEntity(MovieInfoEntity movie, UsersEntity user, MovieVsEntity movieVS) {
         return MovieVoteEntity.builder()
                 .voteIdx(this.voteIdx)
-                .movie(movie)      // 연관관계 매핑 (MovieInfoEntity)
-                .user(user)        // 연관관계 매핑 (UsersEntity)
-                .movieVS(movieVS)  // 연관관계 매핑 (MovieVsEntity)
+                .movie(movie) // 연관관계 매핑 (MovieInfoEntity)
+                .user(user) // 연관관계 매핑 (UsersEntity)
+                .movieVS(movieVS) // 연관관계 매핑 (MovieVsEntity)
                 .build();
     }
 }

@@ -1,11 +1,13 @@
 package org.iclass.backend.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.iclass.backend.dto.UsersDto;
 import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtUtil;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,10 +17,12 @@ public class UsersService {
 
   private final UsersRepository usersRepository;
   private final JwtUtil jwtUtil;
+  private final PasswordEncoder passwordEncoder;
 
-  public UsersService(UsersRepository usersRepository, JwtUtil jwtUtil) {
+  public UsersService(UsersRepository usersRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
     this.usersRepository = usersRepository;
     this.jwtUtil = jwtUtil;
+    this.passwordEncoder = passwordEncoder;
   }
 
   // JWT 토큰에서 사용자 정보 가져오기
@@ -36,36 +40,10 @@ public class UsersService {
     if (entity == null)
       return null;
 
-    // Builder 패턴으로 DTO 생성
-    return UsersDto.builder()
-        .userId(entity.getUserId())
-        .username(entity.getUsername())
-        .password(entity.getPassword()) // 필요 없으면 제거 가능
-        .role(entity.getRole()) // 필요 없으면 제거 가능
-        .regDate(entity.getRegDate()) // 필요 없으면 제거 가능
-        .status(entity.getStatus()) // 필요 없으면 제거 가능
-        .token(token) // JWT 토큰
-        .build();
+    return buildUsersDto(entity, token);
   }
 
-  // 마이페이지 데이터
-  public Object getMyPageData(String userId) {
-    // DB 조회 후 DTO 반환
-    return List.of(
-        "최근 본 영화1",
-        "최근 본 영화2",
-        "최근 본 영화3");
-  }
-
-  // 메인페이지 데이터
-  public Object getMainPageData() {
-    // DB 조회 후 DTO 반환
-    return List.of(
-        "인기 영화1",
-        "인기 영화2",
-        "인기 영화3");
-  }
-
+  // username 업데이트
   public UsersDto updateUsername(String userId, String newUsername) {
     UsersEntity entity = usersRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("사용자 없음"));
@@ -73,13 +51,65 @@ public class UsersService {
     entity.setUsername(newUsername);
     usersRepository.save(entity);
 
+    return buildUsersDto(entity, null); // 수정 시 토큰은 필요 없음
+  }
+
+  // 상태 업데이트 (0=일반,1=접속7일제한,2=정지)
+  public UsersDto updateUserStatus(String userId, int status) {
+    if (status < 0 || status > 2) {
+      throw new IllegalArgumentException("잘못된 상태 값");
+    }
+
+    UsersEntity entity = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+    entity.setStatus(status);
+    usersRepository.save(entity);
+
+    return buildUsersDto(entity, null);
+  }
+
+  // 비밀번호 변경
+  public boolean updatePassword(String userId, String currentPassword, String newPassword) {
+    UsersEntity entity = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+    if (!passwordEncoder.matches(currentPassword, entity.getPassword())) {
+      return false;
+    }
+
+    entity.setPassword(passwordEncoder.encode(newPassword));
+    usersRepository.save(entity);
+    return true;
+  }
+
+  // 모든 사용자 조회
+  public List<UsersDto> getAllUsers() {
+    return usersRepository.findAll().stream()
+        .map(entity -> buildUsersDto(entity, null))
+        .collect(Collectors.toList());
+  }
+
+  // DTO 빌더 공통 메서드
+  private UsersDto buildUsersDto(UsersEntity entity, String token) {
     return UsersDto.builder()
         .userId(entity.getUserId())
         .username(entity.getUsername())
+        .password(entity.getPassword())
         .role(entity.getRole())
         .regDate(entity.getRegDate())
         .status(entity.getStatus())
-        .token(null) // 수정 시 새 토큰은 안 줘도 됨
+        .token(token)
         .build();
+  }
+
+  // 마이페이지 데이터
+  public Object getMyPageData(String userId) {
+    return List.of("최근 본 영화1", "최근 본 영화2", "최근 본 영화3");
+  }
+
+  // 메인페이지 데이터
+  public Object getMainPageData() {
+    return List.of("인기 영화1", "인기 영화2", "인기 영화3");
   }
 }
