@@ -14,6 +14,10 @@
 #### 5. main 파일이 들어있는 폴더에 아까 옮겨둔 service, controller 옮기기
 #### 6. 스테이징, 커밋하고 github 에서 pull requests 하기
 
+## TypeScript 설치 명령어(.txs)
+#### npx create-react-app my-app --template typescript
+
+<br>
 maven프로젝트로
 
 spring web
