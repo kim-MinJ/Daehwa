@@ -1,4 +1,4 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,11 +26,16 @@ import lombok.ToString;
 public class BookMarkEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "bookmark_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long bookmarkIdx;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
+
+  @ManyToOne
+  @JoinColumn(name = "movie_idx", nullable = false)
+  private MovieInfoEntity movie;
+  // 09.07 추가
 }

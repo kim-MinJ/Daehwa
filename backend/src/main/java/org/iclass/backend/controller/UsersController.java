@@ -8,14 +8,24 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/api/user")
-@CrossOrigin(origins = "http://localhost:5174") // 프론트 URL 허용
+@RequestMapping("/api/users")
 public class UsersController {
 
   private final UsersService usersService;
 
   public UsersController(UsersService usersService) {
     this.usersService = usersService;
+  }
+
+  @PutMapping("/update")
+  public ResponseEntity<UsersDto> updateUser(@RequestBody UsersDto dto, HttpServletRequest request) {
+    UsersDto user = usersService.getUserFromToken(request);
+    if (user == null) {
+      return ResponseEntity.status(401).build();
+    }
+
+    UsersDto updated = usersService.updateUsername(user.getUserId(), dto.getUsername());
+    return ResponseEntity.ok(updated);
   }
 
   // JWT 토큰으로 현재 사용자 정보 확인

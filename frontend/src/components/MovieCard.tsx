@@ -1,56 +1,91 @@
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { Star, TrendingUp, TrendingDown, Plus } from 'lucide-react';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Movie, TrendingMovie } from '../types/movie';
 
 interface MovieCardProps {
-  title?: string;
-  year?: string;
-  rating?: string;
-  description?: string;
-  posterUrl?: string;
+  movie: Movie;
+  onClick: () => void;
+  isTrending?: boolean;
 }
 
-export function MovieCard({ 
-  title = "영화 제목", 
-  year = "2023", 
-  rating = "15세 이상",
-  description = "영화에 대한 간단한 설명이 들어갑니다.",
-  posterUrl = "https://images.unsplash.com/photo-1753944847480-92f369a5f00e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3ZpZSUyMHBvc3RlciUyMGNpbmVtYXxlbnwxfHx8fDE3NTYzOTgyOTd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-}: MovieCardProps) {
+export function MovieCard({ movie, onClick, isTrending = false }: MovieCardProps) {
+  const trendingMovie = movie as TrendingMovie;
+  const showTrendRank = isTrending && 'trendRank' in movie;
+
+  const getTrendIcon = () => {
+    if (!showTrendRank) return null;
+    switch (trendingMovie.trendChange) {
+      case 'up':
+        return <TrendingUp className="h-4 w-4 text-green-500" />;
+      case 'down':
+        return <TrendingDown className="h-4 w-4 text-red-500" />;
+      case 'new':
+        return <Badge variant="secondary" className="text-xs px-2 py-1">NEW</Badge>;
+      default:
+        return <div className="w-4 h-4" />; // placeholder for same
+    }
+  };
+
   return (
-    <Card className="p-6 w-full max-w-4xl mx-auto">
-      <div className="flex gap-6">
-        {/* 포스터 영역 */}
-        <div className="flex-shrink-0">
-          <ImageWithFallback 
-            src={posterUrl}
-            alt={title}
-            className="w-48 h-72 object-cover rounded-lg"
-          />
+    <Card 
+      className="group overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer"
+      onClick={onClick}
+    >
+      <div className="relative aspect-[3/4] overflow-hidden">
+        {showTrendRank && (
+          <div className="absolute top-2 left-2 z-10">
+            <Badge variant="default" className="text-sm font-bold">
+              #{trendingMovie.trendRank}
+            </Badge>
+          </div>
+        )}
+        
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+          {getTrendIcon()}
         </div>
         
-        {/* 영화 정보 영역 */}
-        <div className="flex-1 space-y-4">
-          <div className="space-y-2">
-            <h2 className="text-2xl">{title}</h2>
-            <div className="flex gap-4 text-muted-foreground">
-              <span>{year}</span>
-              <span>{rating}</span>
+        <ImageWithFallback
+          src={movie.poster}
+          alt={movie.title}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+        />
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        <div className="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm font-medium">{movie.rating}</span>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <h3>줄거리</h3>
-            <p className="text-muted-foreground">{description}</p>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button className="bg-primary text-primary-foreground">
-              (이전, 다음 버튼)
+            <Button variant="secondary" size="sm" className="h-8">
+              <Plus className="h-4 w-4 mr-1" />
+              찜하기
             </Button>
           </div>
         </div>
       </div>
+      
+      <CardContent className="p-4">
+        <div className="space-y-2">
+          <h3 className="font-semibold line-clamp-1">{movie.title}</h3>
+          {movie.titleEn && (
+            <p className="text-sm text-muted-foreground line-clamp-1">{movie.titleEn}</p>
+          )}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{movie.year}</span>
+            <span>{movie.genre.slice(0, 2).join(', ')}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+            <span className="text-sm font-medium">{movie.rating}</span>
+            <span className="text-sm text-muted-foreground">/ 10</span>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }

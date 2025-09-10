@@ -53,6 +53,9 @@
             "@types/react": "^19.1.12",
             "@types/react-dom": "^19.1.9",
             "@vitejs/plugin-react-swc": "^3.11.0",
+            "autoprefixer": "^10.4.21",
+            "postcss": "^8.5.6",
+            "tailwindcss": "^4.1.13",
             "vite": "6.3.5"
       },
       "scripts": {

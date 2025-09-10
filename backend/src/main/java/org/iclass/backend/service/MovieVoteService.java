@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.iclass.backend.Entity.MovieInfoEntity;
-import org.iclass.backend.Entity.MovieVoteEntity;
-import org.iclass.backend.Entity.MovieVsEntity;
-import org.iclass.backend.Entity.UsersEntity;
 import org.iclass.backend.dto.MovieVoteDto;
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.entity.MovieVoteEntity;
+import org.iclass.backend.entity.MovieVsEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
-import org.iclass.backend.repository.MovieVoteRepository;
 import org.iclass.backend.repository.MovieVSRepository;
+import org.iclass.backend.repository.MovieVoteRepository;
 import org.iclass.backend.repository.UsersRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,8 +69,8 @@ public class MovieVoteService {
     private MovieVoteDto toDto(MovieVoteEntity entity) {
         return MovieVoteDto.builder()
                 .voteIdx(entity.getVoteIdx())
-                .movieId(entity.getMovie().getMovieIdx())
-                .vsId(entity.getMovieVS().getVsIdx())
+                .movieIdx(entity.getMovie().getMovieIdx())
+                .vsIdx(entity.getMovieVS().getVsIdx())
                 .userId(entity.getUser().getUserId()) // String 타입
                 .build();
     }

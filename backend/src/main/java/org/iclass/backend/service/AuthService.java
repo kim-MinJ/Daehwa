@@ -1,14 +1,15 @@
 package org.iclass.backend.service;
 
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+
 import org.iclass.backend.dto.UsersDto;
-import org.iclass.backend.Entity.UsersEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

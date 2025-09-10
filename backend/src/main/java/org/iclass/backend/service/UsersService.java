@@ -1,13 +1,14 @@
 package org.iclass.backend.service;
 
+import java.util.List;
+
 import org.iclass.backend.dto.UsersDto;
-import org.iclass.backend.Entity.UsersEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtUtil;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
 
 @Service
 public class UsersService {
@@ -63,5 +64,22 @@ public class UsersService {
         "인기 영화1",
         "인기 영화2",
         "인기 영화3");
+  }
+
+  public UsersDto updateUsername(String userId, String newUsername) {
+    UsersEntity entity = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+    entity.setUsername(newUsername);
+    usersRepository.save(entity);
+
+    return UsersDto.builder()
+        .userId(entity.getUserId())
+        .username(entity.getUsername())
+        .role(entity.getRole())
+        .regDate(entity.getRegDate())
+        .status(entity.getStatus())
+        .token(null) // 수정 시 새 토큰은 안 줘도 됨
+        .build();
   }
 }

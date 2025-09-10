@@ -1,4 +1,4 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
 
 import java.time.LocalDateTime;
 
@@ -17,27 +17,30 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // ← 이거 추가
 @ToString
 @Table(name = "Users")
 @Entity
-public class UsersEntity {
-    @Id
-    @Column(name = "user_id", length = 100)
-    private String userId;
+@Builder
+public class UsersEntity {  
+  @Id
+  @Column(name = "user_id", length = 100)
+  private String userId;
 
-    @Column(nullable = false, length = 50)
-    private String username;
+  @Column(nullable = false, length = 50)
+  private String username;
 
-    @Column(nullable = false, length = 100)
-    private String password;
+  @Column(nullable = false, length = 255)
+  private String password;
 
-    @Column(length = 20)
-    private String role = "user";
+  @Column(length = 20)
+  @Builder.Default
+  private String role = "user";
 
-    @Column(name = "reg_date")
-    private LocalDateTime regDate = LocalDateTime.now();
+  @Column(name = "reg_date")
+  @Builder.Default
+  private LocalDateTime regDate = LocalDateTime.now();
 
-    @Column
-    private Integer status = 0;
+  @Column
+  @Builder.Default
+  private Integer status = 0; // 로그인 상태 1:로그인 0:로그아웃
 }
