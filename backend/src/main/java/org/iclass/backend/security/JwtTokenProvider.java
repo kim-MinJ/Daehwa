@@ -10,7 +10,7 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
-public class JwtTokenProdiver {
+public class JwtTokenProvider {
 
     // application.properties에서 가져올 수도 있고, 기본값 지정 가능
     @Value("${jwt.secret:nR8vP6uQx2sLz9F1tYhJkVm3bCeGdHwR}") // 최소 32바이트
@@ -22,6 +22,8 @@ public class JwtTokenProdiver {
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
+
+    // 커밋용
 
     // -------------------
     // 토큰 생성
