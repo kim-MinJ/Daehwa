@@ -95,7 +95,7 @@ export function useMoviePage(id: number): State {
         const detailRaw = await safeGet([
           `/api/movies/${id}`,
           `/api/movies/info/${id}`,
-          `http://localhost:8080/api/movies/${id}`,
+          `http://192.168.0.30/api/movies/${id}`,
         ]);
         const movie = mapMovie(detailRaw);
 
@@ -104,7 +104,7 @@ export function useMoviePage(id: number): State {
         try {
           const cr = await safeGet([
             `/api/movies/${id}/credits`,
-            `http://localhost:8080/api/movies/${id}/credits`,
+            `http://192.168.0.30/api/movies/${id}/credits`,
           ]);
           credits = {
             cast: Array.isArray(cr?.cast) ? cr.cast.map(mapPerson) : [],
@@ -117,7 +117,7 @@ export function useMoviePage(id: number): State {
         try {
           const sr = await safeGet([
             `/api/movies/${id}/similar`,
-            `http://localhost:8080/api/movies/${id}/similar`,
+            `http://192.168.0.30/api/movies/${id}/similar`,
           ]);
           const arr = Array.isArray(sr) ? sr : (Array.isArray(sr?.content) ? sr.content : []);
           similar = arr.map(mapMovie);
@@ -128,7 +128,7 @@ export function useMoviePage(id: number): State {
         try {
           const vr = await safeGet([
             `/api/movies/${id}/videos`,
-            `http://localhost:8080/api/movies/${id}/videos`,
+            `http://192.168.0.30/api/movies/${id}/videos`,
           ]);
           trailers = Array.isArray(vr?.results) ? vr.results : (Array.isArray(vr) ? vr : []);
         } catch {}
