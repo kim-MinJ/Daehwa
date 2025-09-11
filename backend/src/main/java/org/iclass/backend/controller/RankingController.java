@@ -43,7 +43,7 @@ public class RankingController {
         }
             String releaseDate = m.optString("release_date", "0000-00-00");
             movie.put("year", releaseDate.length() >= 4 ? releaseDate.substring(0, 4) : "N/A");
-            movie.put("genre", "/movie/{movie_id}/credits");
+            movie.put("genre", "");
             movie.put("rating", m.getDouble("vote_average"));
             movie.put("runtime", 0);
             movie.put("description", m.optString("overview", ""));

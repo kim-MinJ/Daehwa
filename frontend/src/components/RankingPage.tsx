@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Star, TrendingUp, Crown, Medal, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button'
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import Header from './Header';
 import Footer from './Footer';
@@ -30,6 +31,8 @@ interface RankingPageProps {
 export default function RankingPage({ onMovieClick, onBack, onNavigation }: RankingPageProps) {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [selectedVote, setSelectedVote] = useState<'first' | 'second' | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const moviesPerSlide = 4;
 
@@ -76,6 +79,12 @@ export default function RankingPage({ onMovieClick, onBack, onNavigation }: Rank
   const topMoviePercentage = Math.round((topMovieVotes / totalVotes) * 100);
   const secondMoviePercentage = Math.round((secondMovieVotes / totalVotes) * 100);
 
+  // 투표 처리 함수
+  const handleVote = (choice: 'first' | 'second') => {
+    setSelectedVote(choice);
+    setHasVoted(true);
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
       {/* 공통 헤더 */}
@@ -99,138 +108,204 @@ export default function RankingPage({ onMovieClick, onBack, onNavigation }: Rank
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-800 mb-3">최고 평점 대결</h2>
               <p className="text-gray-600 text-lg">이번 주 최고 평점 영화들의 투표 현황</p>
-              <div className="mt-4">
-                <p className="text-gray-500">총 {totalVotes.toLocaleString()}명이 참여</p>
-              </div>
+              {hasVoted && (
+                <div className="mt-4">
+                  <p className="text-gray-500">총 {totalVotes.toLocaleString()}명이 참여</p>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-center gap-12">
               {/* 1위 영화 */}
-              <div 
-                className="group cursor-pointer text-center"
-                onClick={() => onMovieClick(topMovie)}
-              >
-                <div className="relative mb-4">
-                  <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                    <ImageWithFallback
-                      src={topMovie.poster}
-                      alt={topMovie.title}
-                      className="w-full h-full object-cover"
-                    />
+              <div className="text-center flex flex-col items-center">
+                <div 
+                  className="group cursor-pointer"
+                  onClick={() => onMovieClick(topMovie)}
+                >
+                  <div className="relative mb-4">
+                    <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
+                      <ImageWithFallback
+                        src={topMovie.poster}
+                        alt={topMovie.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    {/* 1위 배지 */}
+                    <div className="absolute -top-3 -left-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
+                        <Crown className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    
+                    {/* 승리 표시 (투표 후에만) */}
+                    {hasVoted && selectedVote === 'first' && (
+                      <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-yellow-500 text-white font-bold text-lg px-3 py-1">
+                          선택!
+                        </Badge>
+                      </div>
+                    )}
+                    {hasVoted && selectedVote === 'second' && (
+                      <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-yellow-500 text-white font-bold text-lg px-3 py-1">
+                          승리!
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* 1위 배지 */}
-                  <div className="absolute -top-3 -left-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
-                      <Crown className="h-6 w-6 text-white" />
+                  <div className="w-48 h-28 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-red-500 transition-colors line-clamp-2 break-words">
+                        {topMovie.title}
+                      </h3>
+                      <p className="text-gray-600 mb-2 text-sm truncate">{topMovie.director}</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-1">
+                      <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                      <span className="font-semibold text-xl text-gray-800">{topMovie.rating.toFixed(1)}</span>
                     </div>
                   </div>
-                  
-                  {/* 승리 표시 */}
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-yellow-500 text-white font-bold text-lg px-3 py-1">
-                      승리!
-                    </Badge>
-                  </div>
                 </div>
                 
-                <h3 className="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-500 transition-colors">
-                  {topMovie.title}
-                </h3>
-                <p className="text-gray-600 mb-2">{topMovie.director}</p>
-                <div className="flex items-center justify-center gap-1 mb-3">
-                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                  <span className="font-semibold text-xl text-gray-800">{topMovie.rating.toFixed(1)}</span>
-                </div>
-                
-                {/* 투표 결과 */}
-                <div className="bg-yellow-600/20 rounded-lg p-4 border border-yellow-500/30">
-                  <div className="font-bold text-xl mb-1" style={{ color: '#000000' }}>
-                    {topMoviePercentage}%
-                  </div>
-                  <div className="text-sm" style={{ color: '#000000' }}>
-                    {topMovieVotes.toLocaleString()}표
-                  </div>
+                {/* 투표 버튼 또는 결과 */}
+                <div className="w-48 mt-4">
+                  {!hasVoted ? (
+                    <Button 
+                      onClick={() => handleVote('first')}
+                      className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold w-full"
+                    >
+                      이 영화에 투표
+                    </Button>
+                  ) : (
+                    <div className="bg-yellow-600/20 rounded-lg p-4 border border-yellow-500/30">
+                      <div className="font-bold text-xl mb-1" style={{ color: '#000000' }}>
+                        {topMoviePercentage}%
+                      </div>
+                      <div className="text-sm" style={{ color: '#000000' }}>
+                        {topMovieVotes.toLocaleString()}표
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* VS 텍스트 */}
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center flex-shrink-0">
                 <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center shadow-2xl mb-3">
                   <span className="text-white font-bold text-2xl">VS</span>
                 </div>
                 <p className="text-gray-600 mb-3">대결</p>
                 
-                {/* 투표 진행률 표시 */}
-                <div className="w-40 bg-gray-700 rounded-full h-4 mb-2">
-                  <div 
-                    className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-4 rounded-full transition-all duration-300"
-                    style={{ width: `${topMoviePercentage}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-gray-500">실시간 투표</p>
+                {/* 투표 진행률 표시 (투표 후에만) */}
+                {hasVoted && (
+                  <>
+                    <div className="w-40 bg-gray-700 rounded-full h-4 mb-2">
+                      <div 
+                        className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-4 rounded-full transition-all duration-300"
+                        style={{ width: `${topMoviePercentage}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-gray-500">실시간 투표</p>
+                  </>
+                )}
               </div>
 
               {/* 2위 영화 */}
-              <div 
-                className="group cursor-pointer text-center"
-                onClick={() => onMovieClick(secondMovie)}
-              >
-                <div className="relative mb-4">
-                  <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                    <ImageWithFallback
-                      src={secondMovie.poster}
-                      alt={secondMovie.title}
-                      className="w-full h-full object-cover"
-                    />
+              <div className="text-center">
+                <div 
+                  className="group cursor-pointer"
+                  onClick={() => onMovieClick(secondMovie)}
+                >
+                  <div className="relative mb-4">
+                    <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
+                      <ImageWithFallback
+                        src={secondMovie.poster}
+                        alt={secondMovie.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    {/* 2위 배지 */}
+                    <div className="absolute -top-3 -left-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center shadow-lg">
+                        <Medal className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    
+                    {/* 선택/순위 표시 (투표 후에만) */}
+                    {hasVoted && selectedVote === 'second' && (
+                      <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-gray-400 text-white font-bold text-lg px-3 py-1">
+                          선택!
+                        </Badge>
+                      </div>
+                    )}
+                    {hasVoted && selectedVote === 'first' && (
+                      <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-gray-400 text-white font-bold text-lg px-3 py-1">
+                          2위
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* 2위 배지 */}
-                  <div className="absolute -top-3 -left-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center shadow-lg">
-                      <Medal className="h-6 w-6 text-white" />
+                  <div className="w-48 h-28 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-red-500 transition-colors line-clamp-2 break-words">
+                        {secondMovie.title}
+                      </h3>
+                      <p className="text-gray-600 mb-2 text-sm truncate">{secondMovie.director}</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-1">
+                      <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                      <span className="font-semibold text-xl text-gray-800">{secondMovie.rating.toFixed(1)}</span>
                     </div>
                   </div>
-                  
-                  {/* 순위 표시 */}
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-gray-400 text-white font-bold text-lg px-3 py-1">
-                      2위
-                    </Badge>
-                  </div>
                 </div>
                 
-                <h3 className="font-bold text-xl text-gray-800 mb-2 group-hover:text-red-500 transition-colors">
-                  {secondMovie.title}
-                </h3>
-                <p className="text-gray-600 mb-2">{secondMovie.director}</p>
-                <div className="flex items-center justify-center gap-1 mb-3">
-                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                  <span className="font-semibold text-xl text-gray-800">{secondMovie.rating.toFixed(1)}</span>
-                </div>
-                
-                {/* 투표 결과 */}
-                <div className="bg-gray-300/50 rounded-lg p-4 border border-gray-400">
-                  <div className="font-bold text-xl mb-1" style={{ color: '#000000' }}>
-                    {secondMoviePercentage}%
-                  </div>
-                  <div className="text-sm" style={{ color: '#000000' }}>
-                    {secondMovieVotes.toLocaleString()}표
-                  </div>
+                {/* 투표 버튼 또는 결과 */}
+                <div className="w-48 mt-4">
+                  {!hasVoted ? (
+                    <Button 
+                      onClick={() => handleVote('second')}
+                      className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold w-full"
+                    >
+                      이 영화에 투표
+                    </Button>
+                  ) : (
+                    <div className="bg-gray-300/50 rounded-lg p-4 border border-gray-400">
+                      <div className="font-bold text-xl mb-1" style={{ color: '#000000' }}>
+                        {secondMoviePercentage}%
+                      </div>
+                      <div className="text-sm" style={{ color: '#000000' }}>
+                        {secondMovieVotes.toLocaleString()}표
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
             
             {/* 투표 참여 안내 */}
             <div className="mt-8 text-center">
-              <div className="bg-red-600/20 rounded-xl p-4 inline-block border border-red-500/30">
-                <p className="text-red-500">
-                  🗳️ <span className="font-semibold">투표는 매주 월요일 초기화됩니다</span>
-                </p>
-                <p className="text-red-400 text-sm mt-1">
-                  다음 투표는 7일 후 시작됩니다
-                </p>
-              </div>
+              {!hasVoted ? (
+                <div className="bg-blue-600/20 rounded-xl p-4 inline-block border border-blue-500/30">
+                  <p className="text-blue-600">
+                    🗳️ <span className="font-semibold">어떤 영화가 더 좋았나요? 투표해주세요!</span>
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-green-600/20 rounded-xl p-4 inline-block border border-green-500/30">
+                  <p className="text-green-600">
+                    ✅ <span className="font-semibold">투표가 완료되었습니다!</span>
+                  </p>
+                  <p className="text-green-500 text-sm mt-1">
+                    투표는 매주 월요일 초기화됩니다
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
