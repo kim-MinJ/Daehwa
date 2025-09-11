@@ -438,8 +438,7 @@ useEffect(() => {
           {/* 영화 포스터 */}
           <div className="flex-shrink-0">
             <div className="w-16 h-20 rounded-lg overflow-hidden shadow-md">
-              
-              <ImageWithFallback 
+              <ImageWithFallback
                 src={`https://image.tmdb.org/t/p/w500/${review?.moviePoster}`}
                 alt={review.movieTitle}
                 className="w-full h-full object-cover"

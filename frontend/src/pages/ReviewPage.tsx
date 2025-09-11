@@ -6,7 +6,6 @@
   import { useEffect, useState } from 'react';
   import { Page } from '../components/types';
   import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
   // import CommentModal from "./CommentModal";
 
   
@@ -136,7 +135,6 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
 };
 
   export default function ReviewPage({ onMovieClick, onNavigation }: any) {
-      const navigate = useNavigate();
     const [todayMovie, setTodayMovie] = useState<Movie | null>(null);
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState<Review[]>([]);
@@ -288,7 +286,7 @@ useEffect(() => {
                 <div className="flex-shrink-0">
                   <div 
                     className="w-36 h-52 rounded-lg overflow-hidden shadow-lg cursor-pointer group"
-                    onClick={() => todayMovie && navigate(`/movies/${todayMovie.movieIdx}`)}
+                    onClick={() => onMovieClick(todayMovie)}
                   >
                     <ImageWithFallback
                       src={
