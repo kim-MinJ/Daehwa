@@ -1,5 +1,5 @@
 // src/pages/AdminPage.tsx
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, MessageSquare } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
@@ -12,8 +12,6 @@ import AdminSearchBar from "../components/admin/AdminSearchBar";
 import { api } from "../lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import axios from "axios";
 
 export default function AdminPage() {
   const { userInfo, loading, token } = useAuth();
@@ -102,21 +100,19 @@ export default function AdminPage() {
 
   // Review 상태 변경 (블라인드)
   const updateReviewStatus = async (reviewIdx: number, isBlind: 0 | 1) => {
-  if (!token) return;
-  try {
-    await api.patch(
-      `/reviews/${reviewIdx}/status`, // ← api의 baseURL이 이미 /api 포함
-      { isBlind },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setReviews(prev =>
-      prev.map(r => (r.reviewIdx === reviewIdx ? { ...r, isBlind } : r))
-    );
-  } catch (err) {
-    console.error(err);
-    alert("리뷰 상태 변경 실패");
-  }
-};
+    if (!token) return;
+    try {
+      await api.patch(
+        `/reviews/${reviewIdx}/status`,
+        { isBlind },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setReviews(prev => prev.map(r => r.reviewIdx === reviewIdx ? { ...r, isBlind } : r));
+    } catch (err) {
+      console.error(err);
+      alert("리뷰 상태 변경 실패");
+    }
+  };
 
   // Review 삭제
   const deleteReview = async (reviewIdx: number) => {
@@ -134,7 +130,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-white">
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 관리자 소개 */}
         <div className="mb-8">
@@ -210,7 +205,6 @@ export default function AdminPage() {
         updateReviewStatus={updateReviewStatus}
         deleteReview={deleteReview}
       />
-
     </div>
   );
 }

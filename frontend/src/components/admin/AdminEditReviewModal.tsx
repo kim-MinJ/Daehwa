@@ -1,5 +1,5 @@
 // src/components/admin/AdminEditReviewModal.tsx
-import React, { useState, useEffect } from "react"; // React 전체 import
+import React, { useState, useEffect } from "react";
 import { Review } from "./types";
 import "/src/assets/AdminEditUserModal.css";
 
@@ -16,9 +16,9 @@ export default function AdminEditReviewModal({
   updateReviewStatus,
   deleteReview,
 }: Props) {
-  const [isBlind, setIsBlind] = React.useState<0 | 1>(0);
+  const [isBlind, setIsBlind] = useState<0 | 1>(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (editingReview) setIsBlind(editingReview.isBlind as 0 | 1);
   }, [editingReview]);
 
@@ -30,11 +30,11 @@ export default function AdminEditReviewModal({
   };
 
   const handleDelete = async () => {
-  if (editingReview && confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
-    await deleteReview(editingReview.reviewIdx); // 소프트 삭제 호출
-    setEditingReview(null); // 모달 닫기
-  }
-};
+    if (editingReview && confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
+      await deleteReview(editingReview.reviewIdx);
+      setEditingReview(null);
+    }
+  };
 
   if (!editingReview) return null;
 
@@ -76,7 +76,6 @@ export default function AdminEditReviewModal({
           </div>
         </div>
 
-        {/* 버튼 그룹 */}
         <div className="modal-buttons" style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
           <button
             className="modal-save-btn"
@@ -94,26 +93,22 @@ export default function AdminEditReviewModal({
           </button>
 
           <button
-  className="modal-delete-btn"
-  onClick={handleDelete}
-  style={{
-    padding: "6px 16px",
-    backgroundColor: "#fff",
-    color: "#000", // 텍스트는 검정 유지
-    border: "2px solid #888",
-    borderRadius: "4px",
-    cursor: "pointer",
-    transition: "background-color 3s ease", // 색상만 전환
-  }}
-  onMouseEnter={(e) => {
-    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#ffdddd"; // 연한 빨강
-  }}
-  onMouseLeave={(e) => {
-    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#fff";
-  }}
->
-  삭제
-</button>
+            className="modal-delete-btn"
+            onClick={handleDelete}
+            style={{
+              padding: "6px 16px",
+              backgroundColor: "#fff",
+              color: "#000",
+              border: "2px solid #888",
+              borderRadius: "4px",
+              cursor: "pointer",
+              transition: "background-color 0.3s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#ffdddd")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#fff")}
+          >
+            삭제
+          </button>
 
           <button
             className="modal-cancel-btn"
