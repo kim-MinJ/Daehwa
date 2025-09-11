@@ -94,7 +94,7 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
     <div className="mt-2 border-t border-gray-300 pt-3">
       <button
         onClick={onToggle}
-        className="text-blue-600 font-medium hover:underline mb-2"
+        className="font-medium hover:underline mb-2"
       >
         {isOpen ? "댓글 접기 ▲" : "댓글 보기 ▼"}
       </button>
@@ -144,10 +144,30 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
     const [userRating, setUserRating] = useState(0);
     const [newReview, setNewReview] = useState("");
 
-    const [isModalOpen, setIsModalOpen] = useState(false); // ✅ 모달 열림 상태
     const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null); 
     const [showSpoilers, setShowSpoilers] = useState<boolean>(false);
 
+    const [directors, setDirectors] = useState<string[]>([]);
+    const [genres, setGenres] = useState<string[]>([]);
+
+useEffect(() => {
+  if (!todayMovie) return;
+
+  // 감독
+  axios.get<string[]>(`http://localhost:8080/api/movies/${todayMovie.tmdbMovieId}/directors`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+  })
+  .then(res => setDirectors(res.data))
+  .catch(console.error);
+
+  // 장르
+  axios.get<string[]>(`http://localhost:8080/api/movies/${todayMovie.movieIdx}/genres`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+  })
+  .then(res => setGenres(res.data))
+  .catch(console.error);
+
+}, [todayMovie]);
 
 
 useEffect(() => {
@@ -262,7 +282,6 @@ useEffect(() => {
                 </Badge>
                 <h2 className="text-2xl font-bold text-black">오늘의 영화에 리뷰를 남겨주세요!</h2>
               </div>
-              <span className="text-sm text-black">2024년 9월 5일</span>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* 왼쪽 - 오늘의 영화 정보 */}
@@ -289,11 +308,13 @@ useEffect(() => {
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600 w-12">감독</span>
-                      <span className="text-black">고쳐야함</span>
+                      <span className="text-black">{directors.join(", ") || "정보 없음"}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600 w-12">장르</span>
-                      <Badge variant="outline" className="border-gray-400 text-black">고쳐야함</Badge>
+                      {genres.length > 0 ? genres.map((g) => (
+                        <Badge key={g} variant="outline" className="border-gray-400 text-black">{g}</Badge>
+                      )) : <span className="text-black">정보 없음</span>}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600 w-12">개봉</span>
@@ -381,11 +402,6 @@ useEffect(() => {
                     오늘의 영화 리뷰 등록하기
                   </Button>
                   
-                  {/* <div className="bg-orange-100 rounded-lg p-4 border border-orange-300">
-                    <p className="text-sm text-orange-700">
-                      💝 오늘의 영화 리뷰 작성시 1,000포인트를 드립니다!
-                    </p>
-                  </div> */}
                 </div>
               </div>
             </div>
@@ -410,30 +426,31 @@ useEffect(() => {
 
           {/* 리뷰 목록 */}
           <div className="space-y-6">
-            {reviews.map((review) => (
-              <div key={review.reviewIdx} className="bg-gray-100/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/30">
-                <div className="flex items-start gap-4">
-                  {/* 영화 포스터 */}
-                  <div className="flex-shrink-0">
+  {reviews.map((review) => {
+    const isOpen = selectedReviewId === review.reviewIdx; // ✅ 현재 열려있는 리뷰 확인
+
+    return (
+      <div
+        key={review.reviewIdx}
+        className="bg-gray-100/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/30"
+      >
+        <div className="flex items-start gap-4">
+          {/* 영화 포스터 */}
+          <div className="flex-shrink-0">
             <div className="w-16 h-20 rounded-lg overflow-hidden shadow-md">
               <ImageWithFallback
-                src={
-                 `https://image.tmdb.org/t/p/w500/${review?.moviePoster}`
-                 
-                }
+                src={`https://image.tmdb.org/t/p/w500/${review?.moviePoster}`}
                 alt={review.movieTitle}
                 className="w-full h-full object-cover"
               />
             </div>
           </div>
 
-          {/* 유저 아바타 (임시 기본 이미지 사용) */}
-
+          {/* 리뷰 본문 */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <span className="font-semibold text-black">{review.userId}</span>
-                {/* 필요하다면 인증 여부 필드 추가 */}
               </div>
               <Button
                 variant="ghost"
@@ -466,31 +483,28 @@ useEffect(() => {
             <p
               className={`text-gray-800 mb-4 leading-relaxed transition-all duration-300`}
               style={{
-                filter: review.isBlind && !showSpoilers ? 'blur(4px)' : 'none',
-                userSelect: review.isBlind && !showSpoilers ? 'none' : 'auto',
+                filter: review.isBlind && !showSpoilers ? "blur(4px)" : "none",
+                userSelect: review.isBlind && !showSpoilers ? "none" : "auto",
               }}
             >
               {review.content}
             </p>
 
-            <div className="flex items-center gap-6 pt-2">
-              <button className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group">
-                {/* <ThumbsUp className="h-4 w-4 group-hover:scale-110 transition-transform" /> */}
-                {/* <span className="text-sm font-medium">0</span> */}
-              </button>
-              <button className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group">
-                <MessageCircle className="h-4 w-4 group-hover:scale-110 transition-transform" onClick={() => {
-                      setSelectedReviewId(review.reviewIdx);
-                      setIsModalOpen(true);
-                    }} />
-                <span className="text-sm font-medium">0</span>
-              </button>
-            </div>
+            {/* 댓글 아코디언 삽입 */}
+            <CommentAccordion
+              reviewId={review.reviewIdx}
+              isOpen={isOpen}
+              onToggle={() =>
+                setSelectedReviewId(isOpen ? null : review.reviewIdx)
+              }
+            />
           </div>
         </div>
       </div>
-    ))}
-  </div>
+    );
+  })}
+</div>
+
 
           {/* 더보기 버튼
           <div className="text-center mt-8">

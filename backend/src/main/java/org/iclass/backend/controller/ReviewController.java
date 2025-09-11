@@ -3,7 +3,6 @@ package org.iclass.backend.controller;
 import java.util.List;
 
 import org.iclass.backend.dto.ReviewDto;
-import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.service.ReviewService;
 import org.springframework.http.ResponseEntity;

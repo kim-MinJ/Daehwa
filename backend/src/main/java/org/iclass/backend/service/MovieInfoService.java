@@ -1,7 +1,6 @@
 package org.iclass.backend.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.entity.MovieCrewEntity;

@@ -2,6 +2,7 @@ package org.iclass.backend.service;
 
 import java.util.List;
 
+import org.iclass.backend.dto.CommentsDto;
 import org.iclass.backend.entity.CommentsEntity;
 import org.iclass.backend.entity.ReviewEntity;
 import org.iclass.backend.entity.UsersEntity;
@@ -24,7 +25,7 @@ public class CommentService {
     return commentsRepository.findByReviewReviewIdx(reviewId);
   }
 
-  public CommentsEntity addComment(Long reviewId, String userId, String content) {
+  public CommentsEntity addComment(Long reviewId, String userId, CommentsDto dto) {
     ReviewEntity review = reviewRepository.findById(reviewId)
         .orElseThrow(() -> new RuntimeException("리뷰가 존재하지 않습니다."));
 
@@ -34,7 +35,7 @@ public class CommentService {
     CommentsEntity comment = CommentsEntity.builder()
         .review(review)
         .user(user)
-        .content(content)
+        .content(dto.getContent())
         .build();
 
     return commentsRepository.save(comment);
