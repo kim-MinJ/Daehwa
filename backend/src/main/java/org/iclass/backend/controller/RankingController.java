@@ -4,10 +4,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.iclass.backend.dto.MovieInfoDto;
+import org.iclass.backend.entity.MovieInfoEntity;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -57,5 +60,17 @@ public class RankingController {
                 .body(Map.of("error", "TMDB API 호출 실패", "message", e.getMessage()));
     }
     }
+    @GetMapping("/ranking")
+    public List<MovieInfoDto> getRanking() {
+    List<MovieInfoEntity> movies = movieService.findRankingMovies();
+    return movies.stream()
+                 .map(MovieInfoDto::of)
+                 .collect(Collectors.toList());
+}
+    @PostMapping("/vote")
+    public ResponseEntity<?> voteMovie(@RequestParam Long movieId) {
+    movieService.increaseVoteCount(movieId);
+    return ResponseEntity.ok().build();
+}
 }
 

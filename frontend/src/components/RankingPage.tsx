@@ -18,6 +18,7 @@ interface Movie {
   runtime: number;
   description?: string;
   rank?: number;
+  voteCount?: number;
 }
 
 type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail';
@@ -54,35 +55,36 @@ export default function RankingPage({ onMovieClick, onBack, onNavigation }: Rank
     return <div className="min-h-screen flex items-center justify-center">영화 데이터를 불러오는 중...</div>;
   }
 
-  const rankedMovies = movies
-    .map((movie, index) => ({ ...movie, rank: index + 1 }))
-    .sort((a, b) => b.rating - a.rating);
+const rankedMovies = movies
+  .map((movie, index) => ({ ...movie, rank: index + 1 }))
+  .sort((a, b) => b.rating - a.rating);
 
-  const topMovie = rankedMovies[0];
-  const secondMovie = rankedMovies[1];
-  const remainingMovies = rankedMovies.slice(2);
+const topMovie = rankedMovies[0];
+const secondMovie = rankedMovies[1];
+const remainingMovies = rankedMovies.slice(2);
 
-  const boxOfficeMovies = rankedMovies.slice(0, 10);
-  const totalSlides = Math.ceil(boxOfficeMovies.length / moviesPerSlide);
+// BoxOffice 슬라이드 관련
+const boxOfficeMovies = rankedMovies.slice(0, 10);
+const totalSlides = Math.ceil(boxOfficeMovies.length / moviesPerSlide);
+const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % totalSlides);
+const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+const getCurrentSlideMovies = () => {
+  const startIndex = currentSlide * moviesPerSlide;
+  return boxOfficeMovies.slice(startIndex, startIndex + moviesPerSlide);
+};
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % totalSlides);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+// ✅ DB에서 가져온 voteCount를 사용
+const topMovieVotes = topMovie.voteCount || 0;
+const secondMovieVotes = secondMovie.voteCount || 0;
+const totalVotes = topMovieVotes + secondMovieVotes;
 
-  const getCurrentSlideMovies = () => {
-    const startIndex = currentSlide * moviesPerSlide;
-    return boxOfficeMovies.slice(startIndex, startIndex + moviesPerSlide);
-  };
+const topMoviePercentage = totalVotes > 0 ? Math.round((topMovieVotes / totalVotes) * 100) : 0;
+const secondMoviePercentage = totalVotes > 0 ? Math.round((secondMovieVotes / totalVotes) * 100) : 0;
 
-  const topMovieVotes = 15247;
-  const secondMovieVotes = 12893;
-  const totalVotes = topMovieVotes + secondMovieVotes;
-  const topMoviePercentage = Math.round((topMovieVotes / totalVotes) * 100);
-  const secondMoviePercentage = Math.round((secondMovieVotes / totalVotes) * 100);
-
-  // 투표 처리 함수
-  const handleVote = (choice: 'first' | 'second') => {
-    setSelectedVote(choice);
-    setHasVoted(true);
+// 투표 처리
+const handleVote = (choice: 'first' | 'second') => {
+  setSelectedVote(choice);
+  setHasVoted(true);
   };
 
   return (
