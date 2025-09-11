@@ -241,7 +241,7 @@ export default function SearchPage() {
                     <div
                       key={`${movie.movieIdx}-${idx}`} // 중복 key 방지
                       className="cursor-pointer"
-                      onClick={() => navigate(`/movie/${movie.movieIdx}`)}
+                      onClick={() => navigate(`/movies/${movie.movieIdx}`)}
                     >
                       <div className="aspect-[2/3] rounded-lg overflow-hidden relative">
                         <ImageWithFallback

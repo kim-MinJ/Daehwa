@@ -93,7 +93,12 @@ public class SecurityConfig {
     http.csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/review/**").authenticated()
+            .requestMatchers(HttpMethod.POST, "/api/review/*/comments").hasRole("USER")
             .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/movie/**").permitAll()
+            .requestMatchers("/api/movies/**").permitAll()
+            .requestMatchers("/api/movie/*/directors", "/api/movie/*/genres").permitAll()
             .requestMatchers("/api/**", "/error").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/review/**").authenticated()
             .requestMatchers(HttpMethod.PATCH, "/api/reviews/**").authenticated()

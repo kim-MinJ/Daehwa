@@ -29,4 +29,3 @@ public interface MovieInfoRepository extends JpaRepository<MovieInfoEntity, Long
     @Query(value = "SELECT * FROM MOVIE_INFO ORDER BY DBMS_RANDOM.VALUE FETCH FIRST 1 ROWS ONLY", nativeQuery = true)
     MovieInfoEntity findRandomMovie();
 }
-
