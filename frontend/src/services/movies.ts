@@ -16,13 +16,13 @@ export type Movie = {
 };
 
 export async function fetchMovieById(id: number) {
-  const res = await fetch(`http://192.168.0.30/api/movies/${id}`);
+  const res = await fetch(`/api/movies/${id}`);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Failed: ${res.status}`);
   return res.json();
 }
 export async function fetchMovieByTmdbId(tmdbId: number) {
-  const res = await fetch(`http://192.168.0.30/api/movies?tmdbId=${tmdbId}`);
+  const res = await fetch(`/api/movies?tmdbId=${tmdbId}`);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Failed: ${res.status}`);
   return res.json();
@@ -32,7 +32,7 @@ export async function fetchMovieList(params?: { page?: number; size?: number; q?
   if (params?.page) query.append("page", String(params.page));
   if (params?.size) query.append("size", String(params.size));
   if (params?.q) query.append("q", params.q);
-  const res = await fetch(`http://192.168.0.30/api/movies/list?${query}`);
+  const res = await fetch(`/api/movies/list?${query}`);
   if (!res.ok) throw new Error(`Failed: ${res.status}`);
   return res.json() as Promise<Movie[]>;
 }
@@ -44,7 +44,7 @@ export async function fetchSimilar(id: number) {
 }
 
 export async function fetchCredits(id: number) {
-  const res = await fetch(`http://192.168.0.30/api/movies/${id}/credits`);
+  const res = await fetch(`/api/movies/${id}/credits`);
   if (!res.ok) throw new Error(`Failed: ${res.status}`);
   return res.json(); // 타입은 필요 시 정의
 }
@@ -67,7 +67,7 @@ export async function fetchMovies(query: Query = {}, token?: string) {
   if (query.sort === "rating") params.append("sort", "voteAverage,desc");
 
   // ✅ 목록 엔드포인트로 변경
-  const url = `http://192.168.0.30/api/movies/list?${params.toString()}`;
+  const url = `/api/movies/list?${params.toString()}`;
 
   const res = await fetch(url, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
