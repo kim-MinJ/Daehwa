@@ -1,5 +1,7 @@
 package org.iclass.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -32,6 +34,7 @@ public class MovieGenresEntity {
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
+  @JsonBackReference
   private MovieInfoEntity movie;
 
   @ManyToOne
