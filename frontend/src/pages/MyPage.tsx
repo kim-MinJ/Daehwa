@@ -1,3 +1,4 @@
+// src/pages/MyPage.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -63,22 +64,24 @@ export default function MyPage({}: MyPageProps) {
 
   const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
-  // 인증 헤더
   const authHeader = { Authorization: `Bearer ${token}` };
 
+  // ───────── API 호출 ─────────
   const fetchBookmarks = async () => {
     if (!token) return;
-    axios
-      .get("http://192.168.0.30/api/bookmarks", { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => setBookmarks(res.data))
-      .catch(console.error);
+    try {
+      const res = await axios.get("http://192.168.0.30/api/bookmarks", { headers: authHeader });
+      setBookmarks(res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchRecommendMovies = async () => {
     if (!token) return;
-    axios
-      .get("http://192.168.0.30/api/movies/popular", {
-        headers: { Authorization: `Bearer ${token}` },
+    try {
+      const res = await axios.get("http://192.168.0.30/api/movies/popular", {
+        headers: authHeader,
         params: { count: 12 },
       });
       setRecommendMovies(res.data);
@@ -89,12 +92,12 @@ export default function MyPage({}: MyPageProps) {
 
   const fetchReviews = async () => {
     if (!token) return;
-    axios
-      .get("http://192.168.0.30/api/reviews/my", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setReviews(res.data))
-      .catch(console.error);
+    try {
+      const res = await axios.get("http://192.168.0.30/api/reviews/my", { headers: authHeader });
+      setReviews(res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -109,23 +112,17 @@ export default function MyPage({}: MyPageProps) {
 
   const toggleBookmark = async (movieIdx: number) => {
     if (!token) return;
-    const existing = bookmarks.find((b) => b.movieIdx === movieIdx);
-
-    if (existing) {
-      axios
-        .delete(`http://192.168.0.30/api/bookmarks/${existing.bookmarkIdx}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then(() => fetchBookmarks())
-        .catch(console.error);
-    } else {
-      axios
-        .post(`http://192.168.0.30/api/bookmarks`, null, {
+    try {
+      const existing = bookmarks.find((b) => b.movieIdx === movieIdx);
+      if (existing) {
+        await axios.delete(`http://192.168.0.30/api/bookmarks/${existing.bookmarkIdx}`, { headers: authHeader });
+      } else {
+        await axios.post(`http://192.168.0.30/api/bookmarks`, null, {
           params: { movieIdx },
           headers: authHeader,
         });
       }
-      fetchBookmarks();
+      await fetchBookmarks();
     } catch (err) {
       console.error(err);
     }
@@ -133,6 +130,7 @@ export default function MyPage({}: MyPageProps) {
 
   const isBookmarked = (movieIdx: number) => bookmarks.some((b) => b.movieIdx === movieIdx);
 
+  // ───────── 렌더 ─────────
   return (
     <div className="bg-black min-h-screen">
       <div className="max-w-7xl mx-auto px-3">
@@ -186,24 +184,22 @@ export default function MyPage({}: MyPageProps) {
                 className="w-full"
                 onClick={async () => {
                   if (!adminCode.trim()) return alert("관리자 코드를 입력해주세요.");
-                  axios
-                    .put("http://192.168.0.30/api/admin/grant", null, {
+                  try {
+                    const res = await axios.put("http://192.168.0.30/api/admin/grant", null, {
                       params: { adminCode },
-                      headers: { Authorization: `Bearer ${token}` },
-                    })
-                    .then(async (res) => {
-                      alert(res.data.message);
-                      setIsAdminModalOpen(false);
-                      setAdminCode("");
-                      if (getUserInfo && setUserInfo) {
-                        const data = await getUserInfo();
-                        setUserInfo(data);
-                      }
-                    })
-                    .catch((err) => {
-                      console.error(err);
-                      alert(err.response?.data?.message || "관리자 권한 부여 실패");
+                      headers: authHeader,
                     });
+                    alert(res.data.message);
+                    setIsAdminModalOpen(false);
+                    setAdminCode("");
+                    if (getUserInfo && setUserInfo) {
+                      const data = await getUserInfo();
+                      setUserInfo(data);
+                    }
+                  } catch (err: any) {
+                    console.error(err);
+                    alert(err.response?.data?.message || "관리자 권한 부여 실패");
+                  }
                 }}
               >
                 권한 부여
@@ -282,7 +278,7 @@ export default function MyPage({}: MyPageProps) {
                           variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
                           onClick={() => toggleBookmark(movie.movieIdx)}
                         >
-                          <Heart className="w-4 h-4 mr-1" /> {isBookmarked(movie.movieIdx) ? "북마크" : "북마크"}
+                          <Heart className="w-4 h-4 mr-1" /> 북마크
                         </Button>
                       </CardContent>
                     </Card>
@@ -318,52 +314,51 @@ export default function MyPage({}: MyPageProps) {
               )}
             </TabsContent>
 
-           {/* 내 리뷰 */}
-<TabsContent value="reviews">
-  {reviews.length ? (
-    <div className="space-y-4">
-      {reviews.map((r) => (
-        <div key={r.reviewIdx} className="border rounded-lg p-4 bg-gray-50 shadow-sm relative">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold">
-              영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}
-            </h3>
-            <div className="text-sm text-gray-500 flex flex-col">
-              <span>
-                작성일 :{" "}
-                {r.createdAt
-                  ? new Date(r.createdAt.split(".")[0].replace(" ", "T")).toLocaleDateString()
-                  : "-"}
-              </span>
-              <span>
-                수정일 :{" "}
-                {r.updateAt
-                  ? new Date(r.updateAt.split(".")[0].replace(" ", "T")).toLocaleDateString()
-                  : "-"}
-              </span>
-            </div>
-          </div>
+            {/* 내 리뷰 */}
+            <TabsContent value="reviews">
+              {reviews.length ? (
+                <div className="space-y-4">
+                  {reviews.map((r) => (
+                    <div key={r.reviewIdx} className="border rounded-lg p-4 bg-gray-50 shadow-sm relative">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-semibold">
+                          영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}
+                        </h3>
+                        <div className="text-sm text-gray-500 flex flex-col">
+                          <span>
+                            작성일 :{" "}
+                            {r.createdAt
+                              ? new Date(r.createdAt.split(".")[0].replace(" ", "T")).toLocaleDateString()
+                              : "-"}
+                          </span>
+                          <span>
+                            수정일 :{" "}
+                            {r.updateAt
+                              ? new Date(r.updateAt.split(".")[0].replace(" ", "T")).toLocaleDateString()
+                              : "-"}
+                          </span>
+                        </div>
+                      </div>
 
-          <p className="mb-2 text-gray-800">{r.content}</p>
-          <div className="text-sm text-gray-600">평점: {r.rating} / 10</div>
+                      <p className="mb-2 text-gray-800">{r.content}</p>
+                      <div className="text-sm text-gray-600">평점: {r.rating} / 10</div>
 
-          {/* 보러가기 버튼 (오른쪽 아래) */}
-          <div className="flex justify-end mt-4">
-            <Button
-              size="sm"
-              variant="default"
-              onClick={() => navigate(`/movie/${r.movieIdx}?reviewId=${r.reviewIdx}`)}
-            >
-              보러가기
-            </Button>
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p>작성한 리뷰가 없습니다.</p>
-  )}
-</TabsContent>
+                      <div className="flex justify-end mt-4">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => navigate(`/movie/${r.movieIdx}?reviewId=${r.reviewIdx}`)}
+                        >
+                          보러가기
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>작성한 리뷰가 없습니다.</p>
+              )}
+            </TabsContent>
 
             {/* 계정 설정 */}
             <TabsContent value="settings">
@@ -384,8 +379,8 @@ export default function MyPage({}: MyPageProps) {
                       <Button
                         onClick={async () => {
                           if (!username.trim()) return alert("이름을 입력해주세요.");
-                          axios
-                            .put(
+                          try {
+                            await axios.put(
                               "http://localhost:8080/api/users/update",
                               { username },
                               { headers: authHeader }
@@ -428,9 +423,8 @@ export default function MyPage({}: MyPageProps) {
                             return alert("모든 필드를 입력해주세요.");
                           if (newPassword !== confirmPassword)
                             return alert("비밀번호 확인이 일치하지 않습니다.");
-
-                          axios
-                            .put(
+                          try {
+                            await axios.put(
                               "http://localhost:8080/api/users/password",
                               { currentPassword, newPassword },
                               { headers: authHeader }
