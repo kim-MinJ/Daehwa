@@ -2,26 +2,32 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Search } from "lucide-react";
-import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
-import { User } from "../components/admin/types";
+import { User, Review } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
+import AdminReviewsTab from "../components/admin/AdminReviewsTab";
 import AdminEditUserModal from "../components/admin/AdminEditUserModal";
+import AdminEditReviewModal from "../components/admin/AdminEditReviewModal";
 import { api } from "../lib/api";
 
 export function AdminPage() {
   const { userInfo, loading, token } = useAuth();
   const navigate = useNavigate();
 
+  // --- 상태 ---
   const [activeTab, setActiveTab] = useState("users");
   const [searchQuery, setSearchQuery] = useState("");
+
   const [users, setUsers] = useState<User[]>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
 
   // --- admin 접근 제한 ---
   useEffect(() => {
@@ -36,18 +42,13 @@ export function AdminPage() {
     const fetchUsers = async () => {
       if (!token) return;
       try {
-        const res = await api.get("/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // UsersDto → User 타입 변환
+        const res = await api.get("/users", { headers: { Authorization: `Bearer ${token}` } });
         const formattedUsers: User[] = res.data.map((u: any) => ({
-          id: u.userId, // userId를 id로
+          id: u.userId,
           username: u.username,
           status: u.status === 0 ? "active" : u.status === 1 ? "inactive" : "banned",
           regDate: u.regDate,
         }));
-
         setUsers(formattedUsers);
       } catch (err: any) {
         console.error(err.response?.status, err.response?.data || err);
@@ -57,35 +58,43 @@ export function AdminPage() {
     fetchUsers();
   }, [token]);
 
-  // --- 삭제 ---
-  const deleteUser = async (id: string) => {
-    if (!token) return;
-    try {
-      await api.delete(`/users/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(users.filter(u => u.id !== id));
-    } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
-      alert("삭제 실패");
-    }
-  };
+  // --- Reviews API 호출 ---
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!token) return;
+      try {
+        const res = await api.get("/reviews", { headers: { Authorization: `Bearer ${token}` } });
+        setReviews(res.data);
+      } catch (err: any) {
+        console.error(err.response?.status, err.response?.data || err);
+        alert("리뷰 목록을 가져오지 못했습니다.");
+      }
+    };
+    fetchReviews();
+  }, [token]);
 
-  // --- 상태 변경 ---
+  // --- Users 상태 변경 ---
   const updateUserStatus = async (id: string, status: User["status"]) => {
     if (!token) return;
     try {
-      // 상태를 숫자로 변환 후 백엔드 호출
       const statusNum = status === "active" ? 0 : status === "inactive" ? 1 : 2;
-      await api.patch(
-        `/users/${id}/status`,
-        { status: statusNum },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.patch(`/users/${id}/status`, { status: statusNum }, { headers: { Authorization: `Bearer ${token}` } });
       setUsers(users.map(u => (u.id === id ? { ...u, status } : u)));
     } catch (err: any) {
       console.error(err.response?.status, err.response?.data || err);
       alert("상태 변경 실패");
+    }
+  };
+
+  // --- 리뷰 블라인드 상태 변경 ---
+  const updateReviewStatus = async (reviewIdx: number, isBlind: 0 | 1) => {
+    if (!token) return;
+    try {
+      await api.patch(`/reviews/${reviewIdx}/status`, { isBlind }, { headers: { Authorization: `Bearer ${token}` } });
+      setReviews(reviews.map(r => (r.reviewIdx === reviewIdx ? { ...r, isBlind } : r)));
+    } catch (err: any) {
+      console.error(err.response?.status, err.response?.data || err);
+      alert("리뷰 블라인드 상태 변경 실패");
     }
   };
 
@@ -117,6 +126,7 @@ export function AdminPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users">회원 관리</TabsTrigger>
+            <TabsTrigger value="reviews">리뷰 관리</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -127,6 +137,15 @@ export function AdminPage() {
               updateUserStatus={updateUserStatus}
             />
           </TabsContent>
+
+          <TabsContent value="reviews">
+            <AdminReviewsTab
+              reviews={reviews}
+              searchQuery={searchQuery}
+              setEditingReview={setEditingReview}
+              updateReviewStatus={updateReviewStatus}
+            />
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -134,6 +153,13 @@ export function AdminPage() {
         editingUser={editingUser}
         setEditingUser={setEditingUser}
         updateUserStatus={updateUserStatus}
+      />
+
+      <AdminEditReviewModal
+        editingReview={editingReview}
+        setEditingReview={setEditingReview}
+        updateReviewStatus={updateReviewStatus}
+        deleteReview={async () => {}} // 삭제 기능 제외
       />
 
       <Footer />

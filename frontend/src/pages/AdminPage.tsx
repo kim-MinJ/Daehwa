@@ -1,8 +1,9 @@
 // src/pages/AdminPage.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
+import { Users, MessageSquare } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { User, Review, Movie } from "../components/admin/types";
+import { User, Review } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
 import AdminReviewsTab from "../components/admin/AdminReviewsTab";
 import AdminEditUserModal from "../components/admin/AdminEditUserModal";
@@ -10,6 +11,9 @@ import AdminEditReviewModal from "../components/admin/AdminEditReviewModal";
 import AdminSearchBar from "../components/admin/AdminSearchBar";
 import { api } from "../lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import axios from "axios";
 
 export default function AdminPage() {
   const { userInfo, loading, token } = useAuth();
@@ -20,12 +24,11 @@ export default function AdminPage() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [movies, setMovies] = useState<Movie[]>([]);
 
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
 
-  // --- 관리자 접근 제한 ---
+  // 관리자 접근 제한
   useEffect(() => {
     if (!loading && (!userInfo || userInfo.role !== "admin")) {
       alert("관리자만 접근할 수 있습니다.");
@@ -33,7 +36,7 @@ export default function AdminPage() {
     }
   }, [userInfo, loading, navigate]);
 
-  // --- Users API 호출 ---
+  // Users API 호출
   useEffect(() => {
     if (!token) return;
     (async () => {
@@ -45,36 +48,22 @@ export default function AdminPage() {
           status: u.status === 0 ? "active" : u.status === 1 ? "inactive" : "banned",
           regDate:
             u.regDate && !isNaN(Date.parse(u.regDate))
-              ? new Date(u.regDate).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
-              : "-",  
+              ? new Date(u.regDate).toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })
+              : "-",
         }));
         setUsers(formattedUsers);
-      } catch (err: any) {
+      } catch (err) {
         console.error(err);
         alert("회원 목록을 가져오는 데 실패했습니다.");
       }
     })();
   }, [token]);
 
-  // --- Movies API 호출 (전체 영화) ---
-  useEffect(() => {
-    if (!token) return;
-    (async () => {
-      try {
-        const res = await api.get("/movies/all", { headers: { Authorization: `Bearer ${token}` } });
-        const formattedMovies: Movie[] = res.data.map((m: any) => ({
-          id: m.movieIdx || m.id,
-          title: m.title,
-        }));
-        setMovies(formattedMovies);
-      } catch (err) {
-        console.error(err);
-        alert("영화 목록을 가져오는 데 실패했습니다.");
-      }
-    })();
-  }, [token]);
-
-  // --- Reviews API 호출 ---
+  // Reviews API 호출
   useEffect(() => {
     if (!token) return;
     (async () => {
@@ -88,7 +77,7 @@ export default function AdminPage() {
           rating: r.rating,
           createdAt: r.createdAt,
           updateAt: r.updateAt,
-          isBlind: r.isBlind
+          isBlind: r.isBlind,
         }));
         setReviews(formattedReviews);
       } catch (err) {
@@ -98,39 +87,45 @@ export default function AdminPage() {
     })();
   }, [token]);
 
-  // --- User 상태 변경 ---
+  // User 상태 변경
   const updateUserStatus = async (id: string, status: User["status"]) => {
     if (!token) return;
     try {
       const statusNum = status === "active" ? 0 : status === "inactive" ? 1 : 2;
       await api.patch(`/users/${id}/status`, { status: statusNum }, { headers: { Authorization: `Bearer ${token}` } });
       setUsers(prev => prev.map(u => (u.id === id ? { ...u, status } : u)));
-    } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
+    } catch (err) {
+      console.error(err);
       alert("상태 변경 실패");
     }
   };
 
-  // --- Review 상태 변경 ---
+  // Review 상태 변경 (블라인드)
   const updateReviewStatus = async (reviewIdx: number, isBlind: 0 | 1) => {
-    if (!token) return;
-    try {
-      await api.patch(`/reviews/${reviewIdx}/status`, { isBlind }, { headers: { Authorization: `Bearer ${token}` } });
-      setReviews(prev => prev.map(r => (r.reviewIdx === reviewIdx ? { ...r, isBlind } : r)));
-    } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
-      alert("리뷰 상태 변경 실패");
-    }
-  };
+  if (!token) return;
+  try {
+    await api.patch(
+      `/reviews/${reviewIdx}/status`, // ← api의 baseURL이 이미 /api 포함
+      { isBlind },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setReviews(prev =>
+      prev.map(r => (r.reviewIdx === reviewIdx ? { ...r, isBlind } : r))
+    );
+  } catch (err) {
+    console.error(err);
+    alert("리뷰 상태 변경 실패");
+  }
+};
 
-  // --- Review 삭제 ---
+  // Review 삭제
   const deleteReview = async (reviewIdx: number) => {
     if (!token) return;
     try {
       await api.delete(`/reviews/${reviewIdx}`, { headers: { Authorization: `Bearer ${token}` } });
       setReviews(prev => prev.filter(r => r.reviewIdx !== reviewIdx));
-    } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
+    } catch (err) {
+      console.error(err);
       alert("리뷰 삭제 실패");
     }
   };
@@ -139,12 +134,35 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-white">
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
-            <p className="text-gray-600 mt-2">MovieSSG 사이트 관리 시스템</p>
-          </div>
+        {/* 관리자 소개 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
+          <p className="text-gray-600 mt-2">
+            {userInfo?.username}님, MovieSSG 사이트 관리 시스템에 오신 것을 환영합니다.
+          </p>
+        </div>
+
+        {/* 통계 카드 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card
+            className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
+            onClick={() => setActiveTab("users")}
+          >
+            <Users className="h-8 w-8 text-blue-600 mb-2" />
+            <h2 className="text-lg font-medium text-gray-700">총 회원 수</h2>
+            <p className="text-3xl font-bold text-gray-900">{users.length}</p>
+          </Card>
+
+          <Card
+            className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
+            onClick={() => setActiveTab("reviews")}
+          >
+            <MessageSquare className="h-8 w-8 text-green-600 mb-2" />
+            <h2 className="text-lg font-medium text-gray-700">총 댓글 수</h2>
+            <p className="text-3xl font-bold text-gray-900">{reviews.length}</p>
+          </Card>
         </div>
 
         {/* 검색바 */}
@@ -154,8 +172,8 @@ export default function AdminPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users">회원 관리</TabsTrigger>
-            <TabsTrigger value="reviews">리뷰 관리</TabsTrigger>
-            <TabsTrigger value="comments">댓글 관리</TabsTrigger>
+            <TabsTrigger value="reviews">댓글 관리</TabsTrigger>
+            <TabsTrigger value="comments">댓글 관리(예비)</TabsTrigger>
             <TabsTrigger value="votes">투표 관리</TabsTrigger>
           </TabsList>
 
@@ -171,16 +189,16 @@ export default function AdminPage() {
           <TabsContent value="reviews">
             <AdminReviewsTab
               reviews={reviews}
-              users={users}
-              movies={movies}
               searchQuery={searchQuery}
               setEditingReview={setEditingReview}
+              users={users}
               updateReviewStatus={updateReviewStatus}
             />
           </TabsContent>
         </Tabs>
       </div>
 
+      {/* 모달 */}
       <AdminEditUserModal
         editingUser={editingUser}
         setEditingUser={setEditingUser}
@@ -192,6 +210,7 @@ export default function AdminPage() {
         updateReviewStatus={updateReviewStatus}
         deleteReview={deleteReview}
       />
+
     </div>
   );
 }

@@ -65,7 +65,7 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
 
   useEffect(() => {
     if (isOpen) {
-      axios.get(`http://localhost:8080/api/review/${reviewId}/comments`, {
+      axios.get(`http://localhost:8080/api/reviews/${reviewId}/comments`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       .then(res => setComments(res.data))
@@ -75,7 +75,7 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
 
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
-    axios.post(`http://localhost:8080/api/review/${reviewId}/comments`, {
+    axios.post(`http://localhost:8080/api/reviews/${reviewId}/comments`, {
       content: newComment,
       createdAt: new Date().toISOString()
     }, {
@@ -149,7 +149,7 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
 
 
 useEffect(() => {
-  axios.get("http://localhost:8080/api/review", {
+  axios.get("http://localhost:8080/api/reviews", {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
   })
   .then(async res => {
@@ -175,7 +175,7 @@ useEffect(() => {
 
   const handleSubmitReview = () => {
     if (!todayMovie) return;
-    axios.post("http://localhost:8080/api/review", {
+    axios.post("http://localhost:8080/api/reviews", {
     movieIdx: todayMovie.movieIdx,
     rating: userRating,
     content: newReview,
