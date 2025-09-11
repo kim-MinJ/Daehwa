@@ -15,6 +15,9 @@ export default defineConfig({
     outDir: 'build',
   },
   server: {
+    proxy: {
+      '/api': 'http://localhost:8080', // Spring Boot 서버 주소
+    },
     port: 5173,
     open: true, // 서버 시작 시 브라우저 자동 열기
   },

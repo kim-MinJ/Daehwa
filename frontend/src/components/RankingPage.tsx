@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Star, TrendingUp, Crown, Medal, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -21,18 +22,35 @@ interface Movie {
 type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail';
 
 interface RankingPageProps {
-  movies: Movie[];
   onMovieClick: (movie: Movie) => void;
   onBack: () => void;
   onNavigation: (page: Page) => void;
 }
 
-export default function RankingPage({ movies, onMovieClick, onBack, onNavigation }: RankingPageProps) {
-  // 슬라이드 상태 관리
+export default function RankingPage({ onMovieClick, onBack, onNavigation }: RankingPageProps) {
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const moviesPerSlide = 4;
 
-  // 평점 기준으로 정렬
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const res = await axios.get('http://localhost:8080/api/movie/ranking');
+        setMovies(res.data);
+      } catch (err) {
+        console.error('TMDB API 호출 실패:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovies();
+  }, []);
+
+  if (loading || movies.length < 2) {
+    return <div className="min-h-screen flex items-center justify-center">영화 데이터를 불러오는 중...</div>;
+  }
+
   const rankedMovies = movies
     .map((movie, index) => ({ ...movie, rank: index + 1 }))
     .sort((a, b) => b.rating - a.rating);
@@ -41,24 +59,17 @@ export default function RankingPage({ movies, onMovieClick, onBack, onNavigation
   const secondMovie = rankedMovies[1];
   const remainingMovies = rankedMovies.slice(2);
 
-  // 박스오피스 TOP 10
   const boxOfficeMovies = rankedMovies.slice(0, 10);
   const totalSlides = Math.ceil(boxOfficeMovies.length / moviesPerSlide);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % totalSlides);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
-  };
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
 
   const getCurrentSlideMovies = () => {
     const startIndex = currentSlide * moviesPerSlide;
     return boxOfficeMovies.slice(startIndex, startIndex + moviesPerSlide);
   };
 
-  // VS 대결용 투표 수 생성 (실제로는 서버에서 받아올 데이터)
   const topMovieVotes = 15247;
   const secondMovieVotes = 12893;
   const totalVotes = topMovieVotes + secondMovieVotes;
@@ -213,11 +224,11 @@ export default function RankingPage({ movies, onMovieClick, onBack, onNavigation
             {/* 투표 참여 안내 */}
             <div className="mt-8 text-center">
               <div className="bg-red-600/20 rounded-xl p-4 inline-block border border-red-500/30">
-                <p className="text-red-400">
+                <p className="text-red-500">
                   🗳️ <span className="font-semibold">투표는 매주 월요일 초기화됩니다</span>
                 </p>
-                <p className="text-red-300 text-sm mt-1">
-                  다음 투표는 2일 후 시작됩니다
+                <p className="text-red-400 text-sm mt-1">
+                  다음 투표는 7일 후 시작됩니다
                 </p>
               </div>
             </div>
