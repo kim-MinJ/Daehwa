@@ -2,12 +2,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { User, Review, Movie } from "../components/admin/types";
+import { User, Review, Comment } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
 import AdminReviewsTab from "../components/admin/AdminReviewsTab";
+import AdminCommentsTab from "../components/admin/AdminCommentsTab";
 import AdminEditUserModal from "../components/admin/AdminEditUserModal";
 import AdminEditReviewModal from "../components/admin/AdminEditReviewModal";
+import AdminEditCommentModal from "../components/admin/AdminEditCommentsModal";
 import AdminSearchBar from "../components/admin/AdminSearchBar";
+import AdminDashboardCards from "../components/admin/AdminDashboardCards";
 import { api } from "../lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
@@ -20,12 +23,13 @@ export default function AdminPage() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
 
-  // --- 관리자 접근 제한 ---
+  // 관리자 접근 제한
   useEffect(() => {
     if (!loading && (!userInfo || userInfo.role !== "admin")) {
       alert("관리자만 접근할 수 있습니다.");
@@ -33,53 +37,43 @@ export default function AdminPage() {
     }
   }, [userInfo, loading, navigate]);
 
-  // --- Users API 호출 ---
+  // Users API
   useEffect(() => {
     if (!token) return;
     (async () => {
       try {
-        const res = await api.get("/users", { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get("/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const formattedUsers: User[] = res.data.map((u: any) => ({
           id: u.userId,
           username: u.username,
           status: u.status === 0 ? "active" : u.status === 1 ? "inactive" : "banned",
           regDate:
             u.regDate && !isNaN(Date.parse(u.regDate))
-              ? new Date(u.regDate).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
-              : "-",  
+              ? new Date(u.regDate).toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })
+              : "-",
         }));
         setUsers(formattedUsers);
-      } catch (err: any) {
+      } catch (err) {
         console.error(err);
         alert("회원 목록을 가져오는 데 실패했습니다.");
       }
     })();
   }, [token]);
 
-  // --- Movies API 호출 (전체 영화) ---
+  // Reviews API
   useEffect(() => {
     if (!token) return;
     (async () => {
       try {
-        const res = await api.get("/movies/all", { headers: { Authorization: `Bearer ${token}` } });
-        const formattedMovies: Movie[] = res.data.map((m: any) => ({
-          id: m.movieIdx || m.id,
-          title: m.title,
-        }));
-        setMovies(formattedMovies);
-      } catch (err) {
-        console.error(err);
-        alert("영화 목록을 가져오는 데 실패했습니다.");
-      }
-    })();
-  }, [token]);
-
-  // --- Reviews API 호출 ---
-  useEffect(() => {
-    if (!token) return;
-    (async () => {
-      try {
-        const res = await api.get("/reviews", { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get("/reviews", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const formattedReviews: Review[] = res.data.map((r: any) => ({
           reviewIdx: r.reviewIdx,
           movieIdx: r.movieIdx,
@@ -88,7 +82,7 @@ export default function AdminPage() {
           rating: r.rating,
           createdAt: r.createdAt,
           updateAt: r.updateAt,
-          isBlind: r.isBlind
+          isBlind: r.isBlind,
         }));
         setReviews(formattedReviews);
       } catch (err) {
@@ -98,40 +92,108 @@ export default function AdminPage() {
     })();
   }, [token]);
 
-  // --- User 상태 변경 ---
+  // Comments API
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await api.get("/comments", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const formattedComments: Comment[] = res.data.map((c: any) => ({
+          commentIdx: c.commentIdx,
+          userId: c.userId,
+          content: c.content,
+          createdAt: c.createdAt,
+          updateAt: c.updateAt,
+          isBlind: c.isBlind,
+        }));
+        setComments(formattedComments);
+      } catch (err) {
+        console.error(err);
+        alert("댓글 목록을 가져오는 데 실패했습니다.");
+      }
+    })();
+  }, [token]);
+
+  // User 상태 변경
   const updateUserStatus = async (id: string, status: User["status"]) => {
     if (!token) return;
     try {
       const statusNum = status === "active" ? 0 : status === "inactive" ? 1 : 2;
-      await api.patch(`/users/${id}/status`, { status: statusNum }, { headers: { Authorization: `Bearer ${token}` } });
-      setUsers(prev => prev.map(u => (u.id === id ? { ...u, status } : u)));
-    } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
+      await api.patch(
+        `/users/${id}/status`,
+        { status: statusNum },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
+    } catch (err) {
+      console.error(err);
       alert("상태 변경 실패");
     }
   };
 
-  // --- Review 상태 변경 ---
+  // Review 상태 변경
   const updateReviewStatus = async (reviewIdx: number, isBlind: 0 | 1) => {
     if (!token) return;
     try {
-      await api.patch(`/reviews/${reviewIdx}/status`, { isBlind }, { headers: { Authorization: `Bearer ${token}` } });
-      setReviews(prev => prev.map(r => (r.reviewIdx === reviewIdx ? { ...r, isBlind } : r)));
-    } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
+      await api.patch(
+        `/reviews/${reviewIdx}/status`,
+        { isBlind },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setReviews((prev) =>
+        prev.map((r) => (r.reviewIdx === reviewIdx ? { ...r, isBlind } : r))
+      );
+    } catch (err) {
+      console.error(err);
       alert("리뷰 상태 변경 실패");
     }
   };
 
-  // --- Review 삭제 ---
+  // Review 삭제
   const deleteReview = async (reviewIdx: number) => {
     if (!token) return;
     try {
-      await api.delete(`/reviews/${reviewIdx}`, { headers: { Authorization: `Bearer ${token}` } });
-      setReviews(prev => prev.filter(r => r.reviewIdx !== reviewIdx));
-    } catch (err: any) {
-      console.error(err.response?.status, err.response?.data || err);
+      await api.delete(`/reviews/${reviewIdx}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setReviews((prev) => prev.filter((r) => r.reviewIdx !== reviewIdx));
+    } catch (err) {
+      console.error(err);
       alert("리뷰 삭제 실패");
+    }
+  };
+
+  // Comment 상태 변경
+  const updateCommentStatus = async (commentIdx: number, isBlind: 0 | 1) => {
+    if (!token) return;
+    try {
+      await api.patch(
+        `/comments/${commentIdx}/status`,
+        { isBlind },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setComments((prev) =>
+        prev.map((c) => (c.commentIdx === commentIdx ? { ...c, isBlind } : c))
+      );
+    } catch (err) {
+      console.error(err);
+      alert("댓글 상태 변경 실패");
+    }
+  };
+
+  // Comment 삭제
+  const deleteComment = async (commentIdx: number) => {
+    if (!token) return;
+    try {
+      await api.delete(`/comments/${commentIdx}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setComments((prev) => prev.filter((c) => c.commentIdx !== commentIdx));
+    } catch (err) {
+      console.error(err);
+      alert("댓글 삭제 실패");
     }
   };
 
@@ -140,12 +202,22 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
-            <p className="text-gray-600 mt-2">MovieSSG 사이트 관리 시스템</p>
-          </div>
+        {/* 관리자 소개 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">관리자 대시보드</h1>
+          <p className="text-gray-600 mt-2">
+            {userInfo?.username}님, MovieSSG 사이트 관리 시스템에 오신 것을 환영합니다.
+          </p>
         </div>
+
+        {/* 통계 카드 */}
+        <AdminDashboardCards
+          usersCount={users.length}
+          reviewsCount={reviews.length}
+          postsCount={0}
+          votesCount={0}
+          setActiveTab={setActiveTab}
+        />
 
         {/* 검색바 */}
         <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -171,16 +243,26 @@ export default function AdminPage() {
           <TabsContent value="reviews">
             <AdminReviewsTab
               reviews={reviews}
-              users={users}
-              movies={movies}
               searchQuery={searchQuery}
               setEditingReview={setEditingReview}
+              users={users}
               updateReviewStatus={updateReviewStatus}
+            />
+          </TabsContent>
+
+          <TabsContent value="comments">
+            <AdminCommentsTab
+              comments={comments}
+              searchQuery={searchQuery}
+              setEditingComment={setEditingComment}
+              users={users}
+              updateCommentStatus={updateCommentStatus}
             />
           </TabsContent>
         </Tabs>
       </div>
 
+      {/* 모달 */}
       <AdminEditUserModal
         editingUser={editingUser}
         setEditingUser={setEditingUser}
@@ -191,6 +273,12 @@ export default function AdminPage() {
         setEditingReview={setEditingReview}
         updateReviewStatus={updateReviewStatus}
         deleteReview={deleteReview}
+      />
+      <AdminEditCommentModal
+        editingComment={editingComment}
+        setEditingComment={setEditingComment}
+        updateCommentStatus={updateCommentStatus}
+        deleteComment={deleteComment}
       />
     </div>
   );

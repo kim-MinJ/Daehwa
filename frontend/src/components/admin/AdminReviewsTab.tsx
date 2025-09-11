@@ -1,15 +1,18 @@
 import { Review } from "./types";
 import { Button } from "../ui/button";
-import { useState } from "react";
+import { Dispatch, SetStateAction } from "react";
+
+
 
 interface AdminReviewsTabProps {
   reviews: Review[];
   searchQuery: string;
-  setEditingReview: React.Dispatch<React.SetStateAction<Review | null>>;
+  setEditingReview: Dispatch<SetStateAction<Review | null>>;
   users: { id: string; username: string }[];
-  movies: { id: number; title: string }[];
-  updateReviewStatus: (reviewIdx: number, isBlind: 0 | 1) => void; // 추가
+  movies?: { id: number; title: string }[]; // optional
+  updateReviewStatus: (reviewIdx: number, isBlind: 0 | 1) => void;
 }
+
 
 export default function AdminReviewsTab({
   reviews,
@@ -28,17 +31,13 @@ export default function AdminReviewsTab({
     );
   });
 
-  const handleBlindChange = (reviewIdx: number, value: number) => {
-    updateReviewStatus(reviewIdx, value as 0 | 1);
-  };
-
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b">
             <th className="p-2 text-left">리뷰 idx</th>
-            <th className="p-2 text-left">영화 idx</th>
+            <th className="p-2 text-left">영화</th>
             <th className="p-2 text-left">유저ID</th>
             <th className="p-2 text-left">내용</th>
             <th className="p-2 text-left">평점</th>
@@ -52,14 +51,14 @@ export default function AdminReviewsTab({
           {filteredReviews.length > 0 ? (
             filteredReviews.map(review => {
               const user = users.find(u => u.id === review.userId);
-              const movie = movies.find(m => m.id === review.movieIdx);
+              const movie = movies?.find(m => m.id === review.movieIdx);
 
               return (
                 <tr
                   key={review.reviewIdx}
                   className={`border-b ${
                     review.isBlind === 1 ? "bg-gray-200" : ""
-                  }`} // 블라인드면 회색 배경
+                  }`}
                 >
                   <td className="p-2">{review.reviewIdx}</td>
                   <td className="p-2">{movie?.title || review.movieIdx}</td>
@@ -69,13 +68,11 @@ export default function AdminReviewsTab({
                   <td className="p-2">{new Date(review.createdAt).toLocaleDateString()}</td>
                   <td className="p-2">{new Date(review.updateAt).toLocaleDateString()}</td>
                   <td className="p-2">
-                    <td className="p-2">
-  {review.isBlind === 0 ? (
-    <span className="text-green-600 font-medium">공개</span>
-  ) : (
-    <span className="text-red-600 font-medium">블라인드</span>
-  )}
-</td>
+                    {review.isBlind === 0 ? (
+                      <span className="text-green-600 font-medium">공개</span>
+                    ) : (
+                      <span className="text-red-600 font-medium">블라인드</span>
+                    )}
                   </td>
                   <td className="p-2">
                     <Button

@@ -54,4 +54,20 @@ public class ReviewService {
       return dto;
     }).collect(Collectors.toList());
   }
+
+  // 🔹 리뷰 블라인드 상태 변경
+  public void updateReviewStatus(Long reviewIdx, int isBlind) {
+    ReviewEntity review = reviewRepository.findById(reviewIdx)
+        .orElseThrow(() -> new RuntimeException("Review not found"));
+    review.setIsBlind(isBlind);
+    reviewRepository.save(review);
+  }
+
+  // 🔹 리뷰 삭제
+  public void deleteReview(Long reviewIdx) {
+    ReviewEntity review = reviewRepository.findById(reviewIdx)
+        .orElseThrow(() -> new RuntimeException("Review not found"));
+    reviewRepository.delete(review);
+  }
+
 }

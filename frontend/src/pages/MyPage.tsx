@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // 추가
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -35,11 +35,22 @@ interface Movie {
   posterPath?: string;
 }
 
+interface Review {
+  reviewIdx: number;
+  userId: string;
+  movieIdx: number;
+  content: string;
+  rating: number;
+  regDate: string;
+  movieTitle?: string; // 영화 제목
+}
+
 export default function MyPage({}: MyPageProps) {
-  const navigate = useNavigate(); // useNavigate 훅
+  const navigate = useNavigate();
   const { token, userInfo, setUserInfo, logout, getUserInfo } = useAuth();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [recommendMovies, setRecommendMovies] = useState<Movie[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const [username, setUsername] = useState(userInfo?.username || "");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -70,9 +81,20 @@ export default function MyPage({}: MyPageProps) {
       .catch(console.error);
   };
 
+  const fetchReviews = () => {
+    if (!token) return;
+    axios
+      .get("http://192.168.0.23:8080/api/reviews/my", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setReviews(res.data))
+      .catch(console.error);
+  };
+
   useEffect(() => {
     fetchBookmarks();
     fetchRecommendMovies();
+    fetchReviews();
   }, [token]);
 
   useEffect(() => {
@@ -128,7 +150,7 @@ export default function MyPage({}: MyPageProps) {
                 size="sm"
                 onClick={() => {
                   logout();
-                  navigate("/login"); // 라우터 이동
+                  navigate("/login");
                 }}
               >
                 로그아웃
@@ -142,9 +164,7 @@ export default function MyPage({}: MyPageProps) {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>관리자 모드</DialogTitle>
-              <DialogDescription>
-                관리자 권한을 부여받기 위해 코드를 입력하세요.
-              </DialogDescription>
+              <DialogDescription>관리자 권한을 부여받기 위해 코드를 입력하세요.</DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-3">
               <Label htmlFor="adminCode">관리자 코드</Label>
@@ -226,13 +246,13 @@ export default function MyPage({}: MyPageProps) {
               </div>
 
               <div className="flex justify-end">
-  <div className="grid grid-cols-1 gap-4 text-center mr-6">
-    <div>
-      <div className="text-2xl font-bold">{bookmarks.length}</div>
-      <div className="text-sm text-muted-foreground">북마크</div>
-    </div>
-  </div>
-</div>
+                <div className="grid grid-cols-1 gap-4 text-center mr-6">
+                  <div>
+                    <div className="text-2xl font-bold">{bookmarks.length}</div>
+                    <div className="text-sm text-muted-foreground">북마크</div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -298,6 +318,31 @@ export default function MyPage({}: MyPageProps) {
                 </div>
               ) : (
                 <p>북마크가 없습니다.</p>
+              )}
+            </TabsContent>
+
+            {/* 내 리뷰 */}
+            <TabsContent value="reviews">
+              {reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((r) => (
+                    <div
+                      key={r.reviewIdx}
+                      className="border rounded-lg p-4 bg-gray-50 shadow-sm"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-semibold">{r.movieTitle || `영화 #${r.movieIdx}`}</h3>
+                        <span className="text-sm text-gray-500">
+                          {new Date(r.regDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="mb-2 text-gray-800">{r.content}</p>
+                      <div className="text-sm text-gray-600">평점: {r.rating} / 5</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>작성한 리뷰가 없습니다.</p>
               )}
             </TabsContent>
 

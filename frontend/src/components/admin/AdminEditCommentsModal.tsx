@@ -1,68 +1,59 @@
-// src/components/admin/AdminEditReviewModal.tsx
+// src/components/admin/AdminEditCommentModal.tsx
 import React, { useState, useEffect } from "react";
-import { Review } from "./types";
-import "/src/assets/AdminEditUserModal.css";
+import { Comment } from "./types";
 
 interface Props {
-  editingReview: Review | null;
-  setEditingReview: React.Dispatch<React.SetStateAction<Review | null>>;
-  updateReviewStatus: (reviewIdx: number, isBlind: 0 | 1) => Promise<void>;
-  deleteReview: (reviewIdx: number) => Promise<void>;
+  editingComment: Comment | null;
+  setEditingComment: React.Dispatch<React.SetStateAction<Comment | null>>;
+  updateCommentStatus: (commentIdx: number, isBlind: 0 | 1) => Promise<void>;
+  deleteComment: (commentIdx: number) => Promise<void>;
 }
 
-export default function AdminEditReviewModal({
-  editingReview,
-  setEditingReview,
-  updateReviewStatus,
-  deleteReview,
+export default function AdminEditCommentModal({
+  editingComment,
+  setEditingComment,
+  updateCommentStatus,
+  deleteComment,
 }: Props) {
   const [isBlind, setIsBlind] = useState<0 | 1>(0);
 
   useEffect(() => {
-    if (editingReview) setIsBlind(editingReview.isBlind as 0 | 1);
-  }, [editingReview]);
+    if (editingComment) setIsBlind(editingComment.isBlind as 0 | 1);
+  }, [editingComment]);
 
   const handleSave = async () => {
-    if (editingReview) {
-      await updateReviewStatus(editingReview.reviewIdx, isBlind);
-      setEditingReview(null);
+    if (editingComment) {
+      await updateCommentStatus(editingComment.commentIdx, isBlind);
+      setEditingComment(null);
     }
   };
 
   const handleDelete = async () => {
-    if (editingReview && confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
-      await deleteReview(editingReview.reviewIdx);
-      setEditingReview(null);
+    if (editingComment && confirm("정말 이 댓글을 삭제하시겠습니까?")) {
+      await deleteComment(editingComment.commentIdx);
+      setEditingComment(null);
     }
   };
 
-  if (!editingReview) return null;
+  if (!editingComment) return null;
 
   return (
     <div className="modal-overlay">
       <div className="modal-backdrop"></div>
       <div className="modal-box">
-        <h2 className="modal-title">리뷰 편집</h2>
+        <h2 className="modal-title">댓글 편집</h2>
         <div className="modal-field">
           <div>
-            <label>리뷰 idx</label>
-            <p>{editingReview.reviewIdx}</p>
-          </div>
-          <div>
-            <label>영화 idx</label>
-            <p>{editingReview.movieIdx}</p>
+            <label>댓글 idx</label>
+            <p>{editingComment.commentIdx}</p>
           </div>
           <div>
             <label>유저ID</label>
-            <p>{editingReview.userId}</p>
+            <p>{editingComment.userId}</p>
           </div>
           <div>
             <label>내용</label>
-            <p>{editingReview.content}</p>
-          </div>
-          <div>
-            <label>평점</label>
-            <p>{editingReview.rating}</p>
+            <p>{editingComment.content}</p>
           </div>
           <div>
             <label>상태</label>
@@ -112,7 +103,7 @@ export default function AdminEditReviewModal({
 
           <button
             className="modal-cancel-btn"
-            onClick={() => setEditingReview(null)}
+            onClick={() => setEditingComment(null)}
             style={{
               padding: "6px 16px",
               backgroundColor: "#ccc",
