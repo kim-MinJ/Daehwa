@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./pages/Header";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
-// import SearchPage from "./pages/SearchPage";
+import SearchPage from "./pages/SearchPage";
 // import MovieDetailPage from "./pages/MovieDetailPage";
 // import RankingPage from "./pages/RankingPage";
 import ReviewPage from "./pages/ReviewPage";
@@ -18,7 +18,7 @@ export default function App() {
         <main className="relative">
           <Routes>
             <Route path="*" element={<MainPage />} />
-            {/* <Route path="/search" element={<SearchPage />} /> */}
+            <Route path="/search" element={<SearchPage />} />
             {/* <Route path="/movie/:id" element={<MovieDetailPage />} /> */}
             {/* <Route path="/ranking" element={<RankingPage />} /> */}
             <Route path="/reviews" element={<ReviewPage />} />

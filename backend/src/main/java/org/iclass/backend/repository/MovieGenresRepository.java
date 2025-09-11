@@ -13,4 +13,5 @@ public interface MovieGenresRepository extends JpaRepository<MovieGenresEntity, 
   boolean existsByMovieAndGenre(MovieInfoEntity movie, GenresEntity genre);
 
   List<MovieGenresEntity> findByMovie_MovieIdx(Long movieIdx);
+  List<MovieGenresEntity> findByGenre_Name(String genreName);
 }

@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import Footer from "../components/Footer";
+import Header from "../pages/Header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -126,19 +126,7 @@ function MainPage() {
   // ---- 실제 화면 ----
   return (
     <div className="min-h-screen bg-white">
-      <Header
-  currentPage="home"
-  onNavigation={(page) => {
-    if (page === "admin") {
-      navigate("/mypage"); // admin 대신 mypage로 이동
-    } else {
-      navigate(`/${page}`);
-    }
-  }}
-  onSearch={(q) => navigate(`/search?q=${encodeURIComponent(q)}`)}
-/>
-
-      <main className="relative">
+          <main className="relative">
         {/* 히어로 섹션 */}
         {featured && (
           <div className="relative h-[85vh] mb-8">
@@ -350,8 +338,6 @@ function MainPage() {
           </section>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

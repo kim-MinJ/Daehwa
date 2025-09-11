@@ -94,7 +94,7 @@
           .cors(cors -> cors.configurationSource(corsConfigurationSource()))
           .authorizeHttpRequests(auth -> auth
               .requestMatchers("/api/auth/**").permitAll()
-              .requestMatchers("/api/movies/**", "/error").permitAll()
+              .requestMatchers("/api/**", "/error").permitAll()
               .requestMatchers(HttpMethod.POST, "/api/review/**").authenticated()
               .anyRequest().authenticated())
           .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

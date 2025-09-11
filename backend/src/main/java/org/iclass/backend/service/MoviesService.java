@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.entity.MovieCrewEntity;
