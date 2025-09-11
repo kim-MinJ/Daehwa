@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
+import org.iclass.backend.response.MovieVideoResponse;
 import org.iclass.backend.service.MovieInfoService;
 import org.iclass.backend.service.MovieService;
 import org.iclass.backend.service.MoviesService;
@@ -50,6 +51,14 @@ public class MoviesController {
   @GetMapping("/{id}/similar")
   public ResponseEntity<List<MovieInfoDto>> similar(@PathVariable Long id) {
     return ResponseEntity.ok(movieService.findSimilar(id));
+  }
+
+  // 예: /api/movies/{id}/videos
+  @GetMapping("/{id}/videos")
+  public ResponseEntity<MovieVideoResponse> getVideos(@PathVariable("id") Long id) {
+    // MovieVideoResponse res = movieService.getVideos(id);
+    // return ResponseEntity.ok(res);
+    return ResponseEntity.ok(new MovieVideoResponse()); // 임시
   }
 
   /** 랜덤 영화 추천 (DTO 반환) */

@@ -313,32 +313,52 @@ export default function MyPage({}: MyPageProps) {
               )}
             </TabsContent>
 
-            {/* 내 리뷰 */}
-            <TabsContent value="reviews">
-              {reviews.length ? (
-                <div className="space-y-4">
-                  {reviews.map((r) => (
-                    <div key={r.reviewIdx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-semibold">영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}</h3>
-                        <div className="text-sm text-gray-500 flex flex-col">
-  <span>
-    작성일 : {r.createdAt ? new Date(r.createdAt.split(".")[0].replace(" ", "T")).toLocaleDateString() : "-"}
-  </span>
-  <span>
-    수정일 : {r.updateAt ? new Date(r.updateAt.split(".")[0].replace(" ", "T")).toLocaleDateString() : "-"}
-  </span>
-</div>
-                      </div>
-                      <p className="mb-2 text-gray-800">{r.content}</p>
-                      <div className="text-sm text-gray-600">평점: {r.rating} / 10</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p>작성한 리뷰가 없습니다.</p>
-              )}
-            </TabsContent>
+           {/* 내 리뷰 */}
+<TabsContent value="reviews">
+  {reviews.length ? (
+    <div className="space-y-4">
+      {reviews.map((r) => (
+        <div key={r.reviewIdx} className="border rounded-lg p-4 bg-gray-50 shadow-sm relative">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-semibold">
+              영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}
+            </h3>
+            <div className="text-sm text-gray-500 flex flex-col">
+              <span>
+                작성일 :{" "}
+                {r.createdAt
+                  ? new Date(r.createdAt.split(".")[0].replace(" ", "T")).toLocaleDateString()
+                  : "-"}
+              </span>
+              <span>
+                수정일 :{" "}
+                {r.updateAt
+                  ? new Date(r.updateAt.split(".")[0].replace(" ", "T")).toLocaleDateString()
+                  : "-"}
+              </span>
+            </div>
+          </div>
+
+          <p className="mb-2 text-gray-800">{r.content}</p>
+          <div className="text-sm text-gray-600">평점: {r.rating} / 10</div>
+
+          {/* 보러가기 버튼 (오른쪽 아래) */}
+          <div className="flex justify-end mt-4">
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => navigate(`/movie/${r.movieIdx}?reviewId=${r.reviewIdx}`)}
+            >
+              보러가기
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p>작성한 리뷰가 없습니다.</p>
+  )}
+</TabsContent>
 
             {/* 계정 설정 */}
             <TabsContent value="settings">
