@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.iclass.backend.dto.UsersDto;
 import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
-import org.iclass.backend.security.JwtUtil;
+import org.iclass.backend.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +16,13 @@ import jakarta.servlet.http.HttpServletRequest;
 public class UsersService {
 
   private final UsersRepository usersRepository;
-  private final JwtUtil jwtUtil;
+  private final JwtTokenProvider jwtTokenProvider;
   private final PasswordEncoder passwordEncoder;
 
-  public UsersService(UsersRepository usersRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+  public UsersService(UsersRepository usersRepository, JwtTokenProvider jwtTokenProvider,
+      PasswordEncoder passwordEncoder) {
     this.usersRepository = usersRepository;
-    this.jwtUtil = jwtUtil;
+    this.jwtTokenProvider = jwtTokenProvider;
     this.passwordEncoder = passwordEncoder;
   }
 
@@ -32,7 +33,7 @@ public class UsersService {
       return null;
 
     String token = header.substring(7);
-    String userId = jwtUtil.getUserId(token);
+    String userId = jwtTokenProvider.getUserId(token);
     if (userId == null)
       return null;
 

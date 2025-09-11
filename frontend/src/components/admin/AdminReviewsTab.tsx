@@ -1,16 +1,24 @@
-// src/components/admin/AdminReviewsTab.tsx
 import { Review } from "./types";
 import { Button } from "../ui/button";
+import { useState } from "react";
 
 interface AdminReviewsTabProps {
   reviews: Review[];
   searchQuery: string;
   setEditingReview: React.Dispatch<React.SetStateAction<Review | null>>;
-  users: { id: string; username: string }[];     // 추가
-  movies: { id: number; title: string }[];       // 추가
+  users: { id: string; username: string }[];
+  movies: { id: number; title: string }[];
+  updateReviewStatus: (reviewIdx: number, isBlind: 0 | 1) => void; // 추가
 }
 
-export default function AdminReviewsTab({ reviews, users, movies, searchQuery, setEditingReview }: AdminReviewsTabProps) {
+export default function AdminReviewsTab({
+  reviews,
+  users,
+  movies,
+  searchQuery,
+  setEditingReview,
+  updateReviewStatus,
+}: AdminReviewsTabProps) {
   const filteredReviews = reviews.filter(r => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
@@ -19,6 +27,10 @@ export default function AdminReviewsTab({ reviews, users, movies, searchQuery, s
       r.content.toLowerCase().includes(query)
     );
   });
+
+  const handleBlindChange = (reviewIdx: number, value: number) => {
+    updateReviewStatus(reviewIdx, value as 0 | 1);
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -32,6 +44,7 @@ export default function AdminReviewsTab({ reviews, users, movies, searchQuery, s
             <th className="p-2 text-left">평점</th>
             <th className="p-2 text-left">생성일</th>
             <th className="p-2 text-left">수정일</th>
+            <th className="p-2 text-left">상태</th>
             <th className="p-2 text-left">관리</th>
           </tr>
         </thead>
@@ -42,7 +55,12 @@ export default function AdminReviewsTab({ reviews, users, movies, searchQuery, s
               const movie = movies.find(m => m.id === review.movieIdx);
 
               return (
-                <tr key={review.reviewIdx} className="border-b">
+                <tr
+                  key={review.reviewIdx}
+                  className={`border-b ${
+                    review.isBlind === 1 ? "bg-gray-200" : ""
+                  }`} // 블라인드면 회색 배경
+                >
                   <td className="p-2">{review.reviewIdx}</td>
                   <td className="p-2">{movie?.title || review.movieIdx}</td>
                   <td className="p-2">{user?.username || review.userId}</td>
@@ -50,6 +68,15 @@ export default function AdminReviewsTab({ reviews, users, movies, searchQuery, s
                   <td className="p-2">{review.rating}</td>
                   <td className="p-2">{new Date(review.createdAt).toLocaleDateString()}</td>
                   <td className="p-2">{new Date(review.updateAt).toLocaleDateString()}</td>
+                  <td className="p-2">
+                    <td className="p-2">
+  {review.isBlind === 0 ? (
+    <span className="text-green-600 font-medium">공개</span>
+  ) : (
+    <span className="text-red-600 font-medium">블라인드</span>
+  )}
+</td>
+                  </td>
                   <td className="p-2">
                     <Button
                       className="!bg-black !text-white px-3 py-1 rounded hover:!bg-gray-800"
@@ -59,11 +86,11 @@ export default function AdminReviewsTab({ reviews, users, movies, searchQuery, s
                     </Button>
                   </td>
                 </tr>
-              )
+              );
             })
           ) : (
             <tr>
-              <td colSpan={8} className="p-4 text-center text-gray-500">
+              <td colSpan={9} className="p-4 text-center text-gray-500">
                 검색 결과가 없습니다.
               </td>
             </tr>
