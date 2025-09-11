@@ -7,6 +7,7 @@ import org.iclass.backend.dto.ReviewDto;
 import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.service.ReviewService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +39,18 @@ public class ReviewController {
   public ResponseEntity<List<ReviewDto>> getReviews() {
     List<ReviewDto> list = reviewService.getAllReviews();
     return ResponseEntity.ok(list);
+  }
+
+  // 내 리뷰만 조회
+  // ReviewController.java
+  @GetMapping("/myreview")
+  public ResponseEntity<List<ReviewDto>> getMyReviews(Authentication authentication) {
+    if (authentication == null)
+      return ResponseEntity.status(401).build();
+
+    String userId = authentication.getName(); // JWT에서 subject(userId)
+    List<ReviewDto> myReviews = reviewService.getReviewsByUserId(userId);
+    return ResponseEntity.ok(myReviews);
   }
 
   // 🔹 리뷰 상태 변경 (블라인드)
