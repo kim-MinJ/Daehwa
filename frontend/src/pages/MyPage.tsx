@@ -122,6 +122,15 @@ export default function MyPage({}: MyPageProps) {
         .catch(console.error);
     }
   };
+function ReviewButton() {
+  const navigate = useNavigate();
+  return (
+    <Button size="sm" onClick={() => navigate("/reviews")}>
+      리뷰 작성
+    </Button>
+  );
+}
+
 
   const isBookmarked = (movieIdx: number) => bookmarks.some((b) => b.movieIdx === movieIdx);
 

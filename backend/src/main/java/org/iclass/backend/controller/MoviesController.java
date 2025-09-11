@@ -1,12 +1,12 @@
 package org.iclass.backend.controller;
 
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
+import org.iclass.backend.service.MovieInfoService;
 import org.iclass.backend.service.MovieService;
 import org.iclass.backend.service.MoviesService;
 import org.springframework.data.domain.Page;
@@ -29,6 +29,7 @@ public class MoviesController {
 
   private final MovieService movieService;
   private final MoviesService moviesService;
+  private final MovieInfoService movieInfoService;
   private final MovieInfoRepository movieInfoRepository;
 
   /** 단일 영화 조회 (DB id) */
@@ -59,6 +60,18 @@ public class MoviesController {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.ok(MovieInfoDto.of(movie));
+  }
+
+  @GetMapping("/{tmdbMovieId}/directors")
+  public ResponseEntity<List<String>> getDirectors(@PathVariable Long tmdbMovieId) {
+    List<String> directors = movieInfoService.getDirectorsByTmdbId(tmdbMovieId);
+    return ResponseEntity.ok(directors);
+  }
+
+  @GetMapping("/{movieIdx}/genres")
+  public ResponseEntity<List<String>> getGenres(@PathVariable Long movieIdx) {
+    List<String> genres = movieInfoService.getGenresByMovieIdx(movieIdx);
+    return ResponseEntity.ok(genres);
   }
 
   /** 인기순 영화 */
