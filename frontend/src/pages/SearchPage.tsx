@@ -39,6 +39,16 @@ const genreMap: Record<string, string> = {
   Western: '서부극',
 };
 
+// 간단한 fetch helper
+async function fetchMoviesFromApi(page: number, limit = 20): Promise<Movie[]> {
+  const res = await fetch(`http://localhost:8080/api/searchMovie?page=${page}&limit=${limit}`);
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error('서버에서 배열이 아닌 데이터를 반환했습니다.');
+  // 포스터 없는 영화는 제외
+  return data.filter((m: Movie) => m.posterPath && m.posterPath.trim() !== '');
+}
+
 export default function SearchPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,34 +63,40 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState<'latest' | 'rating' | 'title'>('latest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [displayCount, setDisplayCount] = useState(8);
-
   const [years, setYears] = useState<string[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     setQuery(queryFromUrl);
   }, [queryFromUrl]);
 
   useEffect(() => {
-    async function fetchMovies() {
+    let alive = true;
+    (async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/searchMovie');
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error('서버에서 배열이 아닌 데이터를 반환했습니다.');
-        setMovies(data);
+        const newMovies = await fetchMoviesFromApi(page);
+        if (!alive) return;
 
-        const allYears = [...new Set(data.map(m => m.releaseDate ? `${m.releaseDate.split('-')[0]}년` : ''))].filter(Boolean);
+        // 기존 + 새 데이터 합치고 중복 제거
+        const combined = [...movies, ...newMovies];
+        const uniqueMovies = Array.from(new Map(combined.map(m => [m.movieIdx, m])).values());
+
+        setMovies(uniqueMovies);
+
+        // 연도 및 장르 세팅
+        const allYears = [...new Set(uniqueMovies.map(m => m.releaseDate ? `${m.releaseDate.split('-')[0]}년` : ''))].filter(Boolean);
         setYears(allYears.sort((a, b) => parseInt(b) - parseInt(a)));
 
-        const allGenres = [...new Set(data.flatMap(m => m.genres || []))];
+        const allGenres = [...new Set(uniqueMovies.flatMap(m => m.genres || []))];
         setGenres(allGenres.sort());
       } catch (err) {
         console.error('Fetch error:', err);
       }
-    }
-    fetchMovies();
-  }, []);
+    })();
+
+    return () => { alive = false; };
+  }, [page]);
 
   const yearGroups = useMemo(() => {
     const groups: Record<string, string[]> = { '2020년대': [], '2010년대': [], '2000년대': [] };
@@ -143,6 +159,8 @@ export default function SearchPage() {
     navigate(`/search?query=${encodeURIComponent(query)}`);
   };
 
+  const handleSortChange = (val: string) => setSortBy(val as 'latest' | 'rating' | 'title');
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-8 lg:px-16 py-8 flex gap-8">
@@ -175,8 +193,8 @@ export default function SearchPage() {
             </div>
 
             <div className="space-y-2">
-              {genres.map(genre => (
-                <div key={genre} className="flex items-center space-x-3">
+              {genres.map((genre, idx) => (
+                <div key={`${genre}-${idx}`} className="flex items-center space-x-3">
                   <Checkbox
                     id={`genre-${genre}`}
                     checked={selectedGenres.includes(genre)}
@@ -202,7 +220,7 @@ export default function SearchPage() {
               <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">영화 {sortedMovies.length}건</h1>
                 <div className="flex gap-2">
-                  <Select value={sortBy} onValueChange={setSortBy}>
+                  <Select value={sortBy} onValueChange={handleSortChange}>
                     <SelectTrigger className="w-32 text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="latest">최신순</SelectItem>
@@ -219,9 +237,9 @@ export default function SearchPage() {
                 <p className="text-center text-gray-600 py-12">검색 결과가 없습니다.</p>
               ) : (
                 <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'space-y-4'}>
-                  {sortedMovies.slice(0, displayCount).map(movie => (
+                  {sortedMovies.slice(0, displayCount).map((movie, idx) => (
                     <div
-                      key={movie.movieIdx}
+                      key={`${movie.movieIdx}-${idx}`} // 중복 key 방지
                       className="cursor-pointer"
                       onClick={() => navigate(`/movie/${movie.movieIdx}`)}
                     >
@@ -247,6 +265,13 @@ export default function SearchPage() {
                     onClick={() => setDisplayCount(prev => prev + 8)}
                   >
                     더 많은 결과 보기 ({sortedMovies.length - displayCount}개 더)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="ml-2 px-8 bg-white border-gray-400 text-gray-800 hover:bg-gray-100 hover:text-gray-900"
+                    onClick={() => setPage(prev => prev + 1)}
+                  >
+                    다음 20개 가져오기
                   </Button>
                 </div>
               )}
