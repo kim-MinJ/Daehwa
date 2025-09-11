@@ -65,7 +65,7 @@ export default function MyPage({}: MyPageProps) {
   const fetchBookmarks = () => {
     if (!token) return;
     axios
-      .get("http://192.168.0.23:8080/api/bookmarks", { headers: { Authorization: `Bearer ${token}` } })
+      .get("http://localhost:8080/api/bookmarks", { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => setBookmarks(res.data))
       .catch(console.error);
   };
@@ -73,7 +73,7 @@ export default function MyPage({}: MyPageProps) {
   const fetchRecommendMovies = () => {
     if (!token) return;
     axios
-      .get("http://192.168.0.23:8080/api/movies/popular", {
+      .get("http://localhost:8080/api/movies/popular", {
         headers: { Authorization: `Bearer ${token}` },
         params: { count: 12 },
       })
@@ -84,7 +84,7 @@ export default function MyPage({}: MyPageProps) {
   const fetchReviews = () => {
     if (!token) return;
     axios
-      .get("http://192.168.0.23:8080/api/reviews/my", {
+      .get("http://localhost:8080/api/reviews/my", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setReviews(res.data))
@@ -107,14 +107,14 @@ export default function MyPage({}: MyPageProps) {
 
     if (existing) {
       axios
-        .delete(`http://192.168.0.23:8080/api/bookmarks/${existing.bookmarkIdx}`, {
+        .delete(`http://localhost:8080/api/bookmarks/${existing.bookmarkIdx}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then(() => fetchBookmarks())
         .catch(console.error);
     } else {
       axios
-        .post(`http://192.168.0.23:8080/api/bookmarks`, null, {
+        .post(`http://localhost:8080/api/bookmarks`, null, {
           params: { movieIdx },
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -180,7 +180,7 @@ export default function MyPage({}: MyPageProps) {
                 onClick={() => {
                   if (!adminCode.trim()) return alert("관리자 코드를 입력해주세요.");
                   axios
-                    .put("http://192.168.0.23:8080/api/admin/grant", null, {
+                    .put("http://localhost:8080/api/admin/grant", null, {
                       params: { adminCode },
                       headers: { Authorization: `Bearer ${token}` },
                     })
@@ -370,7 +370,7 @@ export default function MyPage({}: MyPageProps) {
                           if (!username.trim()) return alert("이름을 입력해주세요.");
                           axios
                             .put(
-                              "http://192.168.0.23:8080/api/users/update",
+                              "http://localhost:8080/api/users/update",
                               { username },
                               { headers: { Authorization: `Bearer ${token}` } }
                             )
@@ -413,7 +413,7 @@ export default function MyPage({}: MyPageProps) {
 
                           axios
                             .put(
-                              "http://192.168.0.23:8080/api/users/password",
+                              "http://localhost:8080/api/users/password",
                               { currentPassword, newPassword },
                               { headers: { Authorization: `Bearer ${token}` } }
                             )

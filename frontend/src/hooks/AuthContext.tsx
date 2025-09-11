@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-const API_URL = "http://192.168.0.23:8080/api";
-// const API_URL = "http://192.168.0.30:8080/api"
+const API_URL = "http://localhost:8080/api";
+// const API_URL = "http://localhost:8080/api";  // 내 api
+// const API_URL = "http://192.168.0.30:8080/api" // 서버 api
 
 interface UserInfo {
   username: string;
