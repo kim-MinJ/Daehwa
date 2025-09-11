@@ -3,7 +3,7 @@ import Header from "./pages/Header";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SearchPage from "./pages/SearchPage";
-// import MovieDetailPage from "./pages/MovieDetailPage";
+import MovieDetailPage from "./pages/MovieDetailPage";
 // import RankingPage from "./pages/RankingPage";
 import ReviewPage from "./pages/ReviewPage";
 import AdminPage from "./pages/AdminPage";
@@ -19,7 +19,7 @@ export default function App() {
           <Routes>
             <Route path="*" element={<MainPage />} />
             <Route path="/search" element={<SearchPage />} />
-            {/* <Route path="/movie/:id" element={<MovieDetailPage />} /> */}
+            <Route path="/movies/:id" element={<MovieDetailPage />} />
             {/* <Route path="/ranking" element={<RankingPage />} /> */}
             <Route path="/reviews" element={<ReviewPage />} />
             <Route path="/admin" element={<AdminPage />} />
