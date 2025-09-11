@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Search, Bell, User } from 'lucide-react';
+import { Search, Bell, User, LogIn } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Header() {
+  const token = localStorage.getItem('token');
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -97,10 +98,12 @@ export default function Header() {
 
           {/* 알림 / 관리자 */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5 text-white/80 hover:text-white" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+            {!token && (
+  <Button variant="ghost" size="icon" onClick={() => navigate('/login')}>
+    <LogIn className="h-5 w-5 text-white/80 hover:text-white" />
+  </Button>
+)}
+            <Button variant="ghost" size="icon" onClick={() => navigate('/mypage')}>
               <User className="h-5 w-5 text-white/80 hover:text-white" />
             </Button>
           </div>
