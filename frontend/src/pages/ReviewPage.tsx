@@ -156,7 +156,7 @@ useEffect(() => {
     const reviewsData = await Promise.all(
       res.data.map(async (review: Review) => {
         try {
-          const movieRes = await axios.get(`http://localhost:8080/api/movie/${review.movieIdx}`);
+          const movieRes = await axios.get(`http://localhost:8080/api/movies/info/${review.movieIdx}`);
           return {
             ...review,
             movieTitle: movieRes.data.title,
@@ -198,7 +198,7 @@ useEffect(() => {
   };
 
     useEffect(() => {
-      axios.get<Movie>("http://localhost:8080/api/movie/random", {
+      axios.get<Movie>("http://localhost:8080/api/movies/random", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
     })
         .then(res => {

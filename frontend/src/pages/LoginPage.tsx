@@ -64,7 +64,7 @@ useEffect(() => {
 
     animate();
     return () => cancelAnimationFrame(animationFrame);
-  }, [posters]);
+  }, [posters]);    
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
