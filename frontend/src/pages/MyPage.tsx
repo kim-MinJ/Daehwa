@@ -18,7 +18,6 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 
-// MyPageProps에서 onNavigate 제거
 interface MyPageProps {}
 
 interface Bookmark {
@@ -39,15 +38,17 @@ interface Review {
   reviewIdx: number;
   userId: string;
   movieIdx: number;
+  movieTitle?: string;
   content: string;
   rating: number;
-  regDate: string;
-  movieTitle?: string; // 영화 제목
+  createdAt: string;
+  updateAt: string;
 }
 
 export default function MyPage({}: MyPageProps) {
   const navigate = useNavigate();
   const { token, userInfo, setUserInfo, logout, getUserInfo } = useAuth();
+
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [recommendMovies, setRecommendMovies] = useState<Movie[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -62,33 +63,40 @@ export default function MyPage({}: MyPageProps) {
 
   const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
-  const fetchBookmarks = () => {
+  // 인증 헤더
+  const authHeader = { Authorization: `Bearer ${token}` };
+
+  const fetchBookmarks = async () => {
     if (!token) return;
-    axios
-      .get("http://localhost:8080/api/bookmarks", { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => setBookmarks(res.data))
-      .catch(console.error);
+    try {
+      const res = await axios.get("http://localhost:8080/api/bookmarks", { headers: authHeader });
+      setBookmarks(res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const fetchRecommendMovies = () => {
+  const fetchRecommendMovies = async () => {
     if (!token) return;
-    axios
-      .get("http://localhost:8080/api/movies/popular", {
-        headers: { Authorization: `Bearer ${token}` },
+    try {
+      const res = await axios.get("http://localhost:8080/api/movies/popular", {
+        headers: authHeader,
         params: { count: 12 },
-      })
-      .then((res) => setRecommendMovies(res.data))
-      .catch(console.error);
+      });
+      setRecommendMovies(res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const fetchReviews = () => {
+  const fetchReviews = async () => {
     if (!token) return;
-    axios
-      .get("http://localhost:8080/api/reviews/myreview", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setReviews(res.data))
-      .catch(console.error);
+    try {
+      const res = await axios.get("http://localhost:8080/api/reviews/myreview", { headers: authHeader });
+      setReviews(res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -101,42 +109,29 @@ export default function MyPage({}: MyPageProps) {
     if (userInfo?.username) setUsername(userInfo.username);
   }, [userInfo]);
 
-  const toggleBookmark = (movieIdx: number) => {
+  const toggleBookmark = async (movieIdx: number) => {
     if (!token) return;
     const existing = bookmarks.find((b) => b.movieIdx === movieIdx);
-
-    if (existing) {
-      axios
-        .delete(`http://localhost:8080/api/bookmarks/${existing.bookmarkIdx}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then(() => fetchBookmarks())
-        .catch(console.error);
-    } else {
-      axios
-        .post(`http://localhost:8080/api/bookmarks`, null, {
+    try {
+      if (existing) {
+        await axios.delete(`http://localhost:8080/api/bookmarks/${existing.bookmarkIdx}`, { headers: authHeader });
+      } else {
+        await axios.post(`http://localhost:8080/api/bookmarks`, null, {
           params: { movieIdx },
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then(() => fetchBookmarks())
-        .catch(console.error);
+          headers: authHeader,
+        });
+      }
+      fetchBookmarks();
+    } catch (err) {
+      console.error(err);
     }
   };
-function ReviewButton() {
-  const navigate = useNavigate();
-  return (
-    <Button size="sm" onClick={() => navigate("/reviews")}>
-      리뷰 작성
-    </Button>
-  );
-}
-
 
   const isBookmarked = (movieIdx: number) => bookmarks.some((b) => b.movieIdx === movieIdx);
 
   return (
     <div className="bg-black min-h-screen">
-      <div className="max-w-7xl mx-auto px300">
+      <div className="max-w-7xl mx-auto px-3">
         {/* 헤더 */}
         <div className="bg-red-600 text-white border-b border-red-700">
           <div className="px-6 py-4 flex items-center justify-between">
@@ -153,7 +148,6 @@ function ReviewButton() {
                   <Edit3 className="w-4 h-4 mr-2" /> 관리자 코드
                 </Button>
               )}
-
               <Button
                 variant="outline"
                 size="sm"
@@ -186,26 +180,25 @@ function ReviewButton() {
               />
               <Button
                 className="w-full"
-                onClick={() => {
+                onClick={async () => {
                   if (!adminCode.trim()) return alert("관리자 코드를 입력해주세요.");
-                  axios
-                    .put("http://localhost:8080/api/admin/grant", null, {
-                      params: { adminCode },
-                      headers: { Authorization: `Bearer ${token}` },
-                    })
-                    .then(async (res) => {
-                      alert(res.data.message);
-                      setIsAdminModalOpen(false);
-                      setAdminCode("");
-                      if (getUserInfo && setUserInfo) {
-                        const data = await getUserInfo();
-                        setUserInfo(data);
-                      }
-                    })
-                    .catch((err) => {
-                      console.error(err);
-                      alert(err.response?.data?.message || "관리자 권한 부여 실패");
-                    });
+                  try {
+                    const res = await axios.put(
+                      "http://localhost:8080/api/admin/grant",
+                      null,
+                      { params: { adminCode }, headers: authHeader }
+                    );
+                    alert(res.data.message);
+                    setIsAdminModalOpen(false);
+                    setAdminCode("");
+                    if (getUserInfo && setUserInfo) {
+                      const data = await getUserInfo();
+                      setUserInfo(data);
+                    }
+                  } catch (err: any) {
+                    console.error(err);
+                    alert(err.response?.data?.message || "관리자 권한 부여 실패");
+                  }
                 }}
               >
                 권한 부여
@@ -219,7 +212,7 @@ function ReviewButton() {
           </DialogContent>
         </Dialog>
 
-        {/* 컨텐츠 영역 (흰색 배경) */}
+        {/* 컨텐츠 */}
         <div className="bg-white px-6 py-8">
           {/* 프로필 카드 */}
           <Card className="mb-8">
@@ -228,15 +221,11 @@ function ReviewButton() {
                 <AvatarImage src={userInfo?.profileImage || ""} />
                 <AvatarFallback className="text-xl">{userInfo?.username?.charAt(0)}</AvatarFallback>
               </Avatar>
-
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   <h1 className="text-2xl font-bold">{userInfo?.username || "정보 없음"}</h1>
                   {userInfo?.role === "admin" && (
-                    <span
-                      style={{ backgroundColor: "black", color: "#f87171" }}
-                      className="px-3 py-1 text-sm rounded-md font-semibold"
-                    >
+                    <span className="px-3 py-1 text-sm rounded-md font-semibold" style={{ backgroundColor: "black", color: "#f87171" }}>
                       관리자
                     </span>
                   )}
@@ -245,15 +234,11 @@ function ReviewButton() {
                   <div className="flex items-center space-x-1">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <span>
-                      가입일:{" "}
-                      {userInfo?.regDate
-                        ? new Date(userInfo.regDate).toLocaleDateString()
-                        : "정보 없음"}
+                      가입일: {userInfo?.regDate ? new Date(userInfo.regDate).toLocaleDateString() : "정보 없음"}
                     </span>
                   </div>
                 </div>
               </div>
-
               <div className="flex justify-end">
                 <div className="grid grid-cols-1 gap-4 text-center mr-6">
                   <div>
@@ -274,8 +259,9 @@ function ReviewButton() {
               <TabsTrigger value="settings">계정 설정</TabsTrigger>
             </TabsList>
 
+            {/* 추천 영화 */}
             <TabsContent value="recommend">
-              {recommendMovies.length > 0 ? (
+              {recommendMovies.length ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {recommendMovies.map((movie) => (
                     <Card key={movie.movieIdx}>
@@ -291,7 +277,7 @@ function ReviewButton() {
                           variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
                           onClick={() => toggleBookmark(movie.movieIdx)}
                         >
-                          <Heart className="w-4 h-4 mr-1" /> 북마크
+                          <Heart className="w-4 h-4 mr-1" /> {isBookmarked(movie.movieIdx) ? "북마크" : "북마크"}
                         </Button>
                       </CardContent>
                     </Card>
@@ -302,8 +288,9 @@ function ReviewButton() {
               )}
             </TabsContent>
 
+            {/* 북마크 */}
             <TabsContent value="favorites">
-              {bookmarks.length > 0 ? (
+              {bookmarks.length ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {bookmarks.map((b) => (
                     <Card key={b.bookmarkIdx}>
@@ -314,11 +301,7 @@ function ReviewButton() {
                       />
                       <CardContent className="flex flex-col gap-2">
                         <h3 className="font-bold">{b.title}</h3>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => toggleBookmark(b.movieIdx)}
-                        >
+                        <Button size="sm" variant="destructive" onClick={() => toggleBookmark(b.movieIdx)}>
                           <Heart className="w-4 h-4 mr-1" /> 북마크 제거
                         </Button>
                       </CardContent>
@@ -332,18 +315,20 @@ function ReviewButton() {
 
             {/* 내 리뷰 */}
             <TabsContent value="reviews">
-              {reviews.length > 0 ? (
+              {reviews.length ? (
                 <div className="space-y-4">
                   {reviews.map((r) => (
-                    <div
-                      key={r.reviewIdx}
-                      className="border rounded-lg p-4 bg-gray-50 shadow-sm"
-                    >
+                    <div key={r.reviewIdx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
                       <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-semibold">{r.movieTitle || `영화 #${r.movieIdx}`}</h3>
-                        <span className="text-sm text-gray-500">
-                          {new Date(r.regDate).toLocaleDateString()}
-                        </span>
+                        <h3 className="font-semibold">영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}</h3>
+                        <div className="text-sm text-gray-500 flex flex-col">
+  <span>
+    작성일 : {r.createdAt ? new Date(r.createdAt.split(".")[0].replace(" ", "T")).toLocaleDateString() : "-"}
+  </span>
+  <span>
+    수정일 : {r.updateAt ? new Date(r.updateAt.split(".")[0].replace(" ", "T")).toLocaleDateString() : "-"}
+  </span>
+</div>
                       </div>
                       <p className="mb-2 text-gray-800">{r.content}</p>
                       <div className="text-sm text-gray-600">평점: {r.rating} / 10</div>
@@ -355,6 +340,7 @@ function ReviewButton() {
               )}
             </TabsContent>
 
+            {/* 계정 설정 */}
             <TabsContent value="settings">
               <Card>
                 <CardHeader>
@@ -369,22 +355,20 @@ function ReviewButton() {
                   <div className="space-y-2">
                     <Label htmlFor="username">이름</Label>
                     <div className="flex gap-2">
-                      <Input
-                        id="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                      />
+                      <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                       <Button
-                        onClick={() => {
+                        onClick={async () => {
                           if (!username.trim()) return alert("이름을 입력해주세요.");
-                          axios
-                            .put(
+                          try {
+                            await axios.put(
                               "http://localhost:8080/api/users/update",
                               { username },
-                              { headers: { Authorization: `Bearer ${token}` } }
-                            )
-                            .then(() => alert("이름이 변경되었습니다."))
-                            .catch(() => alert("이름 변경에 실패했습니다."));
+                              { headers: authHeader }
+                            );
+                            alert("이름이 변경되었습니다.");
+                          } catch {
+                            alert("이름 변경에 실패했습니다.");
+                          }
                         }}
                       >
                         변경
@@ -414,25 +398,24 @@ function ReviewButton() {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                       />
                       <Button
-                        onClick={() => {
+                        onClick={async () => {
                           if (!currentPassword || !newPassword || !confirmPassword)
                             return alert("모든 필드를 입력해주세요.");
                           if (newPassword !== confirmPassword)
                             return alert("비밀번호 확인이 일치하지 않습니다.");
-
-                          axios
-                            .put(
+                          try {
+                            await axios.put(
                               "http://localhost:8080/api/users/password",
                               { currentPassword, newPassword },
-                              { headers: { Authorization: `Bearer ${token}` } }
-                            )
-                            .then(() => {
-                              alert("비밀번호가 변경되었습니다.");
-                              setCurrentPassword("");
-                              setNewPassword("");
-                              setConfirmPassword("");
-                            })
-                            .catch(() => alert("비밀번호 변경에 실패했습니다."));
+                              { headers: authHeader }
+                            );
+                            alert("비밀번호가 변경되었습니다.");
+                            setCurrentPassword("");
+                            setNewPassword("");
+                            setConfirmPassword("");
+                          } catch {
+                            alert("비밀번호 변경에 실패했습니다.");
+                          }
                         }}
                       >
                         변경

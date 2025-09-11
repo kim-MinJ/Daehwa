@@ -48,7 +48,7 @@ public class ReviewController {
     if (authentication == null)
       return ResponseEntity.status(401).build();
 
-    String userId = authentication.getName(); // JWT에서 subject(userId)
+    String userId = authentication.getName();
     List<ReviewDto> myReviews = reviewService.getReviewsByUserId(userId);
     return ResponseEntity.ok(myReviews);
   }
