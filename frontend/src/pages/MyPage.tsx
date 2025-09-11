@@ -340,11 +340,11 @@ function ReviewButton() {
                       className="border rounded-lg p-4 bg-gray-50 shadow-sm"
                     >
                       <div className="flex justify-between items-center mb-2">
-  <h3 className="font-semibold">{r.movieTitle}</h3>
-  <span className="text-sm text-gray-500">
-    {new Date(r.createdAt).toLocaleDateString()}
-  </span>
-</div>
+                        <h3 className="font-semibold">{r.movieTitle || `영화 #${r.movieIdx}`}</h3>
+                        <span className="text-sm text-gray-500">
+                          {new Date(r.regDate).toLocaleDateString()}
+                        </span>
+                      </div>
                       <p className="mb-2 text-gray-800">{r.content}</p>
                       <div className="text-sm text-gray-600">평점: {r.rating} / 10</div>
                     </div>
