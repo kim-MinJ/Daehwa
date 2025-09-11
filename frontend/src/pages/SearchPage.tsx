@@ -41,7 +41,7 @@ const genreMap: Record<string, string> = {
 
 // 간단한 fetch helper
 async function fetchMoviesFromApi(page: number, limit = 20): Promise<Movie[]> {
-  const res = await fetch(`http://localhost:8080/api/searchMovie?page=${page}&limit=${limit}`);
+  const res = await fetch(`http://192.168.0.30/api/searchMovie?page=${page}&limit=${limit}`);
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const data = await res.json();
   if (!Array.isArray(data)) throw new Error('서버에서 배열이 아닌 데이터를 반환했습니다.');

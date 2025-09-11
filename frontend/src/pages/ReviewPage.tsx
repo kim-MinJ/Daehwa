@@ -65,7 +65,7 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
 
   useEffect(() => {
     if (isOpen) {
-      axios.get(`http://localhost:8080/api/review/${reviewId}/comments`, {
+      axios.get(`http://192.168.0.30/api/review/${reviewId}/comments`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       })
       .then(res => setComments(res.data))
@@ -75,7 +75,7 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
 
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
-    axios.post(`http://localhost:8080/api/review/${reviewId}/comments`, {
+    axios.post(`http://192.168.0.30/api/review/${reviewId}/comments`, {
       content: newComment,
       createdAt: new Date().toISOString()
     }, {
@@ -152,14 +152,14 @@ useEffect(() => {
   if (!todayMovie) return;
 
   // 감독
-  axios.get<string[]>(`http://localhost:8080/api/movies/${todayMovie.tmdbMovieId}/directors`, {
+  axios.get<string[]>(`http://192.168.0.30/api/movies/${todayMovie.tmdbMovieId}/directors`, {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
   })
   .then(res => setDirectors(res.data))
   .catch(console.error);
 
   // 장르
-  axios.get<string[]>(`http://localhost:8080/api/movies/${todayMovie.movieIdx}/genres`, {
+  axios.get<string[]>(`http://192.168.0.30/api/movies/${todayMovie.movieIdx}/genres`, {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
   })
   .then(res => setGenres(res.data))
@@ -169,14 +169,14 @@ useEffect(() => {
 
 
 useEffect(() => {
-  axios.get("http://localhost:8080/api/reviews", {
+  axios.get("http://192.168.0.30/api/reviews", {
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
   })
   .then(async res => {
     const reviewsData = await Promise.all(
       res.data.map(async (review: Review) => {
         try {
-          const movieRes = await axios.get(`http://localhost:8080/api/movie/${review.movieIdx}`);
+          const movieRes = await axios.get(`http://192.168.0.30/api/movie/${review.movieIdx}`);
           return {
             ...review,
             movieTitle: movieRes.data.title,
@@ -195,7 +195,7 @@ useEffect(() => {
 
   const handleSubmitReview = () => {
     if (!todayMovie) return;
-    axios.post("http://localhost:8080/api/reviews", {
+    axios.post("http://192.168.0.30/api/reviews", {
     movieIdx: todayMovie.movieIdx,
     rating: userRating,
     content: newReview,
@@ -218,7 +218,7 @@ useEffect(() => {
   };
 
     useEffect(() => {
-      axios.get<Movie>("http://localhost:8080/api/movie/random", {
+      axios.get<Movie>("http://192.168.0.30/api/movie/random", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
     })
         .then(res => {

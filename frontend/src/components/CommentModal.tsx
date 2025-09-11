@@ -32,7 +32,7 @@ export default function CommentModal({ reviewId, isOpen, onClose }: CommentModal
 
     setLoading(true);
     axios
-      .get<Comment[]>(`http://localhost:8080/api/review/${reviewId}/comments`, {
+      .get<Comment[]>(`http://192.168.0.30/api/review/${reviewId}/comments`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -51,7 +51,7 @@ export default function CommentModal({ reviewId, isOpen, onClose }: CommentModal
     setPosting(true);
     try {
       const res = await axios.post(
-        `http://localhost:8080/api/review/${reviewId}/comments`,
+        `http://192.168.0.30/api/review/${reviewId}/comments`,
         { content: commentText }, // userId 제거, 서버에서 JWT 확인
         { headers: { Authorization: `Bearer ${token}` } }
       );
