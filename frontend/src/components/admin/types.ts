@@ -1,5 +1,7 @@
 // src/types.ts
 
+
+
 // --- 페이지 타입 ---
 export type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail' | 'search' | 'admin';
 

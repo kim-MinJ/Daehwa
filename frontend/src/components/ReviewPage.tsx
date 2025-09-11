@@ -165,7 +165,6 @@ export default function ReviewPage({ movies, onMovieClick, onBack, onNavigation 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#E4E4E4' }}>
       {/* 공통 헤더 */}
-      <Header currentPage="reviews" onNavigation={onNavigation} />
 
       {/* 페이지 제목 */}
       <div className="bg-gray-900/50">
