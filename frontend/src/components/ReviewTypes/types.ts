@@ -1,0 +1,1 @@
+export type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail' | 'search' | 'admin' | 'main' | 'login' | 'mypage';

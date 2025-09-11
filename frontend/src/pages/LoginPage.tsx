@@ -8,7 +8,7 @@ import { Label } from "../components/ui/label";
 import { Card, CardContent } from "../components/ui/card";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 
-export function LoginPage() {
+export default function LoginPage() {
   const { login, register, logout, isLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // 추가
 import axios from "axios";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -6,7 +7,6 @@ import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Badge } from "../components/ui/badge";
 import { ArrowLeft, Edit3, Calendar, Heart } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -18,9 +18,8 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 
-interface MyPageProps {
-  onNavigate: (page: string) => void;
-}
+// MyPageProps에서 onNavigate 제거
+interface MyPageProps {}
 
 interface Bookmark {
   bookmarkIdx: number;
@@ -36,7 +35,8 @@ interface Movie {
   posterPath?: string;
 }
 
-export function MyPage({ onNavigate }: MyPageProps) {
+export default function MyPage({}: MyPageProps) {
+  const navigate = useNavigate(); // useNavigate 훅
   const { token, userInfo, setUserInfo, logout, getUserInfo } = useAuth();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [recommendMovies, setRecommendMovies] = useState<Movie[]>([]);
@@ -105,17 +105,16 @@ export function MyPage({ onNavigate }: MyPageProps) {
 
   return (
     <div className="bg-black min-h-screen">
-      {/* 중앙 컨텐츠 영역 */}
       <div className="max-w-7xl mx-auto px300">
         {/* 헤더 */}
         <div className="bg-red-600 text-white border-b border-red-700">
           <div className="px-6 py-4 flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => onNavigate("main")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/main")}>
               <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
             </Button>
             <div className="flex items-center space-x-4">
               {userInfo?.role === "admin" ? (
-                <Button variant="default" size="sm" onClick={() => onNavigate("admin")}>
+                <Button variant="default" size="sm" onClick={() => navigate("/admin")}>
                   관리자 모드
                 </Button>
               ) : (
@@ -124,14 +123,12 @@ export function MyPage({ onNavigate }: MyPageProps) {
                 </Button>
               )}
 
-              {/* 로그아웃 버튼 회색 */}
               <Button
                 variant="outline"
                 size="sm"
-                className="border-gray-400 text-gray-400 hover:bg-gray-600 hover:text-white"
                 onClick={() => {
                   logout();
-                  onNavigate("login");
+                  navigate("/login"); // 라우터 이동
                 }}
               >
                 로그아웃

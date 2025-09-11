@@ -7,7 +7,7 @@ import org.iclass.backend.dto.UsersDto;
 import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtTokenProvider;
-import org.iclass.backend.service.AuthService;
+// import org.iclass.backend.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +25,7 @@ public class AuthController {
         private final UsersRepository usersRepository;
         private final PasswordEncoder passwordEncoder;
         private final JwtTokenProvider jwtTokenProvider;
-        private final AuthService authService;
+        // private final AuthService authService;
 
         // 커밋용
         // 회원가입

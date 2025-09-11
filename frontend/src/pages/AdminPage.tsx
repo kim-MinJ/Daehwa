@@ -6,7 +6,6 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import { useAuth } from "../hooks/useAuth";
 import { User, Review, Movie } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
@@ -16,7 +15,7 @@ import AdminEditReviewModal from "../components/admin/AdminEditReviewModal";
 import AdminSearchBar from "../components/admin/AdminSearchBar";
 import { api } from "../lib/api";
 
-export function AdminPage() {
+export default function AdminPage() {
   const { userInfo, loading, token } = useAuth();
   const navigate = useNavigate();
 
@@ -270,7 +269,6 @@ const deleteReview = async (reviewIdx: number) => {
         deleteReview={deleteReview}
       />
 
-      <Footer />
     </div>
   );
 }

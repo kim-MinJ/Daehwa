@@ -19,4 +19,6 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
   @Query("SELECT COALESCE(AVG(r.rating), 0) FROM ReviewEntity r " +
       "WHERE r.movie.movieIdx = :movieId AND r.isBlind = 0")
   Optional<Double> findAvgRatingByMovie(@Param("movieId") Long movieId);
+
+  List<ReviewEntity> findAllByOrderByCreatedAtDesc();
 }
