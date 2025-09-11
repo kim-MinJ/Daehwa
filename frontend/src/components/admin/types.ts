@@ -1,7 +1,5 @@
 // src/types.ts
 
-
-
 // --- 페이지 타입 ---
 export type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail' | 'search' | 'admin';
 
@@ -28,6 +26,17 @@ export interface Review {
 export interface Movie {
   id: number;
   title: string;
+}
+
+// --- 댓글 타입 ---
+export interface Comment {
+  commentIdx: number;
+  userId: string;      // 작성자 ID
+  reviewIdx: number;   // 연결된 리뷰 ID
+  content: string;
+  createdAt: string;   // ISO 문자열
+  updateAt: string;    // ISO 문자열
+  isBlind: number;     // 0=정상, 1=블라인드 (백엔드에 없으면 기본 0)
 }
 
 // --- 게시글 타입 ---
