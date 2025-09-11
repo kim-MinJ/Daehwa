@@ -56,7 +56,7 @@ public class MovieCrewResponse {
         private String creditId;
 
         private String department; // JSON 필드만 사용, Entity에는 저장 안함
-        private String job;        // Entity에 저장할 직책
+        private String job; // Entity에 저장할 직책
 
         // DTO → Entity 변환
         public MovieCrewEntity toEntity(Long tmdbMovieId) {

@@ -21,12 +21,12 @@ import lombok.ToString;
 @Table(name = "BOOKMARK")
 public class BookMarkDto {
     private Long bookmarkIdx;
-    private String userId;           // UsersEntity의 userId
-    private Long movieIdx;           // MovieInfoEntity의 movieIdx
+    private String userId; // UsersEntity의 userId
+    private Long movieIdx; // MovieInfoEntity의 movieIdx
 
     // 추가 정보(DB에 저장 안되는 정보)
-    private String title;            // 영화 제목
-    private String posterPath;       // 영화 포스터 경로
+    private String title; // 영화 제목
+    private String posterPath; // 영화 포스터 경로
 
     // ✅ Entity → DTO 변환
     public static BookMarkDto of(BookMarkEntity entity) {
@@ -43,8 +43,8 @@ public class BookMarkDto {
     public BookMarkEntity toEntity(UsersEntity user, MovieInfoEntity movie) {
         return BookMarkEntity.builder()
                 .bookmarkIdx(this.bookmarkIdx)
-                .user(user)     // 연관관계 매핑: UsersEntity
-                .movie(movie)   // 연관관계 매핑: MovieInfoEntity
+                .user(user) // 연관관계 매핑: UsersEntity
+                .movie(movie) // 연관관계 매핑: MovieInfoEntity
                 .build();
     }
 }

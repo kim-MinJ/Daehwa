@@ -23,13 +23,13 @@ import lombok.ToString;
 @Table(name = "REVIEW")
 public class ReviewDto {
     private Long reviewIdx;
-    private Long movieIdx;         // MovieInfoEntity의 movieIdx
-    private String userId;         // UsersEntity의 userId
+    private Long movieIdx; // MovieInfoEntity의 movieIdx
+    private String userId; // UsersEntity의 userId
     private String content;
     private Integer rating;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
-    private Integer isBlind;       // 0: off, 1: on
+    private Integer isBlind; // 0: off, 1: on
 
     // ✅ Entity → DTO 변환
     public static ReviewDto of(ReviewEntity entity) {
@@ -49,8 +49,8 @@ public class ReviewDto {
     public ReviewEntity toEntity(UsersEntity user, MovieInfoEntity movie) {
         return ReviewEntity.builder()
                 .reviewIdx(this.reviewIdx)
-                .user(user)          // UsersEntity 연관관계
-                .movie(movie)        // MovieInfoEntity 연관관계
+                .user(user) // UsersEntity 연관관계
+                .movie(movie) // MovieInfoEntity 연관관계
                 .content(this.content)
                 .rating(this.rating)
                 .createdAt(this.createdAt)

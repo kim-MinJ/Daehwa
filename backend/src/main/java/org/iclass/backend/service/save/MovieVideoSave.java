@@ -27,10 +27,12 @@ public class MovieVideoSave {
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4"; // 실제 키로 교체
+    private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4"; // 실제
+                                                                                                                                                                                                                                                                                                  // 키로
+                                                                                                                                                                                                                                                                                                  // 교체
 
     public MovieVideoSave(MovieInfoRepository movieInfoRepository,
-                          VideosRepository videosRepository) {
+            VideosRepository videosRepository) {
         this.movieInfoRepository = movieInfoRepository;
         this.videosRepository = videosRepository;
     }
@@ -43,7 +45,8 @@ public class MovieVideoSave {
 
         for (MovieInfoEntity movie : movies) {
             Long tmdbMovieId = movie.getTmdbMovieId();
-            if (tmdbMovieId == null) continue;
+            if (tmdbMovieId == null)
+                continue;
 
             // Open API 호출
             String url = "https://api.themoviedb.org/3/movie/" + tmdbMovieId + "/videos?language=ko-KR";

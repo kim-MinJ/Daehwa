@@ -21,8 +21,8 @@ import lombok.ToString;
 @Table(name = "MOVIE_GENRES")
 public class MovieGenresDto {
     private Long mgIdx;
-    private Long movieIdx;  // MovieInfoEntity의 movieIdx
-    private Long genreIdx;  // GenresEntity의 genreIdx
+    private Long movieIdx; // MovieInfoEntity의 movieIdx
+    private Long genreIdx; // GenresEntity의 genreIdx
 
     // ✅ Entity → DTO 변환
     public static MovieGenresDto of(MovieGenresEntity entity) {
@@ -37,8 +37,8 @@ public class MovieGenresDto {
     public MovieGenresEntity toEntity(MovieInfoEntity movie, GenresEntity genre) {
         return MovieGenresEntity.builder()
                 .mgIdx(this.mgIdx)
-                .movie(movie)   // 연관관계 매핑 (MovieInfoEntity)
-                .genre(genre)   // 연관관계 매핑 (GenresEntity)
+                .movie(movie) // 연관관계 매핑 (MovieInfoEntity)
+                .genre(genre) // 연관관계 매핑 (GenresEntity)
                 .build();
     }
 }

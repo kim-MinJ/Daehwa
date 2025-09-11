@@ -4,9 +4,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
+import org.iclass.backend.dto.MovieInfoDto;
+import org.iclass.backend.entity.MovieCrewEntity;
 import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.repository.MovieCrewRepository;
+import org.iclass.backend.repository.MovieGenresRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,12 +18,18 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class MoviesService {
 
+    private final MovieCrewRepository movieCrewRepository;
+
+    private final MovieGenresRepository movieGenresRepository;
+
   private final MovieInfoRepository movieInfoRepository;
   private final String API_KEY = "302b783e860b19b6822ef0a445e7ae53";
-  private final String API_URL = "https://api.themoviedb.org/3/movie/popular?language=ko-KR&page=1&api_key=" + API_KEY;
+  private final String API_URL = "https://api.themoviedb.org/3/movie/popular?language=ko-KR&page=10&api_key=" + API_KEY;
 
-  public MoviesService(MovieInfoRepository movieInfoRepository) {
+  public MoviesService(MovieInfoRepository movieInfoRepository, MovieGenresRepository movieGenresRepository, MovieCrewRepository movieCrewRepository) {
     this.movieInfoRepository = movieInfoRepository;
+    this.movieGenresRepository = movieGenresRepository;
+    this.movieCrewRepository = movieCrewRepository;
   }
 
   // DB에 영화 저장 (TMDB 인기 영화 가져오기)
@@ -55,13 +64,7 @@ public class MoviesService {
 
   // 랜덤 영화 1개 반환
   public MovieInfoEntity getRandomMovie() {
-    List<MovieInfoEntity> allMovies = movieInfoRepository.findAll();
-    if (allMovies.isEmpty())
-      return null;
-
-    Random random = new Random();
-    int index = random.nextInt(allMovies.size());
-    return allMovies.get(index);
+    return movieInfoRepository.findRandomMovie();
   }
 
   // 문자열 → LocalDate
@@ -71,5 +74,33 @@ public class MoviesService {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  public MovieInfoDto getMovieById(Long movieIdx) {
+    return movieInfoRepository.findById(movieIdx)
+        .map(MovieInfoDto::of)
+        .orElseThrow(() -> new RuntimeException("영화를 찾을 수 없습니다."));
+  }
+
+  public List<MovieInfoDto> getAllMovies() {
+    return movieInfoRepository.findAll().stream()
+        .map(MovieInfoDto::of)
+        .toList();
+  }
+
+  // 장르 가져오기
+  public List<String> getGenresByMovieIdx(Long movieIdx) {
+    return movieGenresRepository.findByMovie_MovieIdx(movieIdx)
+        .stream()
+        .<String>map(entity -> entity.getGenre().getName())
+        .toList();
+  }
+
+  // 감독 가져오기
+  public List<String> getDirectorsByTmdbId(Long tmdbMovieId) {
+    return movieCrewRepository.findByTmdbMovieIdAndJob(tmdbMovieId, "Director")
+        .stream()
+        .map(MovieCrewEntity::getCrewName)
+        .toList();
   }
 }
