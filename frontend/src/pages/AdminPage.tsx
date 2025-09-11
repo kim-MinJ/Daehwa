@@ -155,7 +155,7 @@ export default function AdminPage() {
             onClick={() => setActiveTab("reviews")}
           >
             <MessageSquare className="h-8 w-8 text-green-600 mb-2" />
-            <h2 className="text-lg font-medium text-gray-700">총 댓글 수</h2>
+            <h2 className="text-lg font-medium text-gray-700">총 리뷰 수</h2>
             <p className="text-3xl font-bold text-gray-900">{reviews.length}</p>
           </Card>
         </div>
@@ -167,8 +167,8 @@ export default function AdminPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users">회원 관리</TabsTrigger>
-            <TabsTrigger value="reviews">댓글 관리</TabsTrigger>
-            <TabsTrigger value="comments">댓글 관리(예비)</TabsTrigger>
+            <TabsTrigger value="reviews">리뷰 관리</TabsTrigger>
+            <TabsTrigger value="comments">댓글 관리</TabsTrigger>
             <TabsTrigger value="votes">투표 관리</TabsTrigger>
           </TabsList>
 
