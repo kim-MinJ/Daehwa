@@ -4,7 +4,7 @@ import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SearchPage from "./pages/SearchPage";
 import MovieDetailPage from "./pages/MovieDetailPage";
-// import RankingPage from "./pages/RankingPage";
+import RankingPage from "./pages/RankingPage";
 import ReviewPage from "./pages/ReviewPage";
 import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
@@ -20,7 +20,7 @@ export default function App() {
             <Route path="*" element={<MainPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/movies/:id" element={<MovieDetailPage />} />
-            {/* <Route path="/ranking" element={<RankingPage />} /> */}
+            <Route path="/ranking" element={<RankingPage />} />
             <Route path="/reviews" element={<ReviewPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/login" element={<LoginPage />} />

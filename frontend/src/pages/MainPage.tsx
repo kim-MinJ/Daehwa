@@ -138,7 +138,11 @@ function MainPage() {
 
   const featured = useMemo(() => topRated[0] ?? latest[0], [topRated, latest]);
   const personalizedTop3 = useMemo(() => topRated.slice(0, 3), [topRated]);
-  const latest6 = useMemo(() => latest.slice(0, 6), [latest]);
+  const latest6 = useMemo(() => {
+  const top20 = latest.slice(0, 20); // 최신 20개
+  const shuffled = [...top20].sort(() => Math.random() - 0.5); // 랜덤 섞기
+  return shuffled.slice(0, 6); // 상위 6개 선택
+}, [latest]);
   const weeklyTop5 = useMemo(() => topRated.slice(0, 5), [topRated]);
   const reviewEvent3 = useMemo(() => latest.slice(6, 9), [latest]);
 

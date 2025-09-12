@@ -344,7 +344,7 @@ export default function MyPage({}: MyPageProps) {
                 작성일 : {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}
               </span>
               <span>
-    수정일: {r.updateAt ? new Date(r.updateAt).toLocaleDateString() 
+    수정일 : {r.updateAt ? new Date(r.updateAt).toLocaleDateString() 
                         : r.createdAt ? new Date(r.createdAt).toLocaleDateString() 
                         : "-"}
   </span>
