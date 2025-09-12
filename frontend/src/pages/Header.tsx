@@ -53,25 +53,33 @@ export default function Header() {
           <nav className="hidden md:flex items-center space-x-8">
             <button
               onClick={() => navigate('/')}
-              className={`font-medium transition-colors ${location.pathname === '/' ? 'text-red-500' : 'text-white/80 hover:text-white'}`}
+              className={`font-medium transition-colors ${
+                location.pathname === '/' ? 'text-red-500' : 'text-white/80 hover:text-white'
+              }`}
             >
               홈
             </button>
             <button
               onClick={() => navigate('/search')}
-              className={`font-medium transition-colors ${location.pathname.startsWith('/search') ? 'text-red-500' : 'text-white/80 hover:text-white'}`}
+              className={`font-medium transition-colors ${
+                location.pathname.startsWith('/search') ? 'text-red-500' : 'text-white/80 hover:text-white'
+              }`}
             >
               검색
             </button>
             <button
               onClick={() => navigate('/ranking')}
-              className={`font-medium transition-colors ${location.pathname === '/ranking' ? 'text-red-500' : 'text-white/80 hover:text-white'}`}
+              className={`font-medium transition-colors ${
+                location.pathname === '/ranking' ? 'text-red-500' : 'text-white/80 hover:text-white'
+              }`}
             >
               랭킹
             </button>
             <button
               onClick={() => navigate('/reviews')}
-              className={`font-medium transition-colors ${location.pathname === '/reviews' ? 'text-red-500' : 'text-white/80 hover:text-white'}`}
+              className={`font-medium transition-colors ${
+                location.pathname === '/reviews' ? 'text-red-500' : 'text-white/80 hover:text-white'
+              }`}
             >
               리뷰
             </button>
@@ -86,10 +94,20 @@ export default function Header() {
               />
               <Input
                 type="text"
-                placeholder="영화 제목, 감독, 배우를 검색하세요"
+                placeholder="영화 제목을 검색하세요"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
+
+                // /movies 로 시작하는 URL에서는 이동 안 함
+                onFocus={() => {
+                  if (
+                    !location.pathname.startsWith('/search') &&
+                    !location.pathname.startsWith('/movies')
+                  ) {
+                    navigate('/search');
+                  }
+                }}
                 className="pl-10 bg-gray-900/50 border-gray-700 focus:border-red-500 text-white placeholder:text-white/50"
               />
             </form>
