@@ -24,6 +24,7 @@ import lombok.ToString;
 public class ReviewDto {
     private Long reviewIdx;
     private Long movieIdx; // MovieInfoEntity의 movieIdx
+    private String movieTitle; // 영화 제목 추가
     private String userId; // UsersEntity의 userId
     private String content;
     private Integer rating;
@@ -36,6 +37,7 @@ public class ReviewDto {
         return ReviewDto.builder()
                 .reviewIdx(entity.getReviewIdx())
                 .movieIdx(entity.getMovie() != null ? entity.getMovie().getMovieIdx() : null)
+                .movieTitle(entity.getMovie() != null ? entity.getMovie().getTitle() : null) // 영화 제목 추가
                 .userId(entity.getUser() != null ? entity.getUser().getUserId() : null)
                 .content(entity.getContent())
                 .rating(entity.getRating())
@@ -49,8 +51,8 @@ public class ReviewDto {
     public ReviewEntity toEntity(UsersEntity user, MovieInfoEntity movie) {
         return ReviewEntity.builder()
                 .reviewIdx(this.reviewIdx)
-                .user(user) // UsersEntity 연관관계
-                .movie(movie) // MovieInfoEntity 연관관계
+                .user(user)
+                .movie(movie)
                 .content(this.content)
                 .rating(this.rating)
                 .createdAt(this.createdAt)

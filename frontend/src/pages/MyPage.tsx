@@ -89,17 +89,15 @@ export default function MyPage({}: MyPageProps) {
     }
   };
 
- const fetchReviews = async () => {
-  if (!token) return;
-  try {
-    const res = await axios.get("http://localhost:8080/api/reviews/myreview", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setReviews(res.data);
-  } catch (err) {
-    console.error("내 리뷰 불러오기 실패", err);
-  }
-};
+  const fetchReviews = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get("http://localhost:8080/api/reviews/myreview", { headers: authHeader });
+      setReviews(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     fetchBookmarks();

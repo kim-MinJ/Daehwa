@@ -55,6 +55,18 @@ public class ReviewService {
     }).collect(Collectors.toList());
   }
 
+  // 🔹 유저별 리뷰 조회
+  // ReviewService.java
+  public List<ReviewDto> getReviewsByUserId(String userId) {
+    UsersEntity user = usersRepository.findByUserId(userId)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    return reviewRepository.findByUser(user)
+        .stream()
+        .map(ReviewDto::of) // 영화 제목 포함 DTO 변환
+        .toList();
+  }
+
   // 🔹 리뷰 블라인드 상태 변경
   public void updateReviewStatus(Long reviewIdx, int isBlind) {
     ReviewEntity review = reviewRepository.findById(reviewIdx)
@@ -68,14 +80,6 @@ public class ReviewService {
     ReviewEntity review = reviewRepository.findById(reviewIdx)
         .orElseThrow(() -> new RuntimeException("Review not found"));
     reviewRepository.delete(review);
-  }
-
-  // 내 리뷰만 조회
-  public List<ReviewDto> getMyReviews(UsersEntity user) {
-    return reviewRepository.findAllByUserOrderByCreatedAtDesc(user)
-        .stream()
-        .map(ReviewDto::of)
-        .collect(Collectors.toList());
   }
 
 }
