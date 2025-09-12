@@ -1,3 +1,4 @@
+// src/pages/MainPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
@@ -66,12 +67,12 @@ function MainPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    setErr(null);
+  let alive = true;
+  setLoading(true);
+  setErr(null);
 
-    (async () => {
-      try {
+  (async () => {
+    try {
         const hasPoster = (m: any) => {
           const p = m.posterPath ?? m.posterUrl ?? m.poster_path ?? "";
           return !!p && p.trim() !== "";
@@ -121,19 +122,19 @@ function MainPage() {
           setLatest(uniqueById(latestAcc.map(mapApiToUi)).sort((a, b) => b.year - a.year));
           setTopRated(uniqueById(ratingAcc.map(mapApiToUi)).sort((a, b) => b.rating - a.rating));
         }
-      } catch (e) {
-        if (!alive) return;
-        console.error("메인 데이터 로딩 실패:", e);
-        setErr(null);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
+    } catch (e) {
+      if (!alive) return;
+      console.error("메인 데이터 로딩 실패:", e);
+      setErr(null);
+    } finally {
+      if (alive) setLoading(false);
+    }
+  })();
 
-    return () => {
-      alive = false;
-    };
-  }, [token]);
+  return () => {
+    alive = false;
+  };
+}, [token]);
 
   const featured = useMemo(() => topRated[0] ?? latest[0], [topRated, latest]);
   const personalizedTop3 = useMemo(() => topRated.slice(0, 3), [topRated]);

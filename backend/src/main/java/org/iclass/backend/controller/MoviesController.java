@@ -1,6 +1,7 @@
 package org.iclass.backend.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.iclass.backend.dto.MovieInfoDto;
@@ -123,84 +124,16 @@ public class MoviesController {
   public ResponseEntity<MovieInfoDto> getMovieByIdx(@PathVariable Long movieIdx) {
     return ResponseEntity.ok(moviesService.getMovieById(movieIdx));
   }
+
+  /** 영화 출연진 + 크루 정보 (TMDB 형식) */
+  @GetMapping("/{id}/credits")
+  public ResponseEntity<Map<String, Object>> getCredits(@PathVariable Long id) {
+    return ResponseEntity.ok(moviesService.getCredits(id));
+  }
+
+  /** 영화 비디오 / 예고편 (TMDB 형식, 현재 빈 리스트) */
+  @GetMapping("/{id}/videos")
+  public ResponseEntity<Map<String, Object>> getVideos(@PathVariable Long id) {
+    return ResponseEntity.ok(moviesService.getVideos(id));
+  }
 }
-
-// package org.iclass.backend.controller;
-
-// import org.iclass.backend.entity.MovieInfoEntity;
-
-// import java.util.Collections;
-// import java.util.List;
-// import java.util.stream.Collectors;
-
-// import org.iclass.backend.dto.MovieInfoDto;
-// import org.iclass.backend.repository.MovieInfoRepository;
-// import org.iclass.backend.entity.MovieInfoEntity;
-// import org.iclass.backend.service.MoviesService;
-// import org.springframework.data.domain.PageRequest;
-// import org.springframework.data.domain.Pageable;
-// import org.springframework.data.domain.Sort;
-// import org.springframework.http.ResponseEntity;
-// import org.springframework.web.bind.annotation.GetMapping;
-// import org.springframework.web.bind.annotation.PostMapping;
-// import org.springframework.web.bind.annotation.RequestMapping;
-// import org.springframework.web.bind.annotation.RequestParam;
-// import org.springframework.web.bind.annotation.RestController;
-
-// import lombok.RequiredArgsConstructor;
-
-// @RestController
-// @RequestMapping("/api/movies")
-// @RequiredArgsConstructor
-// public class MoviesController {
-
-// private final MovieInfoRepository movieInfoRepository;
-// private final MoviesService moviesService;
-
-// @PostMapping("/fetch")
-// public String fetchMovies() {
-// moviesService.fetchAndSaveMovies();
-// return "Movies fetched!";
-// }
-
-// @GetMapping("/popular")
-// public ResponseEntity<List<MovieInfoDto>>
-// getPopularMovies(@RequestParam(defaultValue = "20") int count) {
-// // 인기순으로 정렬하고 페이지 요청
-// Pageable pageable = PageRequest.of(0, count, Sort.by(Sort.Direction.DESC,
-// "popularity"));
-
-// // 페이지 요청으로 인기 영화 가져오기
-// List<MovieInfoEntity> movies =
-// movieInfoRepository.findAll(pageable).getContent();
-
-// // Entity → DTO 변환
-// List<MovieInfoDto> dtos = movies.stream()
-// .map(MovieInfoDto::of) // DTO 변환 메서드 사용
-// .collect(Collectors.toList());
-
-// return ResponseEntity.ok(dtos);
-// }
-
-// @GetMapping("/random")
-// public ResponseEntity<List<MovieInfoDto>>
-// getRandomMovies(@RequestParam(defaultValue = "8") int count) {
-// List<MovieInfoEntity> allMovies = movieInfoRepository.findAll();
-// Collections.shuffle(allMovies);
-
-// List<MovieInfoDto> randomMovies = allMovies.stream()
-// .limit(count)
-// .map(entity -> {
-// MovieInfoDto dto = new MovieInfoDto();
-// dto.setMovieIdx(entity.getMovieIdx());
-// dto.setTitle(entity.getTitle());
-// dto.setPosterPath(entity.getPosterPath()); // posterPath 그대로 반환
-// return dto;
-// })
-// .toList();
-
-// return ResponseEntity.ok(randomMovies);
-// }
-// }
-
-// // 0908 1550 복구
