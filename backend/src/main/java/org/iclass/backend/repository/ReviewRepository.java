@@ -21,4 +21,7 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
   Optional<Double> findAvgRatingByMovie(@Param("movieId") Long movieId);
 
   List<ReviewEntity> findAllByOrderByCreatedAtDesc();
+
+  List<ReviewEntity> findAllByUserOrderByCreatedAtDesc(UsersEntity user);
+
 }

@@ -55,4 +55,15 @@ public class ReviewController {
     reviewService.deleteReview(reviewIdx);
     return ResponseEntity.ok().build();
   }
+
+  // 내 리뷰 조회 API
+  // 내 리뷰 조회
+  @GetMapping("/myreview")
+  public ResponseEntity<List<ReviewDto>> getMyReviews(@AuthenticationPrincipal UsersEntity user) {
+    if (user == null) {
+      return ResponseEntity.status(401).build();
+    }
+    List<ReviewDto> myReviews = reviewService.getMyReviews(user);
+    return ResponseEntity.ok(myReviews);
+  }
 }

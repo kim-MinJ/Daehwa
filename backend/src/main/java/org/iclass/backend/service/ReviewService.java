@@ -70,4 +70,12 @@ public class ReviewService {
     reviewRepository.delete(review);
   }
 
+  // 내 리뷰만 조회
+  public List<ReviewDto> getMyReviews(UsersEntity user) {
+    return reviewRepository.findAllByUserOrderByCreatedAtDesc(user)
+        .stream()
+        .map(ReviewDto::of)
+        .collect(Collectors.toList());
+  }
+
 }
