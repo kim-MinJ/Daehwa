@@ -1,4 +1,3 @@
-// src/pages/MainPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
@@ -23,28 +22,6 @@ type UiMovie = {
   description?: string;
 };
 
-// API → UI 매핑 후 포스터 없는 영화 제거
-const filterWithPoster = (movies: ApiMovie[]): ApiMovie[] =>
-  movies.filter(m => {
-    const poster = (m as any).posterPath ?? (m as any).posterUrl ?? (m as any).poster_path ?? "";
-    return !!poster && poster.trim() !== "";
-  });
-
-// API → UI 매핑
-const mapApiToUi = (m: ApiMovie): UiMovie => ({
-  id: (m as any).movieIdx ?? (m as any).id ?? "",
-  title: m.title,
-  poster: (m as any).posterPath ?? (m as any).posterUrl ?? "",
-  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : ((m as any).year ?? 0),
-  genre: Array.isArray(m.genre) && (m.genre as any[]).length ? (m.genre as any[])[0] : ((m as any).genre ?? "기타"),
-  rating:
-    typeof (m as any).voteAverage === "number"
-      ? (m as any).voteAverage
-      : ((m as any).rating ?? 0),
-  runtime: (m as any).runtime ?? 0,
-  description: (m as any).overview ?? (m as any).description,
-});
-
 // ID 중복 제거
 const uniqueById = (movies: UiMovie[]): UiMovie[] => {
   const seen = new Set<string | number>();
@@ -54,6 +31,18 @@ const uniqueById = (movies: UiMovie[]): UiMovie[] => {
     return true;
   });
 };
+
+// API → UI 매핑
+const mapApiToUi = (m: ApiMovie): UiMovie => ({
+  id: (m as any).movieIdx ?? (m as any).id ?? "",
+  title: m.title,
+  poster: (m as any).posterPath ?? (m as any).posterUrl ?? "",
+  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : ((m as any).year ?? 0),
+  genre: Array.isArray(m.genre) && (m.genre as any[]).length ? (m.genre as any[])[0] : ((m as any).genre ?? "기타"),
+  rating: typeof (m as any).voteAverage === "number" ? (m as any).voteAverage : ((m as any).rating ?? 0),
+  runtime: (m as any).runtime ?? 0,
+  description: (m as any).overview ?? (m as any).description,
+});
 
 // ---- 로딩 스피너 컴포넌트 ----
 function LoadingSpinner() {
@@ -77,37 +66,74 @@ function MainPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-  let alive = true;
-  setLoading(true);
-  setErr(null);
+    let alive = true;
+    setLoading(true);
+    setErr(null);
 
-  (async () => {
-    try {
-      const [latestResp, ratingResp] = await Promise.all([
-        fetchMovies({ q: "", page: 1, sort: "latest" } as any, token as any),
-        fetchMovies({ q: "", page: 1, sort: "rating" } as any, token as any),
-      ]);
+    (async () => {
+      try {
+        const hasPoster = (m: any) => {
+          const p = m.posterPath ?? m.posterUrl ?? m.poster_path ?? "";
+          return !!p && p.trim() !== "";
+        };
 
-      if (!alive) return;
+        const targetLatest = 12; // 최신 섹션
+        const targetRating = 10; // 평점 섹션
+        const maxPage = 10; // 안전장치
 
-      const latestList: ApiMovie[] = filterWithPoster((latestResp as any)?.content ?? []);
-      const ratingList: ApiMovie[] = filterWithPoster((ratingResp as any)?.content ?? []);
+        const latestAcc: ApiMovie[] = [];
+        const ratingAcc: ApiMovie[] = [];
 
-      setLatest(uniqueById(latestList.map(mapApiToUi)));
-      setTopRated(uniqueById(ratingList.map(mapApiToUi)));
-    } catch (e) {
-      if (!alive) return;
-      console.error("메인 데이터 로딩 실패:", e);
-      setErr(null);
-    } finally {
-      if (alive) setLoading(false);
-    }
-  })();
+        // 최신 영화 누적
+        let p1 = 1;
+        while (latestAcc.length < targetLatest && p1 <= maxPage) {
+          const resp = await fetchMovies({ q: "", page: p1, sort: "latest" } as any, token as any);
+          const list: ApiMovie[] = (resp as any)?.content ?? [];
+          for (const m of list) {
+            if (!hasPoster(m)) continue;
+            const id = (m as any).movieIdx ?? (m as any).id;
+            if (!latestAcc.some(x => ((x as any).movieIdx ?? (x as any).id) === id)) {
+              latestAcc.push(m);
+              if (latestAcc.length >= targetLatest) break;
+            }
+          }
+          p1++;
+        }
 
-  return () => {
-    alive = false;
-  };
-}, [token]);
+        // 평점 영화 누적
+        let p2 = 1;
+        while (ratingAcc.length < targetRating && p2 <= maxPage) {
+          const resp = await fetchMovies({ q: "", page: p2, sort: "rating" } as any, token as any);
+          const list: ApiMovie[] = (resp as any)?.content ?? [];
+          for (const m of list) {
+            if (!hasPoster(m)) continue;
+            const id = (m as any).movieIdx ?? (m as any).id;
+            if (!ratingAcc.some(x => ((x as any).movieIdx ?? (x as any).id) === id)) {
+              ratingAcc.push(m);
+              if (ratingAcc.length >= targetRating) break;
+            }
+          }
+          p2++;
+        }
+
+        // UI 변환 + 정렬
+        if (alive) {
+          setLatest(uniqueById(latestAcc.map(mapApiToUi)).sort((a, b) => b.year - a.year));
+          setTopRated(uniqueById(ratingAcc.map(mapApiToUi)).sort((a, b) => b.rating - a.rating));
+        }
+      } catch (e) {
+        if (!alive) return;
+        console.error("메인 데이터 로딩 실패:", e);
+        setErr(null);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [token]);
 
   const featured = useMemo(() => topRated[0] ?? latest[0], [topRated, latest]);
   const personalizedTop3 = useMemo(() => topRated.slice(0, 3), [topRated]);
