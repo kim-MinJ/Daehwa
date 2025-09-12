@@ -175,18 +175,19 @@ export default function ReviewPage() {
     if (!todayMovie) return;
 
     // 감독
-    axios.get<string[]>(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    })
-    .then(res => setDirectors(res.data))
-    .catch(console.error);
+    // 감독
+axios.get<string[]>(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+})
+.then(res => setDirectors(res.data))
+.catch(console.error);
 
-    // 장르
-    axios.get<string[]>(`/api/movies/${todayMovie.movieIdx}/genres`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    })
-    .then(res => setGenres(res.data))
-    .catch(console.error);
+// 장르
+axios.get<string[]>(`/api/movies/${todayMovie.movieIdx}/genres`, {
+  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+})
+.then(res => setGenres(res.data))
+.catch(console.error);
 
   }, [todayMovie]);
 
@@ -279,11 +280,11 @@ export default function ReviewPage() {
                     <span className="text-black">{directors.join(", ") || "정보 없음"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 w-12">장르</span>
-                    {genres.length > 0 ? genres.map((g) => (
-                      <Badge key={g} variant="outline" className="border-gray-400 text-black">{g}</Badge>
-                    )) : <span className="text-black">정보 없음</span>}
-                  </div>
+  <span className="text-sm text-gray-600 w-12">장르</span>
+  {genres.length > 0 ? genres.map((g) => (
+    <Badge key={g} variant="outline" className="border-gray-400 text-black">{g}</Badge>
+  )) : <span className="text-black">정보 없음</span>}
+</div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600 w-12">개봉</span>
                     <span className="text-black">{todayMovie.releaseDate?.slice(0, 4)}년</span>
