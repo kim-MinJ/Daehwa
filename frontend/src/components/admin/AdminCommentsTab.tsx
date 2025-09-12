@@ -50,7 +50,7 @@ export default function AdminCommentsTab({
                   className={`border-b ${comment.isBlind === 1 ? "bg-gray-200" : ""}`}
                 >
                   <td className="p-2">{comment.commentIdx}</td>
-                  <td className="p-2">{user?.username || comment.userId}</td>
+                  <td className="p-2">{comment.userId}</td>
                   <td className="p-2">{comment.content}</td>
                   <td className="p-2">{new Date(comment.createdAt).toLocaleDateString()}</td>
                   <td className="p-2">{new Date(comment.updateAt).toLocaleDateString()}</td>

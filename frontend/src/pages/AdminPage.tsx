@@ -97,7 +97,7 @@ export default function AdminPage() {
     if (!token) return;
     (async () => {
       try {
-        const res = await api.get("/comments", {
+        const res = await api.get("/review/comments", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const formattedComments: Comment[] = res.data.map((c: any) => ({
@@ -214,10 +214,10 @@ export default function AdminPage() {
         <AdminDashboardCards
           usersCount={users.length}
           reviewsCount={reviews.length}
-          postsCount={0}
+          postsCount={comments.length}
           votesCount={0}
           setActiveTab={setActiveTab}
-        />
+        />  
 
         {/* 검색바 */}
         <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />

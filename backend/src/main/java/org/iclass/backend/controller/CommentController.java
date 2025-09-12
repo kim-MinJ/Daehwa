@@ -46,4 +46,11 @@ public class CommentController {
   public void deleteComment(@PathVariable Long commentId) {
     commentService.deleteComment(commentId);
   }
+
+  @GetMapping("/comments")
+  public List<CommentsDto> getAllComments() {
+    return commentService.getAllComments().stream()
+        .map(CommentsDto::of) // DTO로 변환
+        .toList();
+  }
 }

@@ -40,11 +40,11 @@ export default function AdminDashboardCards({
         </CardContent>
       </Card>
 
-      <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('posts')}>
+      <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('comments')}>
         <CardContent className="p-6 flex items-center">
           <FileText className="h-8 w-8 text-purple-600" />
           <div className="ml-4">
-            <p className="text-sm font-medium text-gray-600">총 게시글수</p>
+            <p className="text-sm font-medium text-gray-600">총 댓글 수</p>
             <p className="text-2xl font-bold text-gray-900">{postsCount}</p>
           </div>
         </CardContent>

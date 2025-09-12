@@ -98,15 +98,18 @@ export default function Header() {
 
           {/* 알림 / 관리자 */}
           <div className="flex items-center space-x-4">
-            {!token && (
-  <Button variant="ghost" size="icon" onClick={() => navigate('/login')}>
-    <LogIn className="h-5 w-5 text-white/80 hover:text-white" />
+  <Button
+    variant="ghost"
+    size="icon"
+    onClick={() => navigate(token ? "/mypage" : "/login")}
+  >
+    {token ? (
+      <User className="h-5 w-5 text-white/80 hover:text-white" />
+    ) : (
+      <LogIn className="h-5 w-5 text-white/80 hover:text-white" />
+    )}
   </Button>
-)}
-            <Button variant="ghost" size="icon" onClick={() => navigate('/mypage')}>
-              <User className="h-5 w-5 text-white/80 hover:text-white" />
-            </Button>
-          </div>
+</div>
         </div>
       </div>
     </header>
