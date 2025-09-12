@@ -49,6 +49,16 @@ async function fetchMoviesFromApi(page: number, limit = 20): Promise<Movie[]> {
   return data.filter((m: Movie) => m.posterPath && m.posterPath.trim() !== '');
 }
 
+// 로딩 스피너 컴포넌트
+function LoadingSpinner() {
+  return (
+    <div className="flex justify-center items-center py-6">
+      <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <span className="ml-2 text-gray-600">로딩중...</span>
+    </div>
+  );
+}
+
 export default function SearchPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -66,6 +76,7 @@ export default function SearchPage() {
   const [years, setYears] = useState<string[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setQuery(queryFromUrl);
@@ -75,16 +86,14 @@ export default function SearchPage() {
     let alive = true;
     (async () => {
       try {
+        setLoading(true);
         const newMovies = await fetchMoviesFromApi(page);
         if (!alive) return;
 
-        // 기존 + 새 데이터 합치고 중복 제거
         const combined = [...movies, ...newMovies];
         const uniqueMovies = Array.from(new Map(combined.map(m => [m.movieIdx, m])).values());
-
         setMovies(uniqueMovies);
 
-        // 연도 및 장르 세팅
         const allYears = [...new Set(uniqueMovies.map(m => m.releaseDate ? `${m.releaseDate.split('-')[0]}년` : ''))].filter(Boolean);
         setYears(allYears.sort((a, b) => parseInt(b) - parseInt(a)));
 
@@ -92,6 +101,8 @@ export default function SearchPage() {
         setGenres(allGenres.sort());
       } catch (err) {
         console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
       }
     })();
 
@@ -123,7 +134,7 @@ export default function SearchPage() {
     const sorted = [...filteredMovies];
     switch (sortBy) {
       case 'latest':
-        return sorted.sort((a, b) => (b.releaseDate?.split('-')[0] || '0') as unknown as number - (a.releaseDate?.split('-')[0] || '0') as unknown as number);
+        return sorted.sort((a, b) => (parseInt(b.releaseDate?.split('-')[0] || '0')) - (parseInt(a.releaseDate?.split('-')[0] || '0')));
       case 'rating':
         return sorted.sort((a, b) => (b.voteAverage || 0) - (a.voteAverage || 0));
       case 'title':
@@ -179,18 +190,22 @@ export default function SearchPage() {
               </form>
             </div>
 
-            <div className="space-y-2">
-              {Object.entries(yearGroups).map(([label, groupYears]) => (
-                <div key={label} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`group-${label}`}
-                    checked={groupYears.every(y => selectedYears.includes(y))}
-                    onCheckedChange={() => toggleYearGroup(label)}
-                  />
-                  <label htmlFor={`group-${label}`} className="text-sm text-gray-700 cursor-pointer">{label}</label>
-                </div>
-              ))}
-            </div>
+            {loading ? (
+              <LoadingSpinner />
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(yearGroups).map(([label, groupYears]) => (
+                  <div key={label} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`group-${label}`}
+                      checked={groupYears.every(y => selectedYears.includes(y))}
+                      onCheckedChange={() => toggleYearGroup(label)}
+                    />
+                    <label htmlFor={`group-${label}`} className="text-sm text-gray-700 cursor-pointer">{label}</label>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="space-y-2">
               {genres.map((genre, idx) => (
@@ -215,6 +230,8 @@ export default function SearchPage() {
         <div className="flex-1 space-y-6">
           {!query && selectedYears.length === 0 && selectedGenres.length === 0 ? (
             <p className="text-center text-gray-600 py-12">검색어를 입력하거나 필터를 선택해주세요.</p>
+          ) : loading ? (
+            <LoadingSpinner />
           ) : (
             <>
               <div className="flex justify-between items-center">
@@ -239,7 +256,7 @@ export default function SearchPage() {
                 <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'space-y-4'}>
                   {sortedMovies.slice(0, displayCount).map((movie, idx) => (
                     <div
-                      key={`${movie.movieIdx}-${idx}`} // 중복 key 방지
+                      key={`${movie.movieIdx}-${idx}`}
                       className="cursor-pointer"
                       onClick={() => navigate(`/movies/${movie.movieIdx}`)}
                     >
@@ -264,14 +281,7 @@ export default function SearchPage() {
                     className="px-8 bg-white border-gray-400 text-gray-800 hover:bg-gray-100 hover:text-gray-900"
                     onClick={() => setDisplayCount(prev => prev + 8)}
                   >
-                    더 많은 결과 보기 ({sortedMovies.length - displayCount}개 더)
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="ml-2 px-8 bg-white border-gray-400 text-gray-800 hover:bg-gray-100 hover:text-gray-900"
-                    onClick={() => setPage(prev => prev + 1)}
-                  >
-                    다음 20개 가져오기
+                    더 많은 결과 보기
                   </Button>
                 </div>
               )}
