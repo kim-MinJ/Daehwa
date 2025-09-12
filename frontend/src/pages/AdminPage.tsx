@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, MessageSquare, MessageCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { User, Review, Comment } from "../components/admin/types";
+import { User, Review, Comment, Vote } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
 import AdminReviewsTab from "../components/admin/AdminReviewsTab";
 import AdminCommentsTab from "../components/admin/AdminCommentsTab";
@@ -14,6 +14,7 @@ import AdminSearchBar from "../components/admin/AdminSearchBar";
 import { api } from "../lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card } from "../components/ui/card";
+import AdminVotesTab from "@/components/admin/AdminVotesTab";
 
 export default function AdminPage() {
   const { userInfo, loading, token } = useAuth();
@@ -29,6 +30,8 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
+
+  const [votes, setVotes] = useState<Vote[]>([]);
 
   // 관리자 접근 제한
   useEffect(() => {
@@ -110,6 +113,54 @@ export default function AdminPage() {
     })();
   }, [token]);
 
+  // Votes API 호출
+// useEffect(() => {
+//   if (!token) return;
+//   (async () => {
+//     try {
+//       const res = await api.get("/votes", {
+//         headers: { Authorization: `Bearer ${token}` },
+//       });
+//       const formattedVotes: Vote[] = res.data.map((v: any) => ({
+//         id: v.id,
+//         movieTitle: v.movieTitle,
+//         voter: v.voter,
+//         voteCount: v.voteCount,
+//         status: v.status === 0 ? "active" : "inactive",
+//       }));
+//       setVotes(formattedVotes);
+//     } catch (err) {
+//       console.error(err);
+//       alert("투표 목록을 가져오는 데 실패했습니다.");
+//     }
+//   })();
+// }, [token]);
+
+
+
+//더미데이터
+useEffect(() => {
+   const dummyVotes: Vote[] = [
+    {
+      id: "1",
+      movieTitle: "인터스텔라",
+      voter: "관리자",
+      voteCount: 12,
+      status: "active",
+    },
+    {
+      id: "2",
+      movieTitle: "인셉션",
+      voter: "테스터",
+      voteCount: 5,
+      status: "inactive",
+    },
+  ];
+  setVotes(dummyVotes);
+}, []);
+
+
+
   // User 상태 변경
   const updateUserStatus = async (id: string, status: User["status"]) => {
     if (!token) return;
@@ -177,6 +228,38 @@ export default function AdminPage() {
     }
   };
 
+  // Vote 삭제
+  const deleteVote = async (id: string) => {
+  if (!token) return;
+  try {
+    await api.delete(`/votes/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setVotes(prev => prev.filter(v => v.id !== id));
+  } catch (err) {
+    console.error(err);
+    alert("투표 삭제 실패");
+  }
+};
+
+  const updateVoteStatus = async (id: string, status: "active" | "inactive") => {
+  if (!token) return;
+  try {
+    const statusNum = status === "active" ? 0 : 1;
+    await api.patch(`/votes/${id}/status`, { status: statusNum }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setVotes(prev =>
+      prev.map(v => (v.id === id ? { ...v, status } : v))
+    );
+  } catch (err) {
+    console.error(err);
+    alert("투표 상태 변경 실패");
+  }
+};
+
+  
+
   if (loading) return <p>로딩 중...</p>;
 
   return (
@@ -191,7 +274,7 @@ export default function AdminPage() {
         </div>
 
         {/* 통계 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card onClick={() => setActiveTab("users")} className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition">
             <Users className="h-8 w-8 text-blue-600 mb-2" />
             <h2 className="text-lg font-medium text-gray-700">총 회원 수</h2>
@@ -209,6 +292,12 @@ export default function AdminPage() {
             <h2 className="text-lg font-medium text-gray-700">총 댓글 수</h2>
             <p className="text-3xl font-bold text-gray-900">{comments.length}</p>
           </Card>
+          {/* 총 투표 수 */}
+  <Card onClick={() => setActiveTab("votes")} className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition">
+    <MessageCircle className="h-8 w-8 text-yellow-600 mb-2" />
+    <h2 className="text-lg font-medium text-gray-700">총 투표 수</h2>
+    <p className="text-3xl font-bold text-gray-900">{votes.length}</p>
+  </Card>
         </div>
 
         {/* 검색바 */}
@@ -249,6 +338,14 @@ export default function AdminPage() {
     setEditingComment={setEditingComment}
     users={users}
     updateCommentContent={updateCommentContent} // <- 이름 맞춤
+  />
+</TabsContent>
+<TabsContent value="votes">
+  <AdminVotesTab
+    votes={votes}
+    searchQuery={searchQuery}
+    updateVoteStatus={updateVoteStatus}
+    deleteVote={deleteVote}
   />
 </TabsContent>
         </Tabs>

@@ -9,3 +9,11 @@ export interface Comment {
   updateAt: string;
   isBlind: 0 | 1;
 }
+
+export interface Vote {
+  id: string;
+  movieTitle: string;
+  voter: string;
+  voteCount: number;
+  status: "active" | "inactive";
+}
