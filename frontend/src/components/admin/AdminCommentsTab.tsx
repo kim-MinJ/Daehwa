@@ -5,17 +5,17 @@ import { Button } from "../ui/button";
 interface AdminCommentsTabProps {
   comments: Comment[];
   searchQuery: string;
-  setEditingComment: React.Dispatch<React.SetStateAction<Comment | null>>;
   users: { id: string; username: string }[];
-  updateCommentStatus: (commentIdx: number, isBlind: 0 | 1) => void;
+  setEditingComment: React.Dispatch<React.SetStateAction<Comment | null>>;
+  updateCommentContent: (commentIdx: number, content: string) => Promise<void>; // 수정됨
 }
 
 export default function AdminCommentsTab({
   comments,
   searchQuery,
-  setEditingComment,
   users,
-  updateCommentStatus,
+  setEditingComment,
+  updateCommentContent,
 }: AdminCommentsTabProps) {
   const filteredComments = comments.filter(c => {
     const query = searchQuery.trim().toLowerCase();
@@ -36,7 +36,6 @@ export default function AdminCommentsTab({
             <th className="p-2 text-left">내용</th>
             <th className="p-2 text-left">생성일</th>
             <th className="p-2 text-left">수정일</th>
-            <th className="p-2 text-left">상태</th>
             <th className="p-2 text-left">관리</th>
           </tr>
         </thead>
@@ -45,22 +44,12 @@ export default function AdminCommentsTab({
             filteredComments.map(comment => {
               const user = users.find(u => u.id === comment.userId);
               return (
-                <tr
-                  key={comment.commentIdx}
-                  className={`border-b ${comment.isBlind === 1 ? "bg-gray-200" : ""}`}
-                >
+                <tr key={comment.commentIdx} className="border-b">
                   <td className="p-2">{comment.commentIdx}</td>
                   <td className="p-2">{comment.userId}</td>
                   <td className="p-2">{comment.content}</td>
                   <td className="p-2">{new Date(comment.createdAt).toLocaleDateString()}</td>
                   <td className="p-2">{new Date(comment.updateAt).toLocaleDateString()}</td>
-                  <td className="p-2">
-                    {comment.isBlind === 0 ? (
-                      <span className="text-green-600 font-medium">공개</span>
-                    ) : (
-                      <span className="text-red-600 font-medium">블라인드</span>
-                    )}
-                  </td>
                   <td className="p-2">
                     <Button
                       className="!bg-black !text-white px-3 py-1 rounded hover:!bg-gray-800"
@@ -74,7 +63,7 @@ export default function AdminCommentsTab({
             })
           ) : (
             <tr>
-              <td colSpan={7} className="p-4 text-center text-gray-500">
+              <td colSpan={6} className="p-4 text-center text-gray-500">
                 검색 결과가 없습니다.
               </td>
             </tr>

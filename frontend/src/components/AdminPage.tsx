@@ -26,6 +26,11 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
 
+  const [comments, setComments] = useState<Comment[]>([]);
+const [editingComment, setEditingComment] = useState<Comment | null>(null);
+
+const [votes, setVotes] = useState<number>(0);
+
   // 관리자 접근 제한
   useEffect(() => {
     if (!loading && (!userInfo || userInfo.role !== "admin")) {
@@ -126,6 +131,20 @@ export default function AdminPage() {
     }
   };
 
+  // vote API 호출
+  useEffect(() => {
+  if (!token) return;
+  (async () => {
+    try {
+      const res = await api.get("/votes", { headers: { Authorization: `Bearer ${token}` } });
+      setVotes(res.data.length); // API에서 받은 배열 길이로 총 투표 수 계산
+    } catch (err) {
+      console.error(err);
+      alert("투표 목록을 가져오는 데 실패했습니다.");
+    }
+  })();
+}, [token]);
+
   if (loading) return <p>로딩 중...</p>;
 
   return (
@@ -170,6 +189,16 @@ export default function AdminPage() {
     <h2 className="text-lg font-medium text-gray-700">총 댓글 수</h2>
     <p className="text-3xl font-bold text-gray-900">{comments.length}</p>
   </Card>
+  
+  {/* 총 투표 수 */}
+  <Card
+  className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
+  onClick={() => setActiveTab("votes")}
+>
+  <MessageCircle className="h-8 w-8 text-yellow-600 mb-2" />
+  <h2 className="text-lg font-medium text-gray-700">총 투표 수</h2>
+  <p className="text-3xl font-bold text-gray-900">{votes}</p>
+</Card>
 </div>
 
         {/* 검색바 */}

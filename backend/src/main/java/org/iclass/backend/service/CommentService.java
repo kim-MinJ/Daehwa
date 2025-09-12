@@ -1,6 +1,7 @@
 package org.iclass.backend.service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.iclass.backend.dto.CommentsDto;
 import org.iclass.backend.entity.CommentsEntity;
@@ -11,6 +12,7 @@ import org.iclass.backend.repository.ReviewRepository;
 import org.iclass.backend.repository.UsersRepository;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -39,6 +41,13 @@ public class CommentService {
         .build();
 
     return commentsRepository.save(comment);
+  }
+
+  @Transactional
+  public void updateCommentContent(Long commentIdx, String content) {
+    CommentsEntity comment = commentsRepository.findById(commentIdx)
+        .orElseThrow(() -> new NoSuchElementException("댓글이 존재하지 않습니다."));
+    comment.setContent(content);
   }
 
   public void deleteComment(Long commentId) {
