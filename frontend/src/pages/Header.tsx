@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Bell, User } from 'lucide-react';
+import { Search, Bell, User, LogIn } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+  const token = localStorage.getItem('token');
   const queryParams = new URLSearchParams(location.search);
   const initialQuery = queryParams.get('query') || '';
 
@@ -115,13 +116,38 @@ export default function Header() {
 
           {/* 알림 / 관리자 */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5 text-white/80 hover:text-white" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-              <User className="h-5 w-5 text-white/80 hover:text-white" />
-            </Button>
-          </div>
+
+  {location.pathname !== '/login' && (
+    !token ? (
+      // 로그인 버튼
+      <Button variant="ghost" size="icon" onClick={() => navigate('/login')}>
+        <LogIn className="h-5 w-5 text-white/80 hover:text-white" />
+      </Button>
+    ) : (
+      // 로그아웃 버튼
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          localStorage.removeItem('token'); // 토큰 삭제
+          navigate('/login'); // 로그인 페이지로 이동
+          window.location.reload(); // 페이지 새로고침 (optional, 상태 초기화용)
+        }}
+      >
+        <LogIn className="h-5 w-5 text-white/80 hover:text-white rotate-180" /> 
+        {/* 화살표 회전으로 로그아웃 느낌 */}
+      </Button>
+    )
+  )}
+
+  {/* 마이페이지 버튼은 로그인 여부와 관계없이 항상 표시 */}
+  {token && (
+    <Button variant="ghost" size="icon" onClick={() => navigate('/mypage')}>
+      <User className="h-5 w-5 text-white/80 hover:text-white" />
+    </Button>
+  )}
+</div>
+
         </div>
       </div>
     </header>

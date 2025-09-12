@@ -1,7 +1,7 @@
 // src/pages/AdminPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, MessageSquare } from "lucide-react";
+import { Users, MessageSquare, MessageCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { User, Review } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
@@ -25,6 +25,11 @@ export default function AdminPage() {
 
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
+
+  const [comments, setComments] = useState<Comment[]>([]);
+const [editingComment, setEditingComment] = useState<Comment | null>(null);
+
+const [votes, setVotes] = useState<number>(0);
 
   // 관리자 접근 제한
   useEffect(() => {
@@ -126,6 +131,20 @@ export default function AdminPage() {
     }
   };
 
+  // vote API 호출
+  useEffect(() => {
+  if (!token) return;
+  (async () => {
+    try {
+      const res = await api.get("/votes", { headers: { Authorization: `Bearer ${token}` } });
+      setVotes(res.data.length); // API에서 받은 배열 길이로 총 투표 수 계산
+    } catch (err) {
+      console.error(err);
+      alert("투표 목록을 가져오는 데 실패했습니다.");
+    }
+  })();
+}, [token]);
+
   if (loading) return <p>로딩 중...</p>;
 
   return (
@@ -140,25 +159,47 @@ export default function AdminPage() {
         </div>
 
         {/* 통계 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card
-            className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
-            onClick={() => setActiveTab("users")}
-          >
-            <Users className="h-8 w-8 text-blue-600 mb-2" />
-            <h2 className="text-lg font-medium text-gray-700">총 회원 수</h2>
-            <p className="text-3xl font-bold text-gray-900">{users.length}</p>
-          </Card>
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  {/* 총 회원 수 */}
+  <Card
+    className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
+    onClick={() => setActiveTab("users")}
+  >
+    <Users className="h-8 w-8 text-blue-600 mb-2" />
+    <h2 className="text-lg font-medium text-gray-700">총 회원 수</h2>
+    <p className="text-3xl font-bold text-gray-900">{users.length}</p>
+  </Card>
 
-          <Card
-            className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
-            onClick={() => setActiveTab("reviews")}
-          >
-            <MessageSquare className="h-8 w-8 text-green-600 mb-2" />
-            <h2 className="text-lg font-medium text-gray-700">총 리뷰 수</h2>
-            <p className="text-3xl font-bold text-gray-900">{reviews.length}</p>
-          </Card>
-        </div>
+  {/* 총 리뷰 수 */}
+  <Card
+    className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
+    onClick={() => setActiveTab("reviews")}
+  >
+    <MessageSquare className="h-8 w-8 text-green-600 mb-2" />
+    <h2 className="text-lg font-medium text-gray-700">총 리뷰 수</h2>
+    <p className="text-3xl font-bold text-gray-900">{reviews.length}</p>
+  </Card>
+
+  {/* 총 댓글 수 */}
+  <Card
+    className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
+    onClick={() => setActiveTab("comments")} // 클릭 시 댓글 관리 탭으로 이동
+  >
+    <MessageCircle className="h-8 w-8 text-purple-600 mb-2" />
+    <h2 className="text-lg font-medium text-gray-700">총 댓글 수</h2>
+    <p className="text-3xl font-bold text-gray-900">{comments.length}</p>
+  </Card>
+  
+  {/* 총 투표 수 */}
+  <Card
+  className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition"
+  onClick={() => setActiveTab("votes")}
+>
+  <MessageCircle className="h-8 w-8 text-yellow-600 mb-2" />
+  <h2 className="text-lg font-medium text-gray-700">총 투표 수</h2>
+  <p className="text-3xl font-bold text-gray-900">{votes}</p>
+</Card>
+</div>
 
         {/* 검색바 */}
         <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />

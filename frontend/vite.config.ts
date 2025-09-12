@@ -18,8 +18,10 @@ export default defineConfig({
     // ✅ 추가: /api 를 백엔드로 프록시
     proxy: {
       "/api": {
-        // target: "http://192.168.0.30:8080",    // 외부접속용
-        target: "http://localhost:8080",       // 내부개발용
+
+        target: "http://localhost:8080",
+
+
         changeOrigin: true,
       },
     },

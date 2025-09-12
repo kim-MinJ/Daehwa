@@ -7,9 +7,9 @@ import { Dispatch, SetStateAction } from "react";
 interface AdminReviewsTabProps {
   reviews: Review[];
   searchQuery: string;
-  setEditingReview: Dispatch<SetStateAction<Review | null>>;
   users: { id: string; username: string }[];
   movies?: { id: number; title: string }[]; // optional
+  setEditingReview: Dispatch<SetStateAction<Review | null>>;
   updateReviewStatus: (reviewIdx: number, isBlind: 0 | 1) => void;
 }
 
