@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,10 +27,11 @@ import lombok.ToString;
 public class MovieInfoEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "movie_info_seq_gen")
+    @SequenceGenerator(name = "movie_info_seq_gen", sequenceName = "movie_info_seq", allocationSize = 1)
     @Column(name = "movie_idx")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long movieIdx;
-
+    
     @Column(name = "tmdb_movie_id")
     private Long tmdbMovieId;
 

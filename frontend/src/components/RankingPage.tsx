@@ -1,94 +1,148 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Star, TrendingUp, Crown, Medal, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button'
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import Header from './Header';
-import Footer from './Footer';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import Header from "./Header";
+import Footer  from "./Footer";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
+import {
+  TrendingUp,
+  Trophy,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Crown,
+  Medal,
+} from "lucide-react";
 
 interface Movie {
-  id: string;
+  movieIdx: string;
+  tmdbMovieId: string;
   title: string;
-  director: string;
   poster: string;
-  year: number;
+  year: string;
   genre: string;
   rating: number;
   runtime: number;
-  description?: string;
-  rank?: number;
-  voteCount?: number;
+  description: string;
+  director: string;
+  rank: number;
+  voteCount: number;
 }
 
-type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail';
-
-interface RankingPageProps {
+export default function RankingPage({
+  onNavigation,
+  onMovieClick,
+}: {
+  onNavigation: (page: string) => void;
   onMovieClick: (movie: Movie) => void;
-  onBack: () => void;
-  onNavigation: (page: Page) => void;
-}
-
-export default function RankingPage({ onMovieClick, onBack, onNavigation }: RankingPageProps) {
+}) {
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [topMovie, setTopMovie] = useState<Movie | null>(null);
+  const [secondMovie, setSecondMovie] = useState<Movie | null>(null);
+
   const [hasVoted, setHasVoted] = useState(false);
-  const [selectedVote, setSelectedVote] = useState<'first' | 'second' | null>(null);
+  const [selectedVote, setSelectedVote] = useState<"first" | "second" | null>(
+    null
+  );
+  const [voteCounts, setVoteCounts] = useState<{ [key: string]: number }>({});
+
+  // ✅ 슬라이드 상태
   const [currentSlide, setCurrentSlide] = useState(0);
   const moviesPerSlide = 4;
+  const totalSlides = Math.ceil(movies.length / moviesPerSlide);
 
+  const getCurrentSlideMovies = () => {
+    const start = currentSlide * moviesPerSlide;
+    return movies.slice(start, start + moviesPerSlide);
+  };
+
+  // ✅ 나머지 영화
+  const remainingMovies = movies.slice(2);
+
+  // ✅ 투표 수
+// TMDB에서 내려오는 voteCount 값만 사용
+const topMovieVotes = topMovie?.voteCount || 0;
+const secondMovieVotes = secondMovie?.voteCount || 0;
+
+// 전체 합계
+const totalVotes = topMovieVotes + secondMovieVotes;
+
+// 비율 계산
+const topMoviePercentage =
+totalVotes > 0 ? Math.round((topMovieVotes / totalVotes) * 100) : 0;
+const secondMoviePercentage = totalVotes > 0 ? 100 - topMoviePercentage : 0;
+
+// ✅ 투표 핸들러 (UI에서만 증가)
+  const handleVote = async (choice: "first" | "second") => {
+    const movieId =
+      choice === "first" ? topMovie?.movieIdx : secondMovie?.movieIdx;
+    if (!movieId) return;
+
+    setSelectedVote(choice);
+    setHasVoted(true);
+
+    setVoteCounts((prev) => ({
+      ...prev,
+      [movieId]: (prev[movieId] || 0) + 1,
+    }));
+  };
+
+  // ✅ 데이터 로드
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await axios.get('http://localhost:8080/api/movie/ranking');
-        setMovies(res.data);
+        const res = await axios.get("http://localhost:8080/api/movie/ranking");
+        const movieRes = res.data.map((m: any, idx: number) => ({
+          movieIdx: m.movieIdx,
+          tmdbMovieId: m.tmdbMovieId,
+          title: m.title,
+          poster: m.posterPath
+          ? `https://image.tmdb.org/t/p/w500${m.posterPath}`
+          : '/fallback-poster.png',
+          year: m.year,
+          genre: m.genre || "",
+          rating: m.rating,
+          runtime: m.runtime,
+          description: m.description,
+          director: m.director || "알 수 없음",
+          rank: idx + 1,
+          voteCount: m.voteCount
+        }));
+
+        setMovies(movieRes);
+        setTopMovie(movieRes[0]);
+        setSecondMovie(movieRes[1]);
       } catch (err) {
-        console.error('TMDB API 호출 실패:', err);
-      } finally {
-        setLoading(false);
+        console.error("데이터 로드 실패:", err);
       }
     };
+
     fetchMovies();
   }, []);
 
-  if (loading || movies.length < 2) {
-    return <div className="min-h-screen flex items-center justify-center">영화 데이터를 불러오는 중...</div>;
-  }
-
-const rankedMovies = movies
-  .map((movie, index) => ({ ...movie, rank: index + 1 }))
-  .sort((a, b) => b.rating - a.rating);
-
-const topMovie = rankedMovies[0];
-const secondMovie = rankedMovies[1];
-const remainingMovies = rankedMovies.slice(2);
-
-// BoxOffice 슬라이드 관련
-const boxOfficeMovies = rankedMovies.slice(0, 10);
-const totalSlides = Math.ceil(boxOfficeMovies.length / moviesPerSlide);
-const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % totalSlides);
-const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
-const getCurrentSlideMovies = () => {
-  const startIndex = currentSlide * moviesPerSlide;
-  return boxOfficeMovies.slice(startIndex, startIndex + moviesPerSlide);
-};
-
-// ✅ DB에서 가져온 voteCount를 사용
-const topMovieVotes = topMovie.voteCount || 0;
-const secondMovieVotes = secondMovie.voteCount || 0;
-const totalVotes = topMovieVotes + secondMovieVotes;
-
-const topMoviePercentage = totalVotes > 0 ? Math.round((topMovieVotes / totalVotes) * 100) : 0;
-const secondMoviePercentage = totalVotes > 0 ? Math.round((secondMovieVotes / totalVotes) * 100) : 0;
-
-// 투표 처리
-const handleVote = (choice: 'first' | 'second') => {
-  setSelectedVote(choice);
-  setHasVoted(true);
+  const nextSlide = () => {
+    if (currentSlide < totalSlides - 1) {
+      setCurrentSlide((prev) => prev + 1);
+    }
   };
 
+  const prevSlide = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide((prev) => prev - 1);
+    }
+  };
+
+  if (!topMovie || !secondMovie) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#FFFFFF" }}>
       {/* 공통 헤더 */}
       <Header currentPage="ranking" onNavigation={onNavigation} />
 
@@ -186,7 +240,7 @@ const handleVote = (choice: 'first' | 'second') => {
                         {topMoviePercentage}%
                       </div>
                       <div className="text-sm" style={{ color: '#000000' }}>
-                        {topMovieVotes.toLocaleString()}표
+                        {topMovie.voteCount.toLocaleString()}표
                       </div>
                     </div>
                   )}
@@ -282,14 +336,14 @@ const handleVote = (choice: 'first' | 'second') => {
                         {secondMoviePercentage}%
                       </div>
                       <div className="text-sm" style={{ color: '#000000' }}>
-                        {secondMovieVotes.toLocaleString()}표
+                        {secondMovie.voteCount.toLocaleString()}표
                       </div>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-            
+
             {/* 투표 참여 안내 */}
             <div className="mt-8 text-center">
               {!hasVoted ? (
@@ -352,7 +406,7 @@ const handleVote = (choice: 'first' | 'second') => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {getCurrentSlideMovies().map((movie) => (
                   <div 
-                    key={movie.id}
+                    key={movie.movieIdx}
                     className="group cursor-pointer bg-white/80 rounded-lg p-4 hover:bg-white/90 transition-all duration-300 hover:scale-105 shadow-sm border border-gray-300"
                     onClick={() => onMovieClick(movie)}
                   >
@@ -424,7 +478,7 @@ const handleVote = (choice: 'first' | 'second') => {
               <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
                 {remainingMovies.slice(0, 8).map((movie, index) => (
                   <div 
-                    key={movie.id}
+                    key={movie.movieIdx}
                     className="group cursor-pointer flex-shrink-0"
                     onClick={() => onMovieClick(movie)}
                   >

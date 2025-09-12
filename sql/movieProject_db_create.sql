@@ -321,15 +321,6 @@ CREATE TABLE Movie_Vote
   CONSTRAINT PK_Movie_Vote PRIMARY KEY (vote_idx)
 );
 
-ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
-
-ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_user_id UNIQUE (user_id);
-
-ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_VS_idx UNIQUE (VS_idx);
-
 COMMENT ON TABLE Movie_Vote IS 'VS 투표';
 
 COMMENT ON COLUMN Movie_Vote.vote_idx IS '투표 인덱스';
@@ -713,5 +704,8 @@ BEGIN
            created_date  = SYSDATE
      WHERE movie_idx = :NEW.movie_idx;
     -- 없으면 아무것도 하지 않음 (0행이면 그냥 넘어감)
+
+SELECT * FROM MOVIE_VS WHERE vs_idx = 1;
+SELECT * FROM MOVIE_VOTE WHERE vs_idx = 1;
 END;
 /
