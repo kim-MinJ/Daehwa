@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Bell, User } from 'lucide-react';
+import { Search, Bell, User, LogIn } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+  const token = localStorage.getItem('token');
   const queryParams = new URLSearchParams(location.search);
   const initialQuery = queryParams.get('query') || '';
 
