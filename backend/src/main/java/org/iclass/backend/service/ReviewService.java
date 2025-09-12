@@ -82,4 +82,11 @@ public class ReviewService {
     reviewRepository.delete(review);
   }
 
+  // 🔹 리뷰 단건 조회
+  public ReviewDto getReviewByIdx(Long reviewIdx) {
+    ReviewEntity entity = reviewRepository.findByReviewIdx(reviewIdx)
+        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+    return ReviewDto.of(entity);
+  }
+
 }

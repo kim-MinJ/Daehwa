@@ -24,4 +24,6 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
 
   List<ReviewEntity> findAllByUserOrderByCreatedAtDesc(UsersEntity user);
 
+  Optional<ReviewEntity> findByReviewIdx(Long reviewIdx); // 단건 조회
+
 }

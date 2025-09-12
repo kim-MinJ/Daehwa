@@ -40,8 +40,9 @@ interface Review {
   movieIdx: number;
   content: string;
   rating: number;
-  regDate: string;
-  movieTitle?: string; 
+  createdAt: string; // 작성일
+  updateAt: string;  // 수정일
+  movieTitle?: string; // 화면용
 }
 
 export default function MyPage({}: MyPageProps) {
@@ -262,84 +263,109 @@ export default function MyPage({}: MyPageProps) {
               <TabsTrigger value="settings">계정 설정</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="recommend">
-              {recommendMovies.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {recommendMovies.map((movie) => (
-                    <Card key={movie.movieIdx}>
-                      <img
-                        src={movie.posterPath ? `${TMDB_BASE_URL}${movie.posterPath}` : "/default.jpg"}
-                        alt={movie.title}
-                        className="w-full h-48 object-cover rounded-md"
-                      />
-                      <CardContent className="flex flex-col gap-2">
-                        <h3 className="font-bold">{movie.title}</h3>
-                        <Button
-                          size="sm"
-                          variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
-                          onClick={() => toggleBookmark(movie.movieIdx)}
-                        >
-                          <Heart className="w-4 h-4 mr-1" /> 북마크
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p>추천 영화가 없습니다.</p>
-              )}
-            </TabsContent>
+            {/* 추천 영화 탭 */}
+<TabsContent value="recommend">
+  {recommendMovies.length > 0 ? (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {recommendMovies.map((movie) => (
+        <Card key={movie.movieIdx} className="cursor-pointer" onClick={() => navigate(`/movies/${movie.movieIdx}`)}>
+          <img
+            src={movie.posterPath ? `${TMDB_BASE_URL}${movie.posterPath}` : "/default.jpg"}
+            alt={movie.title}
+            className="w-full h-48 object-cover rounded-md"
+          />
+          <CardContent className="flex flex-col gap-2">
+            <h3 className="font-bold">{movie.title}</h3>
+            <Button
+              size="sm"
+              variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
+              onClick={(e) => {
+                e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+                toggleBookmark(movie.movieIdx);
+              }}
+            >
+              <Heart className="w-4 h-4 mr-1" /> 북마크
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  ) : (
+    <p>추천 영화가 없습니다.</p>
+  )}
+</TabsContent>
 
-            <TabsContent value="favorites">
-              {bookmarks.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {bookmarks.map((b) => (
-                    <Card key={b.bookmarkIdx}>
-                      <img
-                        src={b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"}
-                        alt={b.title}
-                        className="w-full h-48 object-cover rounded-md"
-                      />
-                      <CardContent className="flex flex-col gap-2">
-                        <h3 className="font-bold">{b.title}</h3>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => toggleBookmark(b.movieIdx)}
-                        >
-                          <Heart className="w-4 h-4 mr-1" /> 북마크 제거
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p>북마크가 없습니다.</p>
-              )}
-            </TabsContent>
+            {/* 북마크 탭 */}
+<TabsContent value="favorites">
+  {bookmarks.length > 0 ? (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {bookmarks.map((b) => (
+        <Card key={b.bookmarkIdx} className="cursor-pointer" onClick={() => navigate(`/movies/${b.movieIdx}`)}>
+          <img
+            src={b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"}
+            alt={b.title}
+            className="w-full h-48 object-cover rounded-md"
+          />
+          <CardContent className="flex flex-col gap-2">
+            <h3 className="font-bold">{b.title}</h3>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={(e) => {
+                e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+                toggleBookmark(b.movieIdx);
+              }}
+            >
+              <Heart className="w-4 h-4 mr-1" /> 북마크 제거
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  ) : (
+    <p>북마크가 없습니다.</p>
+  )}
+</TabsContent>
 
             <TabsContent value="reviews">
-              {reviews.length ? (
-                <div className="space-y-4">
-                  {reviews.map((r) => (
-                    <div key={r.reviewIdx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-semibold">영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}</h3>
-                        <div className="text-sm text-gray-500 flex flex-col">
-                          <span>
-                            작성일 : {r.regDate ? new Date(r.regDate).toLocaleDateString() : "-"}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="mb-2 text-gray-800">{r.content}</p>
-                      <div className="text-sm text-gray-600">평점: {r.rating} / 10</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p>작성한 리뷰가 없습니다.</p>
-              )}
-            </TabsContent>
+  {reviews.length ? (
+    <div className="space-y-4">
+      {reviews.map((r) => (
+        <div
+          key={r.reviewIdx}
+          className="border rounded-lg p-4 bg-gray-50 shadow-sm"
+        >
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-semibold">
+              영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}
+            </h3>
+            <div className="text-sm text-gray-500 flex flex-col">
+              <span>
+                작성일 : {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}
+              </span>
+              <span>
+    수정일: {r.updateAt ? new Date(r.updateAt).toLocaleDateString() 
+                        : r.createdAt ? new Date(r.createdAt).toLocaleDateString() 
+                        : "-"}
+  </span>
+            </div>
+          </div>
+          <p className="mb-2 text-gray-800">{r.content}</p>
+          <div className="text-sm text-gray-600 mb-2">평점: {r.rating} / 10</div>
+          <Button
+  size="sm"
+  variant="outline"
+  onClick={() => navigate(`/reviews/${r.reviewIdx}`)}
+>
+  리뷰 보러가기
+</Button>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p>작성한 리뷰가 없습니다.</p>
+  )}
+</TabsContent>
 
             <TabsContent value="settings">
               <Card>
