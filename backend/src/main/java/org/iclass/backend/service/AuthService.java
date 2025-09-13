@@ -34,7 +34,7 @@ public class AuthService {
 
     usersRepository.save(entity);
 
-    String token = jwtTokenProvider.createTokenWithUserId(entity.getUserId());
+    String token = jwtTokenProvider.generateToken(entity.getUserId());
     return UsersDto.of(entity, token);
   }
 
@@ -45,7 +45,7 @@ public class AuthService {
     if (!passwordEncoder.matches(password, entity.getPassword()))
       throw new RuntimeException("비밀번호 불일치");
 
-    String token = jwtTokenProvider.createTokenWithUserId(entity.getUserId());
+    String token = jwtTokenProvider.generateToken(entity.getUserId());
     return UsersDto.of(entity, token);
   }
 }

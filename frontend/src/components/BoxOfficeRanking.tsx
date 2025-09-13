@@ -47,7 +47,7 @@ export function BoxOfficeRanking({ movies, onMovieClick }: BoxOfficeRankingProps
   };
 
   return (
-    <section id="rankings" className="py-8">
+    <section id="ranking" className="py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center space-x-2 mb-6">
           <Trophy className="h-6 w-6 text-primary" />
