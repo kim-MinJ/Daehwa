@@ -168,7 +168,7 @@ useEffect(() => {
 
   (async () => {
     try {
-      const res = await api.get("/vs/votes", {
+      const res = await api.get("/vs/movievote", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -375,13 +375,9 @@ useEffect(() => {
   />
 </TabsContent>
 <TabsContent value="votes">
-  <AdminVotesTab
-    votes={votes}
-    searchQuery={searchQuery}
-    updateVoteStatus={updateVoteStatus}
-    deleteVote={deleteVote}
-  />
+  <AdminVotesTab token={token!} />
 </TabsContent>
+
         </Tabs>
       </div>
 

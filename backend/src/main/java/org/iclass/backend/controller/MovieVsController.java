@@ -1,3 +1,4 @@
+// src/main/java/org/iclass/backend/controller/MovieVsController.java
 package org.iclass.backend.controller;
 
 import java.util.HashMap;
@@ -25,13 +26,13 @@ public class MovieVsController {
         return ResponseEntity.ok(movieVsService.createVs(movie1Id, movie2Id));
     }
 
-    // 전체 VS 조회
+    // 전체 VS 조회 (엔티티 그대로)
     @GetMapping
     public ResponseEntity<List<MovieVsEntity>> getAllVs() {
         return ResponseEntity.ok(movieVsService.getAllVs());
     }
 
-    // 특정 VS 조회
+    // 단일 VS 조회
     @GetMapping("/{id}")
     public ResponseEntity<MovieVsDto> getVs(@PathVariable Long id) {
         return ResponseEntity.ok(movieVsService.getVs(id));
@@ -44,7 +45,7 @@ public class MovieVsController {
         return ResponseEntity.noContent().build();
     }
 
-    // 랭킹 페이지: 활성화된 VS 조회
+    // 활성화된 VS 조회 (랭킹 페이지용)
     @GetMapping("/ranking")
     public ResponseEntity<MovieVsEntity> getRankingVotes() {
         MovieVsEntity ranking = movieVsService.getActiveRanking();
@@ -68,28 +69,38 @@ public class MovieVsController {
         }
     }
 
-    // 투표 정보 조회 (Entity 직접 접근)
-    @GetMapping("/votes")
-    public ResponseEntity<List<Map<String, Object>>> getAllVotes() {
+    // 🎬 관리자용: movievote 리스트
+    @GetMapping("/movievote")
+    public ResponseEntity<List<Map<String, Object>>> getMovieVoteList() {
         List<MovieVsEntity> vsList = movieVsService.getAllVs();
 
         List<Map<String, Object>> result = vsList.stream().map(vs -> {
             Map<String, Object> map = new HashMap<>();
-            map.put("voteIdx", vs.getVsIdx());
-            map.put("movie1Title", vs.getMovieVs1().getTitle());
-            map.put("movie1Poster", vs.getMovieVs1().getPosterPath());
-            map.put("movie1Rating", vs.getMovieVs1().getVoteAverage());
-            map.put("movie1Year",
-                    vs.getMovieVs1().getReleaseDate() != null ? vs.getMovieVs1().getReleaseDate().getYear() : 0);
 
-            map.put("movie2Title", vs.getMovieVs2().getTitle());
-            map.put("movie2Poster", vs.getMovieVs2().getPosterPath());
-            map.put("movie2Rating", vs.getMovieVs2().getVoteAverage());
-            map.put("movie2Year",
-                    vs.getMovieVs2().getReleaseDate() != null ? vs.getMovieVs2().getReleaseDate().getYear() : 0);
+            map.put("vsIdx", vs.getVsIdx());
+
+            // 영화1 정보
+            if (vs.getMovieVs1() != null) {
+                map.put("movie1Idx", vs.getMovieVs1().getMovieIdx());
+                map.put("movie1Title", vs.getMovieVs1().getTitle());
+                map.put("movie1Poster", vs.getMovieVs1().getPosterPath());
+                map.put("movie1Rating", vs.getMovieVs1().getVoteAverage());
+                map.put("movie1Year",
+                        vs.getMovieVs1().getReleaseDate() != null ? vs.getMovieVs1().getReleaseDate().getYear() : 0);
+            }
+
+            // 영화2 정보
+            if (vs.getMovieVs2() != null) {
+                map.put("movie2Idx", vs.getMovieVs2().getMovieIdx());
+                map.put("movie2Title", vs.getMovieVs2().getTitle());
+                map.put("movie2Poster", vs.getMovieVs2().getPosterPath());
+                map.put("movie2Rating", vs.getMovieVs2().getVoteAverage());
+                map.put("movie2Year",
+                        vs.getMovieVs2().getReleaseDate() != null ? vs.getMovieVs2().getReleaseDate().getYear() : 0);
+            }
 
             map.put("active", vs.getActive() == 1);
-            map.put("totalVotes", 0); // 필요시 서비스에서 계산해서 넣으면 됨
+            map.put("totalVotes", 0); // 필요시 서비스에서 계산
 
             return map;
         }).toList();

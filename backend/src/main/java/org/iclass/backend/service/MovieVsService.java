@@ -1,3 +1,4 @@
+// src/main/java/org/iclass/backend/service/MovieVsService.java
 package org.iclass.backend.service;
 
 import java.util.List;
@@ -32,10 +33,11 @@ public class MovieVsService {
         MovieInfoEntity movie2 = movieInfoRepository.findById(movie2Id)
                 .orElseThrow(() -> new IllegalArgumentException("영화2 없음: " + movie2Id));
 
-        MovieVsEntity entity = new MovieVsEntity();
-        entity.setMovieVs1(movie1);
-        entity.setMovieVs2(movie2);
-        entity.setActive(1);
+        MovieVsEntity entity = MovieVsEntity.builder()
+                .movieVs1(movie1)
+                .movieVs2(movie2)
+                .active(1)
+                .build();
 
         MovieVsEntity saved = movieVSRepository.save(entity);
         return toDto(saved);
@@ -43,7 +45,7 @@ public class MovieVsService {
 
     // 전체 VS 조회
     public List<MovieVsEntity> getAllVs() {
-        return movieVSRepository.findAll(); // DTO 변환 없이 엔티티 그대로 반환
+        return movieVSRepository.findAll();
     }
 
     // 단일 VS 조회
@@ -63,7 +65,7 @@ public class MovieVsService {
         return movieVSRepository.findByActive(1).orElse(null);
     }
 
-    // DTO 변환 (필요 시만 사용)
+    // DTO 변환
     private MovieVsDto toDto(MovieVsEntity entity) {
         return MovieVsDto.builder()
                 .vsIdx(entity.getVsIdx())
