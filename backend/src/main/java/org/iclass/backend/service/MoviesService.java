@@ -150,4 +150,17 @@ public class MoviesService {
     result.put("results", List.of());
     return result;
   }
+
+  public List<MovieInfoDto> getOldPopularMovies(int count) {
+    return movieInfoRepository.findAll().stream()
+        .filter(m -> m.getReleaseDate() != null)
+        .filter(m -> {
+          int year = m.getReleaseDate().getYear();
+          return year >= 2010 && year <= 2019;
+        })
+        .sorted((a, b) -> Double.compare(b.getPopularity(), a.getPopularity()))
+        .limit(count)
+        .map(MovieInfoDto::of)
+        .toList();
+  }
 }

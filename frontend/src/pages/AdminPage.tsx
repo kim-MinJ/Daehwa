@@ -14,7 +14,7 @@ import AdminSearchBar from "../components/admin/AdminSearchBar";
 import { api } from "../lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card } from "../components/ui/card";
-import AdminVotesTab from "@/components/admin/AdminVotesTab";
+import AdminVotesTab from "../components/admin/AdminVotesTab";
 
 export default function AdminPage() {
   const { userInfo, loading, token } = useAuth();

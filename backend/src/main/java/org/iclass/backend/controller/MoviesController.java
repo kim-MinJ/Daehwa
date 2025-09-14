@@ -136,4 +136,11 @@ public class MoviesController {
   public ResponseEntity<Map<String, Object>> getVideos(@PathVariable Long id) {
     return ResponseEntity.ok(moviesService.getVideos(id));
   }
+
+  /** 2010년대 인기 영화 */
+  @GetMapping("/oldpopular")
+  public ResponseEntity<List<MovieInfoDto>> getOldPopular(@RequestParam(defaultValue = "20") int count) {
+    List<MovieInfoDto> movies = moviesService.getOldPopularMovies(count);
+    return ResponseEntity.ok(movies);
+  }
 }
