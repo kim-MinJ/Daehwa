@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, MessageSquare, MessageCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { User, Review, Comment, Vote } from "../components/admin/types";
+import { User, Review, Comment, Vote, Movie } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
 import AdminReviewsTab from "../components/admin/AdminReviewsTab";
 import AdminCommentsTab from "../components/admin/AdminCommentsTab";
@@ -26,6 +26,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
 
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
@@ -91,6 +92,28 @@ export default function AdminPage() {
       }
     })();
   }, [token]);
+
+  // Movies API 호출
+  useEffect(() => {
+  if (!token) return;
+  (async () => {
+    try {
+      const res = await api.get("/movies/all", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const formattedMovies: Movie[] = res.data.map((m: any) => ({
+        id: m.movieIdx,  // ⚠️ DTO 필드명이 movieIdx 라고 했으니 이렇게 맞추세요
+        title: m.title,
+      }));
+
+      setMovies(formattedMovies);
+    } catch (err) {
+      console.error(err);
+      alert("영화 목록을 가져오는 데 실패했습니다.");
+    }
+  })();
+}, [token]);
 
   // Comments API 호출
   useEffect(() => {
@@ -322,14 +345,15 @@ useEffect(() => {
           </TabsContent>
 
           <TabsContent value="reviews">
-            <AdminReviewsTab
-              reviews={reviews}
-              searchQuery={searchQuery}
-              setEditingReview={setEditingReview}
-              users={users}
-              updateReviewStatus={updateReviewStatus}
-            />
-          </TabsContent>
+    <AdminReviewsTab
+      reviews={reviews}
+      searchQuery={searchQuery}
+      setEditingReview={setEditingReview}
+      users={users}
+      movies={movies}   // ✅ 영화 데이터 전달
+      updateReviewStatus={updateReviewStatus}
+    />
+  </TabsContent>
 
           <TabsContent value="comments">
   <AdminCommentsTab
