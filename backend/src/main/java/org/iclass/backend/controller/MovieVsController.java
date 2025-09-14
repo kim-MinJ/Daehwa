@@ -62,7 +62,8 @@ public class MovieVsController {
             }
             movieVsService.setRankingVotes(
                     Long.valueOf(movieIds.get(0)),
-                    Long.valueOf(movieIds.get(1)));
+                    Long.valueOf(movieIds.get(1))
+            );
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -76,10 +77,8 @@ public class MovieVsController {
 
         List<Map<String, Object>> result = vsList.stream().map(vs -> {
             Map<String, Object> map = new HashMap<>();
-
             map.put("vsIdx", vs.getVsIdx());
 
-            // 영화1 정보
             if (vs.getMovieVs1() != null) {
                 map.put("movie1Idx", vs.getMovieVs1().getMovieIdx());
                 map.put("movie1Title", vs.getMovieVs1().getTitle());
@@ -89,7 +88,6 @@ public class MovieVsController {
                         vs.getMovieVs1().getReleaseDate() != null ? vs.getMovieVs1().getReleaseDate().getYear() : 0);
             }
 
-            // 영화2 정보
             if (vs.getMovieVs2() != null) {
                 map.put("movie2Idx", vs.getMovieVs2().getMovieIdx());
                 map.put("movie2Title", vs.getMovieVs2().getTitle());

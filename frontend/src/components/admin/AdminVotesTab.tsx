@@ -21,25 +21,25 @@ function LoadingSpinner() {
 }
 
 export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabProps) {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [allMovies, setAllMovies] = useState<Movie[]>([]); // 전체 영화
   const [movieVotes, setMovieVotes] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [vsMovie1, setVsMovie1] = useState<Movie | null>(null);
   const [vsMovie2, setVsMovie2] = useState<Movie | null>(null);
   const [selecting, setSelecting] = useState<"movie1" | "movie2" | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 12;
 
-  // VS 영화 불러오기
+  // 전체 영화 데이터 한 번만 불러오기
   useEffect(() => {
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/searchMovie?page=${currentPage}&limit=${PAGE_SIZE}&query=${searchQuery}`);
+        const res = await fetch("/api/searchMovie?page=1&limit=1000"); // 최대치로 한 번만 불러오기
         const data: any[] = await res.json();
+
         const mapped: Movie[] = data
           .filter(m => m.posterPath)
           .map(m => ({
@@ -56,43 +56,61 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
             rank: 0,
             voteCount: 0,
           }));
-        setMovies(mapped);
+
+        setAllMovies(mapped);
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     })();
-  }, [currentPage, searchQuery]);
+  }, []);
 
   // MovieVote 리스트
+  const fetchMovieVotes = async () => {
+    try {
+      const res = await fetch("/api/vs/movievote");
+      const data: any[] = await res.json();
+
+      const mapped: Movie[] = data.map(m => ({
+        movieIdx: String(m.movie1Idx || m.movie2Idx),
+        tmdbMovieId: "",
+        title: m.movie1Title || m.movie2Title,
+        poster: m.movie1Poster || m.movie2Poster ? `https://image.tmdb.org/t/p/w500${m.movie1Poster || m.movie2Poster}` : "",
+        year: m.movie1Year || m.movie2Year || "",
+        genre: "",
+        rating: m.movie1Rating || m.movie2Rating || 0,
+        runtime: 0,
+        description: "",
+        director: "",
+        rank: 0,
+        voteCount: m.totalVotes ?? 0,
+      }));
+
+      setMovieVotes(mapped);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/vs/movievote");
-        const data: any[] = await res.json();
-        const mapped: Movie[] = data
-          .filter(m => m.posterPath)
-          .map(m => ({
-            movieIdx: String(m.movieIdx),
-            tmdbMovieId: m.tmdbMovieId ?? "",
-            title: m.title,
-            poster: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : "",
-            year: m.releaseDate?.split("-")[0] ?? "",
-            genre: m.genre ?? "",
-            rating: m.voteAverage ?? 0,
-            runtime: m.runtime ?? 0,
-            description: m.overview ?? "",
-            director: m.director ?? "",
-            rank: 0,
-            voteCount: m.voteCount ?? 0,
-          }));
-        setMovieVotes(mapped);
-      } catch (err) {
-        console.error(err);
-      }
-    })();
+    fetchMovieVotes();
   }, []);
+
+  // 검색 & 필터링
+  const filteredMovies = useMemo(() => {
+    if (!allMovies) return [];
+    return allMovies.filter(movie =>
+      movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      movie.director.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [allMovies, searchQuery]);
+
+  // 페이징
+  const pagedMovies = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredMovies.slice(start, start + PAGE_SIZE);
+  }, [filteredMovies, currentPage]);
 
   const handleCardClick = (movie: Movie) => {
     if (!vsMovie1) return setVsMovie1(movie);
@@ -103,8 +121,9 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   const handleApply = async () => {
     if (!vsMovie1 || !vsMovie2) return;
+
     try {
-      const res = await fetch("http://localhost:8080/api/vs/ranking", {
+      const res = await fetch("/api/vs/ranking", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -114,9 +133,12 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
           movieIds: [Number(vsMovie1.movieIdx), Number(vsMovie2.movieIdx)],
         }),
       });
+
       if (!res.ok) throw new Error("VS 등록 실패");
+
       alert("✅ VS 등록 완료");
       if (onApplyVsMovies) onApplyVsMovies(vsMovie1, vsMovie2);
+      fetchMovieVotes(); // 리스트 갱신
     } catch (err) {
       console.error(err);
       alert("❌ VS 등록 중 오류 발생");
@@ -149,7 +171,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
               value={searchQuery}
               onChange={e => {
                 setSearchQuery(e.target.value);
-                setCurrentPage(1); // 검색 시 1페이지로 초기화
+                setCurrentPage(1);
               }}
               className="border p-2 rounded w-full"
             />
@@ -193,8 +215,8 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
           {loading ? (
             <LoadingSpinner />
           ) : (
-            <div className={viewMode === "grid" ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" : "space-y-4"}>
-              {movies.map(movie => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {pagedMovies.map(movie => (
                 <div
                   key={movie.movieIdx}
                   className={`cursor-pointer relative rounded-lg overflow-hidden border ${
@@ -216,7 +238,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
             {currentPage > 1 && (
               <Button size="sm" onClick={() => setCurrentPage(prev => prev - 1)}>이전</Button>
             )}
-            {movies.length === PAGE_SIZE && (
+            {currentPage * PAGE_SIZE < filteredMovies.length && (
               <Button size="sm" onClick={() => setCurrentPage(prev => prev + 1)}>다음</Button>
             )}
           </div>

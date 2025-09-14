@@ -23,6 +23,7 @@ public class MovieVsService {
 
     // VS 생성
     public MovieVsDto createVs(Long movie1Id, Long movie2Id) {
+        // 기존 활성 VS 비활성화
         movieVSRepository.findByActive(1).ifPresent(oldVs -> {
             oldVs.setActive(0);
             movieVSRepository.save(oldVs);
