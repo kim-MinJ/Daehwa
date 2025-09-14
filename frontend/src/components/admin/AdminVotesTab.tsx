@@ -1,55 +1,40 @@
 // src/components/admin/AdminVotesTab.tsx
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Trash2 } from 'lucide-react';
-import { Vote } from './types';
-import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Trash2 } from "lucide-react";
+import { useVsManager, VsVote } from "../../hooks/useVsManager";
 
 interface AdminVotesTabProps {
-  votes?: Vote[];
-  searchQuery?: string;
-  updateVoteStatus: (id: string, status: 'active' | 'inactive') => void;
-  deleteVote: (id: string) => void;
-  selectedRankingVotes: string[]; // 선택된 투표영화 id 배열
-  setSelectedRankingVotes: (ids: string[]) => void; // 선택 상태 변경
+  token: string;
 }
 
-export default function AdminVotesTab({
-  votes = [],
-  searchQuery = '',
-  updateVoteStatus,
-  deleteVote,
-  selectedRankingVotes,
-  setSelectedRankingVotes,
-}: AdminVotesTabProps) {
-  const filterVotes = () =>
-    votes.filter(v =>
-      (v.movieTitle || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (v.voter || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+export default function AdminVotesTab({ token }: AdminVotesTabProps) {
+  const {
+    votes,
+    loading,
+    selectedRankingVotes,
+    setSelectedRankingVotes,
+    deleteVs,
+    updateVoteStatus,
+    toggleRankingVote,
+    saveRankingVotes,
+  } = useVsManager(token);
 
-  const getStatusBadge = (status: string) => {
-    const colorMap = { active: 'bg-green-600', inactive: 'bg-yellow-600' };
-    return (
-      <span className={`${colorMap[status as keyof typeof colorMap]} text-white px-2 py-1 rounded`}>
-        {status}
-      </span>
-    );
-  };
+  const [searchQuery, setSearchQuery] = React.useState("");
 
-  const toggleRankingVote = (id: string) => {
-    if (selectedRankingVotes.includes(id)) {
-      setSelectedRankingVotes(selectedRankingVotes.filter(v => v !== id));
-    } else {
-      if (selectedRankingVotes.length >= 2) {
-        alert('랭킹 투표 영화는 최대 2개까지 선택할 수 있습니다.');
-        return;
-      }
-      setSelectedRankingVotes([...selectedRankingVotes, id]);
-    }
-  };
+  const filteredVotes = votes.filter(
+    (v) =>
+      v.movie1Title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.movie2Title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const filtered = filterVotes();
+  const getStatusBadge = (active: boolean) => (
+    <span className={`${active ? "bg-green-600" : "bg-yellow-600"} text-white px-2 py-1 rounded`}>
+      {active ? "active" : "inactive"}
+    </span>
+  );
+
+  if (loading) return <p>로딩 중...</p>;
 
   return (
     <Card>
@@ -57,68 +42,56 @@ export default function AdminVotesTab({
         <CardTitle>투표 관리</CardTitle>
       </CardHeader>
       <CardContent>
-        {filtered.length === 0 ? (
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="검색"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="border p-2 rounded w-full"
+          />
+        </div>
+        {filteredVotes.length === 0 ? (
           <p className="text-center py-4 text-gray-500">검색 결과가 없습니다.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-4">영화</th>
-                  <th className="text-left p-4">투표자</th>
-                  <th className="text-left p-4">투표수</th>
-                  <th className="text-left p-4">상태</th>
-                  <th className="text-left p-4">랭킹 투표</th>
-                  <th className="text-left p-4">관리</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(vote => (
-                  <tr key={vote.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4 font-medium">{vote.movieTitle || '-'}</td>
-                    <td className="p-4">{vote.voter || '-'}</td>
-                    <td className="p-4">{vote.voteCount ?? 0}</td>
-                    <td className="p-4">{getStatusBadge(vote.status)}</td>
-                    <td className="p-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedRankingVotes.includes(vote.id)}
-                        onChange={() => toggleRankingVote(vote.id)}
-                        disabled={
-                          !selectedRankingVotes.includes(vote.id) &&
-                          selectedRankingVotes.length >= 2
-                        }
-                      />
-                    </td>
-                    <td className="p-4 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant={vote.status === 'active' ? 'default' : 'outline'}
-                        onClick={() => updateVoteStatus(vote.id, 'active')}
-                      >
-                        활성
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={vote.status === 'inactive' ? 'destructive' : 'outline'}
-                        onClick={() => updateVoteStatus(vote.id, 'inactive')}
-                      >
-                        비활성
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteVote(vote.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex flex-col gap-4">
+            {filteredVotes.map((vote: VsVote) => (
+              <div key={vote.voteIdx} className="flex flex-wrap items-center border p-4 rounded-lg gap-4 hover:shadow-md transition">
+                <div className="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
+                  <img src={vote.movie1Poster} alt={vote.movie1Title} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg">{vote.movie1Title} vs {vote.movie2Title}</h3>
+                  <p className="text-sm text-gray-500">
+                    {vote.movie1Rating?.toFixed(1)} / {vote.movie1Year} vs {vote.movie2Rating?.toFixed(1)} / {vote.movie2Year}
+                  </p>
+                  <div className="mt-2">{getStatusBadge(vote.active)}</div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedRankingVotes.includes(vote.voteIdx)}
+                    onChange={() => toggleRankingVote(vote.voteIdx)}
+                    disabled={!selectedRankingVotes.includes(vote.voteIdx) && selectedRankingVotes.length >= 2}
+                  />
+                  <span className="text-xs text-gray-500">랭킹 투표</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button size="sm" variant={vote.active ? "default" : "outline"} onClick={() => updateVoteStatus(vote.voteIdx, "active")}>활성</Button>
+                  <Button size="sm" variant={!vote.active ? "destructive" : "outline"} onClick={() => updateVoteStatus(vote.voteIdx, "inactive")}>비활성</Button>
+                  <Button size="sm" variant="destructive" onClick={() => deleteVs(vote.voteIdx)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
+        <div className="mt-4 flex justify-end">
+          <Button onClick={saveRankingVotes} disabled={selectedRankingVotes.length !== 2}>
+            선택 완료 / 랭킹 업데이트
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

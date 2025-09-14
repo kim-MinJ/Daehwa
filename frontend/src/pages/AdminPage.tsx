@@ -33,6 +33,7 @@ export default function AdminPage() {
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
 
   const [votes, setVotes] = useState<Vote[]>([]);
+  const [selectedRankingVotes, setSelectedRankingVotes] = useState<string[]>([]);
 
   // 관리자 접근 제한
   useEffect(() => {
@@ -161,26 +162,35 @@ export default function AdminPage() {
 
 
 
-//더미데이터
+// Votes API 호출
 useEffect(() => {
-   const dummyVotes: Vote[] = [
-    {
-      id: "1",
-      movieTitle: "인터스텔라",
-      voter: "관리자",
-      voteCount: 12,
-      status: "active",
-    },
-    {
-      id: "2",
-      movieTitle: "인셉션",
-      voter: "테스터",
-      voteCount: 5,
-      status: "inactive",
-    },
-  ];
-  setVotes(dummyVotes);
-}, []);
+  if (!token) return;
+
+  (async () => {
+    try {
+      const res = await api.get("/vs/votes", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // API 데이터 → Vote 타입으로 변환
+      const formattedVotes: Vote[] = res.data.map((v: any) => ({
+        id: String(v.voteIdx), // vsIdx 기준
+        movieTitle: `${v.movie1Title} vs ${v.movie2Title}`,
+        voter: "-", // 현재 API에 투표자 정보 없으면 "-" 처리
+        voteCount: v.voteCount ?? 0, // voteCount 없으면 0 처리
+        status: v.active ? "active" : "inactive",
+        posterPath: v.movie1Poster, // 선택적으로 첫 번째 영화 포스터
+        rating: v.movie1Rating, // 선택적으로 첫 번째 영화 평점
+        year: v.movie1Year, // 선택적으로 첫 번째 영화 년도
+      }));
+
+      setVotes(formattedVotes);
+    } catch (err) {
+      console.error(err);
+      alert("투표 목록을 가져오는 데 실패했습니다.");
+    }
+  })();
+}, [token]);
 
 
 

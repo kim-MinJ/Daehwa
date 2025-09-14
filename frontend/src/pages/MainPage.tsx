@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import axios from "axios";
-import { Star, Info, ChevronRight } from "lucide-react";
+import { Star, Info } from "lucide-react";
 
 // UI 타입
 type UiMovie = {
@@ -42,111 +42,100 @@ function MainPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [popular40, setPopular40] = useState<UiMovie[]>([]);
   const [weeklyTop10, setWeeklyTop10] = useState<UiMovie[]>([]);
   const [personalizedTop3, setPersonalizedTop3] = useState<UiMovie[]>([]);
   const [latest6, setLatest6] = useState<UiMovie[]>([]);
   const [reviewEvent3, setReviewEvent3] = useState<UiMovie[]>([]);
-  const [err, setErr] = useState<string | null>(null);
   const [oldPopular, setOldPopular] = useState<UiMovie[]>([]);
+  const [err, setErr] = useState<string | null>(null);
 
   const onMovieClick = (m: UiMovie) => navigate(`/movies/${m.id}`);
-  const toRanking = () => navigate("/ranking");
-  const toMovies = () => navigate("/movies");
 
-  // 인기 영화 불러오기
+  // 인기 영화 & 최신 영화 & 맞춤 추천
   useEffect(() => {
-    if (!token) return;
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
 
-    const authHeader = { Authorization: `Bearer ${token}` };
+  const fetchPopular = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const res = await axios.get("http://localhost:8080/api/movies/popular", {
+        headers: authHeader, // token 있으면 넣고, 없으면 빈 객체
+        params: { count: 40 },
+      });
 
-    const fetchPopular = async () => {
-  setLoading(true);
-  setErr(null);
-  try {
-    const res = await axios.get("http://localhost:8080/api/movies/popular", {
-      headers: authHeader,
-      params: { count: 40 },
-    });
+      const movies: UiMovie[] = res.data.map((m: any) => ({
+        id: m.movieIdx,
+        title: m.title ?? "제목 없음",
+        poster: m.posterPath ?? "",
+        year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+        genre: m.genre ?? "기타",
+        rating: m.voteAverage ?? 0,
+        runtime: m.runtime ?? 0,
+        description: m.overview ?? "",
+        releaseDate: m.releaseDate ?? null,
+      }));
 
-    const movies: UiMovie[] = res.data.map((m: any) => ({
-      id: m.movieIdx,
-      title: m.title ?? "제목 없음",
-      poster: m.posterPath ?? "",
-      year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-      genre: m.genre ?? "기타",
-      rating: m.voteAverage ?? 0,
-      runtime: m.runtime ?? 0,
-      description: m.overview ?? "",
-      releaseDate: m.releaseDate ?? null, // releaseDate 원본도 저장
-    }));
+      setPopular40(movies);
+      setWeeklyTop10(movies.slice(0, 10));
 
-    setPopular40(movies);
-    setWeeklyTop10(movies.slice(0, 10));
+      // 최신 영화 6개
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const latestMovies = movies.filter(
+        (m) => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo
+      );
+      const shuffledLatest = [...latestMovies].sort(() => Math.random() - 0.5);
+      setLatest6(shuffledLatest.slice(0, 6));
 
-    // 최신 영화: 현재 날짜 기준 6개월 전 이후 개봉작 필터링
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      // 맞춤 추천
+      const shuffled = [...movies].sort(() => Math.random() - 0.5);
+      setPersonalizedTop3(shuffled.slice(0, 3));
+      setReviewEvent3(shuffled.slice(3, 6));
+    } catch (error) {
+      console.error("영화 로딩 실패:", error);
+      setErr("영화를 불러오는데 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const latestMovies = movies
-  .filter(m => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo);
+  fetchPopular();
+}, [token]);
 
-// 랜덤 섞기
-const shuffledLatest = [...latestMovies].sort(() => Math.random() - 0.5);
+  // 추억의 영화
+useEffect(() => {
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
 
-// 최신영화 6개
-setLatest6(shuffledLatest.slice(0, 6));
+  const fetchOldPopular = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/movies/oldpopular", {
+        headers: authHeader, // token 있으면 넣고, 없으면 빈 객체
+        params: { count: 40 },
+      });
 
-    // 맞춤 추천
-    const shuffled = [...movies].sort(() => Math.random() - 0.5);
-    setPersonalizedTop3(shuffled.slice(0, 3));
-    setReviewEvent3(shuffled.slice(3, 6));
-  } catch (error) {
-    console.error("영화 로딩 실패:", error);
-    setErr("영화를 불러오는데 실패했습니다.");
-  } finally {
-    setLoading(false);
-  }
-};
+      const movies: UiMovie[] = res.data.map((m: any) => ({
+        id: m.movieIdx,
+        title: m.title ?? "제목 없음",
+        poster: m.posterPath ?? "",
+        year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+        genre: m.genre ?? "기타",
+        rating: m.voteAverage ?? 0,
+        runtime: m.runtime ?? 0,
+        description: m.overview ?? "",
+      }));
 
-    fetchPopular();
-  }, [token]);
+      const shuffled = [...movies].sort(() => Math.random() - 0.5);
+      setOldPopular(shuffled.slice(0, 10));
+    } catch (error) {
+      console.error("추억의 영화 로딩 실패:", error);
+    }
+  };
 
-  // 추억의 영화 랜덤 10개 불러오기
-  useEffect(() => {
-    if (!token) return;
-
-    const authHeader = { Authorization: `Bearer ${token}` };
-
-    const fetchOldPopular = async () => {
-      try {
-        const res = await axios.get("http://localhost:8080/api/movies/oldpopular", {
-          headers: authHeader,
-          params: { count: 40 }, // 40개 가져오기
-        });
-
-        const movies: UiMovie[] = res.data.map((m: any) => ({
-          id: m.movieIdx,
-          title: m.title ?? "제목 없음",
-          poster: m.posterPath ?? "",
-          year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-          genre: m.genre ?? "기타",
-          rating: m.voteAverage ?? 0,
-          runtime: m.runtime ?? 0,
-          description: m.overview ?? "",
-        }));
-
-        // 랜덤 10개 선택
-        const shuffled = [...movies].sort(() => Math.random() - 0.5);
-        setOldPopular(shuffled.slice(0, 10));
-      } catch (error) {
-        console.error("추억의 영화 로딩 실패:", error);
-      }
-    };
-
-    fetchOldPopular();
-  }, [token]);
+  fetchOldPopular();
+}, [token]);
 
   // featured 선택 (랜덤)
   const featured = useMemo(() => {
@@ -158,11 +147,11 @@ setLatest6(shuffledLatest.slice(0, 6));
   return (
     <div className="min-h-screen bg-white">
       <main className="relative">
-        {loading ? (
-          <LoadingSpinner />
-        ) : (
+        {loading && <LoadingSpinner />}
+
+        {/* 로그인 여부와 상관없이 페이지 내용 렌더링 */}
+        {!loading && (
           <>
-            {/* 히어로 섹션 */}
             {featured && (
               <div className="relative h-[85vh] mb-8 cursor-pointer" onClick={() => onMovieClick(featured)}>
                 <ImageWithFallback
@@ -209,25 +198,35 @@ setLatest6(shuffledLatest.slice(0, 6));
               {/* 맞춤 추천 TOP3 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">당신만을 위한 추천
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    당신만을 위한 추천
                     <span className="text-sm text-gray-700 font-normal ml-3">
-        사소하지만 널 위해 준비해봤어...받아...줄래...?
-      </span>
+                      사소하지만 널 위해 준비해봤어...받아...줄래...?
+                    </span>
                   </h2>
-                  {/* <Button variant="ghost" className="text-gray-600 hover:text-black font-medium" onClick={toRanking}>
-                    전체 보기 <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button> */}
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
                 <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
                   {personalizedTop3.map((movie, index) => (
-                    <div key={movie.id} className="group cursor-pointer flex-shrink-0 relative" onClick={() => onMovieClick(movie)}>
+                    <div
+                      key={movie.id}
+                      className="group cursor-pointer flex-shrink-0 relative"
+                      onClick={() => onMovieClick(movie)}
+                    >
                       <div className="w-80 aspect-[16/9] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                        <ImageWithFallback src={getPosterUrl(movie.poster, "w780")} alt={movie.title} className="w-full h-full object-cover" />
+                        <ImageWithFallback
+                          src={getPosterUrl(movie.poster, "w780")}
+                          alt={movie.title}
+                          className="w-full h-full object-cover"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
                           <div className="absolute bottom-4 left-4 right-4">
                             <div className="flex items-center gap-2 mb-2">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${index === 0 ? "bg-red-600" : index === 1 ? "bg-orange-600" : "bg-yellow-600"}`}>
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                                  index === 0 ? "bg-red-600" : index === 1 ? "bg-orange-600" : "bg-yellow-600"
+                                }`}
+                              >
                                 {index + 1}
                               </div>
                               <Badge className="bg-white/20 text-white hover:bg-white/20 text-xs">맞춤 추천</Badge>
@@ -250,13 +249,10 @@ setLatest6(shuffledLatest.slice(0, 6));
               {/* 최신 영화 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">최신 영화
-                    <span className="text-sm text-gray-700 font-normal ml-3">
-        이거? 지금 볼만한데? 도전? ㄱ?      </span>
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    최신 영화
+                    <span className="text-sm text-gray-700 font-normal ml-3">이거? 지금 볼만한데? 도전? ㄱ?</span>
                   </h2>
-                  {/* <Button variant="ghost" className="text-gray-600 hover:text-black font-medium" onClick={toMovies}>
-                    더보기 <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button> */}
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
                 <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
@@ -283,19 +279,19 @@ setLatest6(shuffledLatest.slice(0, 6));
               {/* 이번주 인기 TOP5 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">이번주 인기 순위
-                    <span className="text-sm text-gray-700 font-normal ml-3">
-        지금 이거 놓치면 후회합니다?
-      </span>
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    이번주 인기 순위
+                    <span className="text-sm text-gray-700 font-normal ml-3">지금 이거 놓치면 후회합니다?</span>
                   </h2>
-                  {/* <Button variant="ghost" className="text-gray-600 hover:text-black font-medium" onClick={toRanking}>
-                    전체 순위 <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button> */}
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
                 <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
                   {weeklyTop10.slice(0, 10).map((movie, index) => (
-                    <div key={movie.id} className="group cursor-pointer flex-shrink-0 relative" onClick={() => onMovieClick(movie)}>
+                    <div
+                      key={movie.id}
+                      className="group cursor-pointer flex-shrink-0 relative"
+                      onClick={() => onMovieClick(movie)}
+                    >
                       <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
                         <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
                         <div className="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
@@ -319,10 +315,11 @@ setLatest6(shuffledLatest.slice(0, 6));
               {/* 추억의 영화 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">추억의 영화
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    추억의 영화
                     <span className="text-sm text-gray-700 font-normal ml-3">
-        옛날 그 감성, 그 기분 지금 다시 느껴보시는건 어떨까요?
-      </span>
+                      옛날 그 감성, 그 기분 지금 다시 느껴보시는건 어떨까요?
+                    </span>
                   </h2>
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
