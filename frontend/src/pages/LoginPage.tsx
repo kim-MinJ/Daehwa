@@ -120,7 +120,7 @@ useEffect(() => {
         <Card className="w-full max-w-md p-8 rounded-lg bg-black/40 backdrop-blur-md shadow-[0_0_8px_2px_rgba(255,255,255,0.5)] text-white">
   <CardContent className="p-0 space-y-4 text-white">
     <div className="text-center mb-6">
-      <h1 className="text-3xl font-bold">MovieInfo</h1>
+      <h6 className="text-xl font-bold text-red-400 mb-4">MovieSSG</h6>
       <p className="text-gray-300">
         {!isLoggedIn
           ? isLogin
