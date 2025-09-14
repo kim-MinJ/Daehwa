@@ -1,4 +1,3 @@
-// src/main/java/org/iclass/backend/service/MovieVsService.java
 package org.iclass.backend.service;
 
 import java.util.List;
@@ -21,7 +20,7 @@ public class MovieVsService {
     private final MovieVSRepository movieVSRepository;
     private final MovieInfoRepository movieInfoRepository;
 
-    // VS 생성
+    // 새로운 VS 생성
     public MovieVsDto createVs(Long movie1Id, Long movie2Id) {
         // 기존 활성 VS 비활성화
         movieVSRepository.findByActive(1).ifPresent(oldVs -> {
@@ -44,7 +43,7 @@ public class MovieVsService {
         return toDto(saved);
     }
 
-    // 전체 VS 조회
+    // 모든 VS 조회
     public List<MovieVsEntity> getAllVs() {
         return movieVSRepository.findAll();
     }
@@ -61,7 +60,7 @@ public class MovieVsService {
         movieVSRepository.deleteById(id);
     }
 
-    // 활성화된 VS 조회
+    // 활성 VS 조회
     public MovieVsEntity getActiveRanking() {
         return movieVSRepository.findByActive(1).orElse(null);
     }
@@ -76,18 +75,26 @@ public class MovieVsService {
                 .build();
     }
 
-    // 랭킹 페이지에서 VS 영화 변경
-    public void setRankingVotes(Long movie1Id, Long movie2Id) {
-        MovieInfoEntity movie1 = movieInfoRepository.findById(movie1Id)
-                .orElseThrow(() -> new IllegalArgumentException("영화1 없음: " + movie1Id));
-        MovieInfoEntity movie2 = movieInfoRepository.findById(movie2Id)
-                .orElseThrow(() -> new IllegalArgumentException("영화2 없음: " + movie2Id));
+    // VS 저장 (프론트에서 movieIds 배열로 호출)
+    @Transactional
+    public MovieVsDto saveVs(MovieVsDto dto) {
+        MovieInfoEntity movie1 = movieInfoRepository.findById(dto.getMovieVs1Idx())
+                .orElseThrow(() -> new IllegalArgumentException("영화1 없음: " + dto.getMovieVs1Idx()));
+        MovieInfoEntity movie2 = movieInfoRepository.findById(dto.getMovieVs2Idx())
+                .orElseThrow(() -> new IllegalArgumentException("영화2 없음: " + dto.getMovieVs2Idx()));
 
-        MovieVsEntity vs = movieVSRepository.findByActive(1).orElse(new MovieVsEntity());
-        vs.setMovieVs1(movie1);
-        vs.setMovieVs2(movie2);
-        vs.setActive(1);
+        // 기존 활성 VS 비활성화
+        movieVSRepository.findByActive(1).ifPresent(oldVs -> {
+            oldVs.setActive(0);
+            movieVSRepository.save(oldVs);
+        });
 
-        movieVSRepository.save(vs);
+        MovieVsEntity newVs = dto.toEntity(movie1, movie2);
+        MovieVsEntity saved = movieVSRepository.save(newVs);
+        return toDto(saved);
+    }
+
+    public MovieVsEntity getActiveVs() {
+        return movieVSRepository.findByActive(1).orElse(null);
     }
 }

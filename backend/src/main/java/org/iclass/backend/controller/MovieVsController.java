@@ -1,4 +1,3 @@
-// src/main/java/org/iclass/backend/controller/MovieVsController.java
 package org.iclass.backend.controller;
 
 import java.util.HashMap;
@@ -20,13 +19,25 @@ public class MovieVsController {
 
     private final MovieVsService movieVsService;
 
-    // VS 생성
-    @PostMapping
-    public ResponseEntity<MovieVsDto> createVs(@RequestParam Long movie1Id, @RequestParam Long movie2Id) {
-        return ResponseEntity.ok(movieVsService.createVs(movie1Id, movie2Id));
+    // 새로운 VS 생성
+    @PostMapping("/ranking")
+    public ResponseEntity<?> createVs(@RequestBody Map<String, List<Long>> payload) {
+        List<Long> movieIds = payload.get("movieIds");
+        if (movieIds == null || movieIds.size() != 2) {
+            return ResponseEntity.badRequest().body("영화 2개를 선택해주세요");
+        }
+
+        MovieVsDto dto = MovieVsDto.builder()
+                .movieVs1Idx(movieIds.get(0))
+                .movieVs2Idx(movieIds.get(1))
+                .active(1)
+                .build();
+
+        MovieVsDto saved = movieVsService.saveVs(dto);
+        return ResponseEntity.ok(saved);
     }
 
-    // 전체 VS 조회 (엔티티 그대로)
+    // 모든 VS 조회 (엔티티 그대로)
     @GetMapping
     public ResponseEntity<List<MovieVsEntity>> getAllVs() {
         return ResponseEntity.ok(movieVsService.getAllVs());
@@ -52,25 +63,7 @@ public class MovieVsController {
         return ResponseEntity.ok(ranking);
     }
 
-    // 랭킹 페이지: 선택된 2개 영화 저장
-    @PatchMapping("/ranking")
-    public ResponseEntity<Void> saveRankingVotes(@RequestBody Map<String, Object> payload) {
-        try {
-            List<Integer> movieIds = (List<Integer>) payload.get("movieIds");
-            if (movieIds == null || movieIds.size() != 2) {
-                return ResponseEntity.badRequest().build();
-            }
-            movieVsService.setRankingVotes(
-                    Long.valueOf(movieIds.get(0)),
-                    Long.valueOf(movieIds.get(1))
-            );
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    // 🎬 관리자용: movievote 리스트
+    // 관리자용 movievote 리스트
     @GetMapping("/movievote")
     public ResponseEntity<List<Map<String, Object>>> getMovieVoteList() {
         List<MovieVsEntity> vsList = movieVsService.getAllVs();
@@ -104,5 +97,14 @@ public class MovieVsController {
         }).toList();
 
         return ResponseEntity.ok(result);
+    }
+
+    // active=1인 VS 가져오기
+    @GetMapping("/active")
+    public ResponseEntity<MovieVsEntity> getActiveVs() {
+        MovieVsEntity vs = movieVsService.getActiveVs();
+        if (vs == null)
+            return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(vs);
     }
 }

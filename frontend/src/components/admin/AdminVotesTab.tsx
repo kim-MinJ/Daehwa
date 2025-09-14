@@ -21,7 +21,7 @@ function LoadingSpinner() {
 }
 
 export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabProps) {
-  const [allMovies, setAllMovies] = useState<Movie[]>([]); // 전체 영화
+  const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [movieVotes, setMovieVotes] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +37,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/searchMovie?page=1&limit=1000"); // 최대치로 한 번만 불러오기
+        const res = await fetch("/api/searchMovie?page=1&limit=1000");
         const data: any[] = await res.json();
 
         const mapped: Movie[] = data
@@ -120,30 +120,30 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   };
 
   const handleApply = async () => {
-    if (!vsMovie1 || !vsMovie2) return;
+  if (!vsMovie1 || !vsMovie2) return;
 
-    try {
-      const res = await fetch("/api/vs/ranking", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          movieIds: [Number(vsMovie1.movieIdx), Number(vsMovie2.movieIdx)],
-        }),
-      });
+  try {
+    const res = await fetch("/api/vs/ranking", {
+      method: "POST", // ❌ PATCH → ✅ POST
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        movieIds: [Number(vsMovie1.movieIdx), Number(vsMovie2.movieIdx)],
+      }),
+    });
 
-      if (!res.ok) throw new Error("VS 등록 실패");
+    if (!res.ok) throw new Error("VS 등록 실패");
 
-      alert("✅ VS 등록 완료");
-      if (onApplyVsMovies) onApplyVsMovies(vsMovie1, vsMovie2);
-      fetchMovieVotes(); // 리스트 갱신
-    } catch (err) {
-      console.error(err);
-      alert("❌ VS 등록 중 오류 발생");
-    }
-  };
+    alert("✅ VS 등록 완료");
+    if (onApplyVsMovies) onApplyVsMovies(vsMovie1, vsMovie2);
+    fetchMovieVotes(); // 리스트 갱신
+  } catch (err) {
+    console.error(err);
+    alert("❌ VS 등록 중 오류 발생");
+  }
+};
 
   return (
     <Card>
