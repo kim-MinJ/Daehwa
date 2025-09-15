@@ -22,9 +22,9 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // genresSave.fetchAndSaveGenres(); // Genres 저장
         // movieInfoSave.fetchAndSaveAllPages(); // MovieInfo, MovieGenres 저장
-        // System.out.println("DataLoader.run() 시작됨");
         // movieCreditSave.fetchAndSaveAllCredits(); // MovieCast, MovieCrew 저장
         // movieVideoSave.fetchAndSaveAllVideos(); // Video 저장
+        // System.out.println("DataLoader.run() 종료됨");
 
         // DB 에 데이터 저장하고 싶으면 주석 풀기
     }

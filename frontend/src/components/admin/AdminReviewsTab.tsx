@@ -1,18 +1,16 @@
+import { Link } from "react-router-dom";
 import { Review } from "./types";
 import { Button } from "../ui/button";
 import { Dispatch, SetStateAction } from "react";
 
-
-
 interface AdminReviewsTabProps {
   reviews: Review[];
   searchQuery: string;
-  setEditingReview: Dispatch<SetStateAction<Review | null>>;
   users: { id: string; username: string }[];
   movies?: { id: number; title: string }[]; // optional
+  setEditingReview: Dispatch<SetStateAction<Review | null>>;
   updateReviewStatus: (reviewIdx: number, isBlind: 0 | 1) => void;
 }
-
 
 export default function AdminReviewsTab({
   reviews,
@@ -27,7 +25,8 @@ export default function AdminReviewsTab({
     if (!query) return true;
     return (
       r.reviewIdx.toString().includes(query) ||
-      r.content.toLowerCase().includes(query)
+      r.content.toLowerCase().includes(query) ||
+      r.userId.toLowerCase().includes(query)
     );
   });
 
@@ -38,7 +37,7 @@ export default function AdminReviewsTab({
           <tr className="border-b">
             <th className="p-2 text-left">리뷰 idx</th>
             <th className="p-2 text-left">영화</th>
-            <th className="p-2 text-left">유저ID</th>
+            <th className="p-2 text-left">유저</th>
             <th className="p-2 text-left">내용</th>
             <th className="p-2 text-left">평점</th>
             <th className="p-2 text-left">생성일</th>
@@ -53,6 +52,12 @@ export default function AdminReviewsTab({
               const user = users.find(u => u.id === review.userId);
               const movie = movies?.find(m => m.id === review.movieIdx);
 
+              // 내용 10글자 이상이면 잘라내기
+              const shortContent =
+                review.content.length > 10
+                  ? review.content.slice(0, 10) + "..."
+                  : review.content;
+
               return (
                 <tr
                   key={review.reviewIdx}
@@ -61,12 +66,27 @@ export default function AdminReviewsTab({
                   }`}
                 >
                   <td className="p-2">{review.reviewIdx}</td>
-                  <td className="p-2">{movie?.title || review.movieIdx}</td>
-                  <td className="p-2">{user?.username || review.userId}</td>
-                  <td className="p-2">{review.content}</td>
+                  <td className="p-2">
+  {movie ? (
+    <Link
+      to={`/movies/${movie.id}`}   // 영화 상세 페이지 이동
+      className="text-blue-600 hover:underline"
+    >
+      {movie.title}
+    </Link>
+  ) : (
+    "알 수 없는 영화"
+  )}
+</td>
+                  <td className="p-2">{user ? user.username : review.userId}</td>
+                  <td className="p-2">{shortContent}</td>
                   <td className="p-2">{review.rating}</td>
-                  <td className="p-2">{new Date(review.createdAt).toLocaleDateString()}</td>
-                  <td className="p-2">{new Date(review.updateAt).toLocaleDateString()}</td>
+                  <td className="p-2">
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-2">
+                    {new Date(review.updateAt).toLocaleDateString()}
+                  </td>
                   <td className="p-2">
                     {review.isBlind === 0 ? (
                       <span className="text-green-600 font-medium">공개</span>

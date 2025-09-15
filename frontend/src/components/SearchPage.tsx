@@ -124,7 +124,6 @@ export default function SearchPage({ movies, onMovieClick, onBack, onNavigation,
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
       {/* 공통 헤더 */}
-      <Header currentPage="search" onNavigation={onNavigation} />
 
       <div className="max-w-7xl mx-auto px-8 lg:px-16 py-8">
         <div className="flex gap-8">

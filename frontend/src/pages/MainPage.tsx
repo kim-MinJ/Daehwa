@@ -2,14 +2,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
-import Footer from "../components/Footer";
-import Header from "../pages/Header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { fetchMovies } from "@/services/movies";
-import type { Movie as ApiMovie } from "@/types/movie";
-import { ChevronRight, Info, MessageSquare, Star } from "lucide-react";
+import axios from "axios";
+import { Star, Info } from "lucide-react";
 
 // UI 타입
 type UiMovie = {
@@ -21,34 +18,15 @@ type UiMovie = {
   rating: number;
   runtime: number;
   description?: string;
+  releaseDate?: string | null;
 };
 
-// API → UI 매핑
-const mapApiToUi = (m: ApiMovie): UiMovie => ({
-  id: (m as any).movieIdx ?? (m as any).id ?? "",
-  title: m.title,
-  poster: (m as any).posterPath ?? (m as any).posterUrl ?? "",
-  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : ((m as any).year ?? 0),
-  genre: Array.isArray(m.genre) && (m.genre as any[]).length ? (m.genre as any[])[0] : ((m as any).genre ?? "기타"),
-  rating:
-    typeof (m as any).voteAverage === "number"
-      ? (m as any).voteAverage
-      : ((m as any).rating ?? 0),
-  runtime: (m as any).runtime ?? 0,
-  description: (m as any).overview ?? (m as any).description,
-});
-
-// ID 중복 제거
-const uniqueById = (movies: UiMovie[]): UiMovie[] => {
-  const seen = new Set<string | number>();
-  return movies.filter((movie) => {
-    if (seen.has(movie.id)) return false;
-    seen.add(movie.id);
-    return true;
-  });
+// 포스터 URL 처리
+const getPosterUrl = (path: string | undefined, size: string = "w500") => {
+  if (!path || path.trim() === "") return "/fallback.png";
+  return path.startsWith("http") ? path : `https://image.tmdb.org/t/p/${size}${path}`;
 };
 
-// ---- 로딩 스피너 컴포넌트 ----
 function LoadingSpinner() {
   return (
     <div className="flex justify-center items-center min-h-[80vh]">
@@ -64,79 +42,129 @@ function MainPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  const [latest, setLatest] = useState<UiMovie[]>([]);
-  const [topRated, setTopRated] = useState<UiMovie[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [popular40, setPopular40] = useState<UiMovie[]>([]);
+  const [weeklyTop10, setWeeklyTop10] = useState<UiMovie[]>([]);
+  const [personalizedTop3, setPersonalizedTop3] = useState<UiMovie[]>([]);
+  const [latest6, setLatest6] = useState<UiMovie[]>([]);
+  const [reviewEvent3, setReviewEvent3] = useState<UiMovie[]>([]);
+  const [oldPopular, setOldPopular] = useState<UiMovie[]>([]);
   const [err, setErr] = useState<string | null>(null);
 
+  const onMovieClick = (m: UiMovie) => navigate(`/movies/${m.id}`);
+
+  // 인기 영화 & 최신 영화 & 맞춤 추천
   useEffect(() => {
-    let alive = true;
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const fetchPopular = async () => {
     setLoading(true);
     setErr(null);
+    try {
+      const res = await axios.get("http://localhost:8080/api/movies/popular", {
+        headers: authHeader, // token 있으면 넣고, 없으면 빈 객체
+        params: { count: 40 },
+      });
 
-    (async () => {
-      try {
-        const [latestResp, ratingResp] = await Promise.all([
-          fetchMovies({ q: "", page: 1, sort: "latest" } as any, token as any),
-          fetchMovies({ q: "", page: 1, sort: "rating" } as any, token as any),
-        ]);
+      const movies: UiMovie[] = res.data.map((m: any) => ({
+        id: m.movieIdx,
+        title: m.title ?? "제목 없음",
+        poster: m.posterPath ?? "",
+        year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+        genre: m.genre ?? "기타",
+        rating: m.voteAverage ?? 0,
+        runtime: m.runtime ?? 0,
+        description: m.overview ?? "",
+        releaseDate: m.releaseDate ?? null,
+      }));
 
-        if (!alive) return;
-        const latestList: ApiMovie[] = (latestResp as any)?.content ?? [];
-        const ratingList: ApiMovie[] = (ratingResp as any)?.content ?? [];
+      setPopular40(movies);
+      setWeeklyTop10(movies.slice(0, 10));
 
-        setLatest(uniqueById(latestList.map(mapApiToUi)));
-        setTopRated(uniqueById(ratingList.map(mapApiToUi)));
-      } catch (e) {
-        if (!alive) return;
-        console.error("메인 데이터 로딩 실패:", e);
-        setErr(null);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
+      // 최신 영화 6개
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const latestMovies = movies.filter(
+        (m) => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo
+      );
+      const shuffledLatest = [...latestMovies].sort(() => Math.random() - 0.5);
+      setLatest6(shuffledLatest.slice(0, 6));
 
-    return () => {
-      alive = false;
-    };
-  }, [token]);
+      // 맞춤 추천
+      const shuffled = [...movies].sort(() => Math.random() - 0.5);
+      setPersonalizedTop3(shuffled.slice(0, 3));
+      setReviewEvent3(shuffled.slice(3, 6));
+    } catch (error) {
+      console.error("영화 로딩 실패:", error);
+      setErr("영화를 불러오는데 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const featured = useMemo(() => topRated[0] ?? latest[0], [topRated, latest]);
-  const personalizedTop3 = useMemo(() => topRated.slice(0, 3), [topRated]);
-  const latest6 = useMemo(() => latest.slice(0, 6), [latest]);
-  const weeklyTop5 = useMemo(() => topRated.slice(0, 5), [topRated]);
-  const reviewEvent3 = useMemo(() => latest.slice(6, 9), [latest]);
+  fetchPopular();
+}, [token]);
 
-  const toRanking = () => navigate("/ranking");
-  const toMovies = () => navigate("/movies");
-  const onMovieClick = (m: UiMovie) => navigate(`/movies/${m.id}`);
+  // 추억의 영화
+useEffect(() => {
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const fetchOldPopular = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/movies/oldpopular", {
+        headers: authHeader, // token 있으면 넣고, 없으면 빈 객체
+        params: { count: 40 },
+      });
+
+      const movies: UiMovie[] = res.data.map((m: any) => ({
+        id: m.movieIdx,
+        title: m.title ?? "제목 없음",
+        poster: m.posterPath ?? "",
+        year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+        genre: m.genre ?? "기타",
+        rating: m.voteAverage ?? 0,
+        runtime: m.runtime ?? 0,
+        description: m.overview ?? "",
+      }));
+
+      const shuffled = [...movies].sort(() => Math.random() - 0.5);
+      setOldPopular(shuffled.slice(0, 10));
+    } catch (error) {
+      console.error("추억의 영화 로딩 실패:", error);
+    }
+  };
+
+  fetchOldPopular();
+}, [token]);
+
+  // featured 선택 (랜덤)
+  const featured = useMemo(() => {
+    if (weeklyTop10.length === 0) return personalizedTop3[0] ?? latest6[0];
+    const randomIndex = Math.floor(Math.random() * weeklyTop10.length);
+    return weeklyTop10[randomIndex];
+  }, [weeklyTop10, personalizedTop3, latest6]);
 
   return (
     <div className="min-h-screen bg-white">
       <main className="relative">
-        {loading ? (
-          <LoadingSpinner />
-        ) : (
-          <>
-            {/* 히어로 섹션 */}
-            {featured && (
-              <div className="relative h-[85vh] mb-8">
-                <div className="absolute inset-0 cursor-pointer" onClick={() => onMovieClick(featured)}>
-                  <ImageWithFallback
-                    src={`https://image.tmdb.org/t/p/original${featured.poster}`}
-                    alt={featured.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                </div>
+        {loading && <LoadingSpinner />}
 
+        {/* 로그인 여부와 상관없이 페이지 내용 렌더링 */}
+        {!loading && (
+          <>
+            {featured && (
+              <div className="relative h-[85vh] mb-8 cursor-pointer" onClick={() => onMovieClick(featured)}>
+                <ImageWithFallback
+                  src={getPosterUrl(featured.poster, "w500")}
+                  alt={featured.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 w-full">
-                  <div className="max-w-7xl mx-auto px-8 lg:px-16 relative pb-8 lg:pb-16">
-                    <div className="max-w-lg">
-                      <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-                        {featured.title}
-                      </h1>
+                  <div className="max-w-7xl mx-auto px-8 lg:px-16 pb-8 lg:pb-16">
+                    <div className="max-w-lg text-white">
+                      <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">{featured.title}</h1>
                       {featured.description && (
                         <p className="text-white/90 text-lg lg:text-xl leading-relaxed mb-6">
                           {featured.description.slice(0, 200)}...
@@ -145,9 +173,7 @@ function MainPage() {
                       <div className="flex items-center gap-4 mb-8 text-white/80">
                         <div className="flex items-center gap-2">
                           <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                          <span className="text-lg font-semibold">
-                            {typeof featured.rating === "number" ? featured.rating.toFixed(1) : featured.rating}
-                          </span>
+                          <span className="text-lg font-semibold">{featured.rating.toFixed(1)}</span>
                         </div>
                         <span>•</span>
                         <span>{featured.year}년</span>
@@ -157,10 +183,7 @@ function MainPage() {
                         <span>{featured.genre}</span>
                       </div>
                       <div className="flex justify-start">
-                        <Button
-                          className="bg-white text-black hover:bg-white/90 px-12 py-4 text-xl font-semibold shadow-lg"
-                          onClick={() => onMovieClick(featured)}
-                        >
+                        <Button className="bg-white text-black hover:bg-white/90 px-12 py-4 text-xl font-semibold shadow-lg">
                           <Info className="h-6 w-6 mr-3" />
                           상세 정보
                         </Button>
@@ -171,78 +194,80 @@ function MainPage() {
               </div>
             )}
 
-            {/* 맞춤 추천 TOP3 */}
             <section className="max-w-7xl mx-auto px-8 lg:px-16 pt-[100px] space-y-[100px] pb-16">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl lg:text-2xl font-medium text-gray-600">당신만을 위한 추천</h2>
-                <Button variant="ghost" className="text-gray-600 hover:text-black font-medium" onClick={toRanking}>
-                  전체 보기 <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-              <div className="w-full h-px bg-gray-200 mb-6" />
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
-                {personalizedTop3.map((movie, index) => (
-                  <div key={movie.id} className="group cursor-pointer flex-shrink-0 relative" onClick={() => onMovieClick(movie)}>
-                    <div className="w-80 aspect-[16/9] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                      <ImageWithFallback
-                        src={`https://image.tmdb.org/t/p/w780${movie.poster}`}
-                        alt={movie.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                                index === 0 ? "bg-red-600" : index === 1 ? "bg-orange-600" : "bg-yellow-600"
-                              }`}
-                            >
-                              {index + 1}
+              {/* 맞춤 추천 TOP3 */}
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    당신만을 위한 추천
+                    <span className="text-sm text-gray-700 font-normal ml-3">
+                      사소하지만 널 위해 준비해봤어...받아...줄래...?
+                    </span>
+                  </h2>
+                </div>
+                <div className="w-full h-px bg-gray-200 mb-6" />
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                  {personalizedTop3.map((movie, index) => (
+                    <div
+                      key={movie.id}
+                      className="group cursor-pointer flex-shrink-0 relative"
+                      onClick={() => onMovieClick(movie)}
+                    >
+                      <div className="w-80 aspect-[16/9] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
+                        <ImageWithFallback
+                          src={getPosterUrl(movie.poster, "w780")}
+                          alt={movie.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
+                          <div className="absolute bottom-4 left-4 right-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                                  index === 0 ? "bg-red-600" : index === 1 ? "bg-orange-600" : "bg-yellow-600"
+                                }`}
+                              >
+                                {index + 1}
+                              </div>
+                              <Badge className="bg-white/20 text-white hover:bg-white/20 text-xs">맞춤 추천</Badge>
                             </div>
-                            <Badge className="bg-white/20 text-white hover:bg-white/20 text-xs">맞춤 추천</Badge>
-                          </div>
-                          <h3 className="text-white font-bold text-lg mb-1 line-clamp-1">{movie.title}</h3>
-                          <div className="flex items-center gap-2 text-white/80 text-sm">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                            <span>{movie.rating.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>{movie.year}년</span>
+                            <h3 className="text-white font-bold text-lg mb-1 line-clamp-1">{movie.title}</h3>
+                            <div className="flex items-center gap-2 text-white/80 text-sm">
+                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                              <span>{movie.rating.toFixed(1)}</span>
+                              <span>•</span>
+                              <span>{movie.year}년</span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
               {/* 최신 영화 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl lg:text-2xl font-medium text-gray-600">최신 영화</h2>
-                  <Button variant="ghost" className="text-gray-600 hover:text-black font-medium" onClick={toMovies}>
-                    더보기 <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    최신 영화
+                    <span className="text-sm text-gray-700 font-normal ml-3">이거? 지금 볼만한데? 도전? ㄱ?</span>
+                  </h2>
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
                 <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
                   {latest6.map((movie) => (
                     <div key={movie.id} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
                       <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                        <ImageWithFallback
-                          src={`https://image.tmdb.org/t/p/w500${movie.poster}`}
-                          alt={movie.title}
-                          className="w-full h-full object-cover"
-                        />
+                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
                         <div className="absolute top-2 right-2">
                           <Badge className="bg-blue-600 text-white text-xs">NEW</Badge>
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="absolute bottom-3 left-3 right-3">
-                            <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">{movie.title}</h4>
-                            <div className="flex items-center gap-1 text-white/80 text-xs">
-                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                              <span>{movie.rating.toFixed(1)}</span>
-                            </div>
+                        <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-1 rounded-md">
+                          <div className="font-semibold line-clamp-1">{movie.title}</div>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span>{movie.rating.toFixed(1)}</span>
                           </div>
                         </div>
                       </div>
@@ -254,21 +279,21 @@ function MainPage() {
               {/* 이번주 인기 TOP5 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl lg:text-2xl font-medium text-gray-600">이번주 인기 순위</h2>
-                  <Button variant="ghost" className="text-gray-600 hover:text-black font-medium" onClick={toRanking}>
-                    전체 순위 <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    이번주 인기 순위
+                    <span className="text-sm text-gray-700 font-normal ml-3">지금 이거 놓치면 후회합니다?</span>
+                  </h2>
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
                 <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
-                  {weeklyTop5.map((movie, index) => (
-                    <div key={movie.id} className="group cursor-pointer flex-shrink-0 relative" onClick={() => onMovieClick(movie)}>
+                  {weeklyTop10.slice(0, 10).map((movie, index) => (
+                    <div
+                      key={movie.id}
+                      className="group cursor-pointer flex-shrink-0 relative"
+                      onClick={() => onMovieClick(movie)}
+                    >
                       <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                        <ImageWithFallback
-                          src={`https://image.tmdb.org/t/p/w500${movie.poster}`}
-                          alt={movie.title}
-                          className="w-full h-full object-cover"
-                        />
+                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
                         <div className="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
                           {index + 1}
                         </div>
@@ -287,41 +312,36 @@ function MainPage() {
                 </div>
               </div>
 
-              {/* 리뷰 이벤트 */}
+              {/* 추억의 영화 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl lg:text-2xl font-medium text-gray-600">리뷰 이벤트</h2>
-                  <Badge className="bg-purple-600 text-white hover:bg-purple-600">진행중</Badge>
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    추억의 영화
+                    <span className="text-sm text-gray-700 font-normal ml-3">
+                      옛날 그 감성, 그 기분 지금 다시 느껴보시는건 어떨까요?
+                    </span>
+                  </h2>
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
-                <div className="bg-gray-100 rounded-xl p-6">
-                  <p className="text-gray-700 mb-6">영화 리뷰를 작성하고 특별한 혜택을 받아보세요!</p>
-                  <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
-                    {reviewEvent3.map((movie) => (
-                      <div key={movie.id} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
-                        <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                          <ImageWithFallback
-                            src={`https://image.tmdb.org/t/p/w500${movie.poster}`}
-                            alt={movie.title}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="absolute bottom-3 left-3 right-3">
-                              <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">{movie.title}</h4>
-                              <div className="flex items-center gap-1 text-white/80 text-xs mb-2">
-                                <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                                <span>{movie.rating.toFixed(1)}</span>
-                              </div>
-                              <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-xs">
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                리뷰 작성
-                              </Button>
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                  {oldPopular.map((movie) => (
+                    <div key={movie.id} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
+                      <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
+                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute bottom-3 left-3 right-3">
+                            <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">{movie.title}</h4>
+                            <div className="flex items-center gap-1 text-white/80 text-xs">
+                              <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                              <span>{movie.rating.toFixed(1)}</span>
+                              <span>•</span>
+                              <span>{movie.year}년</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>

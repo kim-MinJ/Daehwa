@@ -64,7 +64,11 @@ export interface Notice {
 // --- 투표 타입 ---
 export interface Vote {
   id: string;
+  movieIdx: number;   // DB 연동용
   movieTitle: string;
+  posterPath?: string;  // TMDB 이미지 경로
+  rating?: number;      // 별점
+  year?: string;        // 출시년도
   voter: string;
   voteCount: number;
   status: 'active' | 'inactive';

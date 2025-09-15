@@ -24,14 +24,10 @@ export default function LoginPage() {
   const [posters, setPosters] = useState<string[]>([]);
   const [offset, setOffset] = useState(0);
 
-  // 로그인 상태 변화 감지 시
 useEffect(() => {
-  if (isLoggedIn) {
-    setIsLogin(true); // 로그인 성공하면 로그인 탭 유지
-  }
+    if (isLoggedIn) setIsLogin(true);
 }, [isLoggedIn]);
 
-  // 포스터 가져오기
   useEffect(() => {
     async function fetchPosters() {
       try {
@@ -46,12 +42,10 @@ useEffect(() => {
     fetchPosters();
   }, []);
 
-  // 연속 자동 슬라이드
   useEffect(() => {
     if (posters.length === 0) return;
-
     let animationFrame: number;
-    const speed = 1; // 1 frame당 이동 픽셀, 속도 조절 가능
+    const speed = 1;
 
     const animate = () => {
       setOffset(prev => {
@@ -92,38 +86,28 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black/80">
+      <div className="w-screen h-screen flex items-center justify-center bg-black/80">
         <p className="text-white">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center overflow-hidden">
-      {/* 슬라이드 컨테이너 */}
+    <div className="relative w-screen h-screen overflow-hidden">
+      {/* 슬라이드 이미지 */}
       <div
-  className="absolute flex h-full"
+        className="absolute top-0 left-0 h-screen flex"
   style={{
     transform: `translateX(-${offset}px)`,
     transition: "transform 0.05s linear",
   }}
 >
-  {posters.map((poster, idx) => (
-    <img
-  key={idx}
-  src={poster}
-  alt="poster"
-  className="h-full object-cover flex-shrink-0"
-  style={{ width: "auto" }}
-/>
-  ))}
  {[...posters, ...posters].map((poster, idx) => (
     <img
       key={idx}
       src={poster}
       alt="poster"
-      className="h-full object-contain flex-shrink-0"
-      style={{ width: "auto" }} // 비율 유지, 여백 없이 옆으로 붙음
+            className="h-screen object-cover flex-shrink-0"
     />
   ))}
 </div>
@@ -132,13 +116,11 @@ useEffect(() => {
       <div className="absolute inset-0 bg-black/70"></div>
 
       {/* 로그인 카드 */}
-      <Card
-className="w-full max-w-md z-10 p-8 rounded-lg text-white bg-black/40 backdrop-blur-md
-             shadow-[0_0_8px_2px_rgba(255,255,255,0.5)]"
->
+      <div className="relative z-10 flex items-center justify-center w-full h-full">
+        <Card className="w-full max-w-md p-8 rounded-lg bg-black/40 backdrop-blur-md shadow-[0_0_8px_2px_rgba(255,255,255,0.5)] text-white">
   <CardContent className="p-0 space-y-4 text-white">
     <div className="text-center mb-6">
-      <h1 className="text-3xl font-bold">MovieInfo</h1>
+      <h6 className="text-xl font-bold text-red-400 mb-4">MovieSSG</h6>
       <p className="text-gray-300">
         {!isLoggedIn
           ? isLogin
@@ -249,11 +231,9 @@ className="w-full max-w-md z-10 p-8 rounded-lg text-white bg-black/40 backdrop-b
 />
             로그인 상태 유지
           </label>
-          
         </div>
       )}
 
-      {/* 메인 로그인 버튼 */}
       <Button
         type="submit"
         className="w-full bg-red-600/70 hover:bg-red-600 transition"
@@ -277,6 +257,7 @@ className="w-full max-w-md z-10 p-8 rounded-lg text-white bg-black/40 backdrop-b
     )}
   </CardContent>
 </Card>
+      </div>
     </div>
   );
 }
