@@ -70,7 +70,7 @@
       const fetchMovies = async () => {
         try {
           setLoading(true);
-          const res = await axios.get("http://localhost:8080/api/movie/ranking");
+          const res = await axios.get("/api/movie/ranking");
           const movieRes = res.data.map((m: any, idx: number) => ({
             movieIdx: m.movieIdx,
             tmdbMovieId: m.tmdbMovieId,
