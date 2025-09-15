@@ -129,7 +129,7 @@ COMMENT ON COLUMN Movie_Info.tmdb_movie_id IS 'tmdb_movie_id';
 
 COMMENT ON COLUMN Movie_Info.title IS '영화 제목';
 
-COMMENT ON COLUMN Movie_Info.popularity IS '별점 합계';
+COMMENT ON COLUMN Movie_Info.popularity IS 'tmdb 내부 인기도';
 
 COMMENT ON COLUMN Movie_Info.vote_count IS '투표 숫자';
 
@@ -298,10 +298,14 @@ COMMENT ON COLUMN Movie_Genres.genre_id IS '장르 아이디';
 -- 1-12. Movie_VS
 CREATE TABLE Movie_VS
 (
-  VS_idx    NUMBER    NOT NULL,
-  movie_VS1 NUMBER    NOT NULL,
-  movie_VS2 NUMBER    NOT NULL,
-  active    NUMBER(1) DEFAULT 0,
+  VS_idx     NUMBER    NOT NULL,
+  VS_round   NUMBER    NOT NULL,
+  pair       NUMBER    NOT NULL,
+  movie_VS1  NUMBER    NOT NULL,
+  movie_VS2  NUMBER    NOT NULL,
+  active     NUMBER(1) DEFAULT 0 NOT NULL,
+  start_date DATE      NOT NULL,
+  end_date   DATE     ,
   CONSTRAINT PK_Movie_VS PRIMARY KEY (VS_idx)
 );
 
@@ -309,40 +313,42 @@ COMMENT ON TABLE Movie_VS IS 'VS 투표하는 영화';
 
 COMMENT ON COLUMN Movie_VS.VS_idx IS 'VS 인덱스';
 
+COMMENT ON COLUMN Movie_VS.VS_round IS '회차';
+
+COMMENT ON COLUMN Movie_VS.pair IS '회차내 VS 번호';
+
 COMMENT ON COLUMN Movie_VS.movie_VS1 IS '투표 영화1';
 
 COMMENT ON COLUMN Movie_VS.movie_VS2 IS '투표 영화2';
 
 COMMENT ON COLUMN Movie_VS.active IS '투표 진행 유무 (0: no, 1: yes)';
 
+COMMENT ON COLUMN Movie_VS.start_date IS '시작일';
+
+COMMENT ON COLUMN Movie_VS.end_date IS '종료일';
+
 -- 1-13. Movie_Vote
 CREATE TABLE Movie_Vote
 (
   vote_idx  NUMBER        NOT NULL,
-  movie_idx NUMBER        NOT NULL,
-  user_id    VARCHAR2(100) NOT NULL,
   VS_idx    NUMBER        NOT NULL,
+  user_id   VARCHAR2(100) NOT NULL,
+  movie_idx NUMBER        NOT NULL,
+  VS_date   DATE          DEFAULT sysdate NOT NULL,
   CONSTRAINT PK_Movie_Vote PRIMARY KEY (vote_idx)
 );
-
-ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_movie_idx UNIQUE (movie_idx);
-
-ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_user_id UNIQUE (user_id);
-
-ALTER TABLE Movie_Vote
-  ADD CONSTRAINT UQ_VS_idx UNIQUE (VS_idx);
 
 COMMENT ON TABLE Movie_Vote IS 'VS 투표';
 
 COMMENT ON COLUMN Movie_Vote.vote_idx IS '투표 인덱스';
 
-COMMENT ON COLUMN Movie_Vote.movie_idx IS '투표하는 영화 인덱스';
+COMMENT ON COLUMN Movie_Vote.VS_idx IS 'VS 인덱스';
 
 COMMENT ON COLUMN Movie_Vote.user_id IS '투표한 사용자';
 
-COMMENT ON COLUMN Movie_Vote.VS_idx IS '중복 투표 확인';
+COMMENT ON COLUMN Movie_Vote.movie_idx IS '투표하는 영화 인덱스(영화 확인용)';
+
+COMMENT ON COLUMN Movie_Vote.VS_date IS 'VS 투표 날짜';
 
 -- 1-14. Ranking
 CREATE TABLE Ranking
@@ -706,16 +712,16 @@ BEGIN
 END;
 /
 
--- Movie_Info.popularity -> Ranking.ranking_count 연동 트리거
-CREATE OR REPLACE TRIGGER trg_update_ranking
-AFTER UPDATE OF popularity ON Movie_Info
-FOR EACH ROW
-BEGIN
-    -- Ranking 테이블에 해당 movie_idx가 있으면 업데이트
-    UPDATE Ranking
-       SET ranking_count = :NEW.popularity,
-           created_date  = SYSDATE
-     WHERE movie_idx = :NEW.movie_idx;
-    -- 없으면 아무것도 하지 않음 (0행이면 그냥 넘어감)
-END;
-/
+-- -- Movie_Info.popularity -> Ranking.ranking_count 연동 트리거
+-- CREATE OR REPLACE TRIGGER trg_update_ranking
+-- AFTER UPDATE OF popularity ON Movie_Info
+-- FOR EACH ROW
+-- BEGIN
+--     -- Ranking 테이블에 해당 movie_idx가 있으면 업데이트
+--     UPDATE Ranking
+--        SET ranking_count = :NEW.popularity,
+--            created_date  = SYSDATE
+--      WHERE movie_idx = :NEW.movie_idx;
+--     -- 없으면 아무것도 하지 않음 (0행이면 그냥 넘어감)
+-- END;
+-- /
