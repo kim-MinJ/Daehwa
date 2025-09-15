@@ -85,7 +85,11 @@ export default function RankingPage({
   useEffect(() => {
     const fetchMovies = async () => {
       try {
+<<<<<<< HEAD
         const apiKey = "302b783e860b19b6822ef0a445e7ae53"; // 🔑 실제 TMDB API 키 넣으세요
+=======
+        const apiKey = "YOUR_TMDB_API_KEY"; // 🔑 실제 TMDB API 키 넣으세요
+>>>>>>> 7a79e33ed4113da2f4042880af353c2cec0b38d2
         const res = await axios.get(
           `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=ko-KR&page=1`
         );
@@ -101,7 +105,11 @@ export default function RankingPage({
           rating: m.vote_average,
           runtime: 0,
           description: m.overview,
+<<<<<<< HEAD
           director: m.director,
+=======
+          director: "알 수 없음",
+>>>>>>> 7a79e33ed4113da2f4042880af353c2cec0b38d2
           rank: idx + 1,
           voteCount: m.vote_count,
         }));
