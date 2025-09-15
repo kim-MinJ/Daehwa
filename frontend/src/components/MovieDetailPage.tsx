@@ -3,8 +3,6 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import Header from './Header';
-import Footer from './Footer';
 
 interface Movie {
   id: string;
@@ -120,7 +118,6 @@ export default function MovieDetailPage({ movie, onBack, onNavigation }: MovieDe
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
       {/* 공통 헤더 */}
-      <Header currentPage="movie-detail" onNavigation={onNavigation || (() => {})} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 뒤로가기 버튼 */}
@@ -336,7 +333,6 @@ export default function MovieDetailPage({ movie, onBack, onNavigation }: MovieDe
       </div>
       
       {/* 공통 푸터 */}
-      <Footer />
     </div>
   );
 }
