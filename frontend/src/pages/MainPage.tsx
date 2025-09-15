@@ -61,7 +61,7 @@ function MainPage() {
     setLoading(true);
     setErr(null);
     try {
-      const res = await axios.get("http://localhost:8080/api/movies/popular", {
+      const res = await axios.get("/api/movies/popular", {
         headers: authHeader, // token 있으면 넣고, 없으면 빈 객체
         params: { count: 40 },
       });
@@ -111,7 +111,7 @@ useEffect(() => {
 
   const fetchOldPopular = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/movies/oldpopular", {
+      const res = await axios.get("/api/movies/oldpopular", {
         headers: authHeader, // token 있으면 넣고, 없으면 빈 객체
         params: { count: 40 },
       });
