@@ -66,7 +66,7 @@ export default function MyPage({}: MyPageProps) {
   const fetchBookmarks = async () => {
     if (!token) return;
     try {
-      const res = await axios.get("http://localhost:8080/api/bookmarks", { headers: authHeader });
+      const res = await axios.get("/api/bookmarks", { headers: authHeader });
       setBookmarks(res.data);
     } catch (err) {
       console.error(err);
@@ -76,7 +76,7 @@ export default function MyPage({}: MyPageProps) {
   const fetchRecommendMovies = async () => {
     if (!token) return;
     try {
-      const res = await axios.get("http://localhost:8080/api/movies/popular", {
+      const res = await axios.get("/api/movies/popular", {
         headers: authHeader,
         params: { count: 12 },
       });
@@ -89,7 +89,7 @@ export default function MyPage({}: MyPageProps) {
   const fetchReviews = async () => {
     if (!token) return;
     try {
-      const res = await axios.get("http://localhost:8080/api/reviews/myreview", { headers: authHeader });
+      const res = await axios.get("/api/reviews/myreview", { headers: authHeader });
       setReviews(res.data);
     } catch (err) {
       console.error(err);
@@ -112,9 +112,9 @@ export default function MyPage({}: MyPageProps) {
     const existing = bookmarks.find((b) => b.movieIdx === movieIdx);
     try {
       if (existing) {
-        await axios.delete(`http://localhost:8080/api/bookmarks/${existing.bookmarkIdx}`, { headers: authHeader });
+        await axios.delete(`/api/bookmarks/${existing.bookmarkIdx}`, { headers: authHeader });
       } else {
-        await axios.post(`http://localhost:8080/api/bookmarks`, null, {
+        await axios.post(`/api/bookmarks`, null, {
           params: { movieIdx },
           headers: authHeader,
         });
@@ -182,7 +182,7 @@ export default function MyPage({}: MyPageProps) {
                   if (!adminCode.trim()) return alert("관리자 코드를 입력해주세요.");
                   try {
                     const res = await axios.put(
-                      "http://localhost:8080/api/admin/grant",
+                      "/api/admin/grant",
                       null,
                       { params: { adminCode }, headers: authHeader }
                     );
@@ -391,7 +391,7 @@ export default function MyPage({}: MyPageProps) {
                           if (!username.trim()) return alert("이름을 입력해주세요.");
                           try {
                             await axios.put(
-                              "http://localhost:8080/api/users/update",
+                              "/api/users/update",
                               { username },
                               { headers: authHeader }
                             );
@@ -435,7 +435,7 @@ export default function MyPage({}: MyPageProps) {
                             return alert("비밀번호 확인이 일치하지 않습니다.");
                           try {
                             await axios.put(
-                              "http://localhost:8080/api/users/password",
+                              "/api/users/password",
                               { currentPassword, newPassword },
                               { headers: authHeader }
                             );
