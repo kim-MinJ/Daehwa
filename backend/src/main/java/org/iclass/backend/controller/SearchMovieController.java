@@ -22,7 +22,7 @@ public class SearchMovieController {
     }
 
     // 단일 영화 조회
-    @GetMapping("/api/searchMovie/{id}")
+    @GetMapping("/api/movies/{id}")
     public MovieInfoEntity getMovieById(@PathVariable Long id) {
         return service.getMovieById(id);
     }
