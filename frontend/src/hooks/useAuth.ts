@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 
 const API_URL = "/api";
-// const API_URL = "http://localhost:8080/api";
+// const API_URL = "/api";
 
 export interface UserInfo {
   userId: string;
