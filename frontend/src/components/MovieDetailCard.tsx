@@ -17,7 +17,7 @@ interface MovieDetailCardProps {
   userRating?: number;
 }
 
-export function MovieDetailCard({ 
+export function   MovieDetailCard({ 
   title = "영화 제목", 
   year = "2023", 
   rating = "15세 이상 관람가",
