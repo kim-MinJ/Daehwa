@@ -28,34 +28,40 @@ public class ChatService {
       .defaultHeader("Content-Type", "application/json")
       .build();
 
-  public ChatResponse getChatCompletion(ChatRequest request) {
-    // ✅ userId로 유저 찾기 (없으면 예외 발생)
-    UsersEntity user = usersRepository.findByUserId(request.getUserId())
-        .orElseThrow(() -> new RuntimeException("User not found"));
+  public ChatResponse getChatCompletion(ChatRequest request, String userId) {
+    // ✅ 로그인한 유저 찾기 (없으면 null = 게스트 모드)
+    UsersEntity user = null;
+    if (request.getUserId() != null && !request.getUserId().isBlank()) {
+      user = usersRepository.findByUserId(userId).orElse(null);
+    }
 
-    // user 메시지 저장
-    request.getMessages().forEach(msg -> {
-      if ("user".equals(msg.getRole())) {
-        chatMessageRepository.save(ChatMessageEntity.builder()
-            .role("user")
-            .content(msg.getContent())
-            .createdAt(LocalDateTime.now())
-            .user(user)
-            .build());
+    System.out.println("챗서비스 요청 userId:" + userId);
+
+    // ✅ 유저 메시지 저장 (로그인한 경우만)
+    if (user != null) {
+      for (ChatRequest.Message msg : request.getMessages()) {
+        if ("user".equals(msg.getRole())) {
+          chatMessageRepository.save(ChatMessageEntity.builder()
+              .role("user")
+              .content(msg.getContent())
+              .createdAt(LocalDateTime.now())
+              .user(user)
+              .build());
+        }
       }
-    });
+    }
 
-    // OpenAI 호출
+    // ✅ OpenAI API 호출
     ChatResponse response = webClient.post()
         .uri("/chat/completions")
         .header("Authorization", "Bearer " + apiKey)
-        .bodyValue(new ChatCompletionPayload("gpt-4.0-mini", request.getMessages()))
+        .bodyValue(new ChatCompletionPayload("gpt-4o-mini", request.getMessages()))
         .retrieve()
         .bodyToMono(ChatResponse.class)
         .block();
 
-    // assistant 메시지 저장
-    if (response != null && response.getChoices() != null && !response.getChoices().isEmpty()) {
+    // ✅ Assistant 메시지 저장 (로그인한 경우만)
+    if (user != null && response != null && response.getChoices() != null && !response.getChoices().isEmpty()) {
       String reply = response.getChoices().get(0).getMessage().getContent();
       chatMessageRepository.save(ChatMessageEntity.builder()
           .role("assistant")
@@ -68,6 +74,7 @@ public class ChatService {
     return response;
   }
 
+  // ✅ OpenAI 요청 DTO
   record ChatCompletionPayload(String model, java.util.List<ChatRequest.Message> messages) {
   }
 }

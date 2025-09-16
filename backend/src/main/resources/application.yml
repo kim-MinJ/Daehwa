@@ -8,7 +8,7 @@ spring:
     password: 1234
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     properties:
       hibernate:
         '[format_sql]': true
@@ -28,4 +28,4 @@ jwt:
   #깃 저장용
 openai:
   api:
-    key: {OPENAI_API_KEY}
+    key: ${OPENAI_API_KEY}

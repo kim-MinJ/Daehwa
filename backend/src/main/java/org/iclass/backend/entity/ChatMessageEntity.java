@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chat_messages")
+@Table(name = "CHAT_MESSAGES")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,13 +20,13 @@ public class ChatMessageEntity {
 
   private String role; // user / assistant / system
 
-  @Column(columnDefinition = "TEXT")
+  @Column(name = "CONTENT")
   private String content;
 
   private LocalDateTime createdAt;
 
   // ✅ UsersEntity와 연관관계 매핑
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id") // FK
+  @JoinColumn(name = "user_id", referencedColumnName = "user_id") // FK
   private UsersEntity user;
 }

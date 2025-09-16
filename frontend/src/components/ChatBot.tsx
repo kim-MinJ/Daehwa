@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, User, Bot } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
+
 
 interface Message {
   id: string;
@@ -25,6 +26,10 @@ const ChatBot = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+   const userId = localStorage.getItem("userId"); 
+  const token = localStorage.getItem("token");
+const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  
   // 아이콘과 텍스트 번갈아 표시하기
   useEffect(() => {
     const interval = setInterval(() => {
@@ -32,6 +37,13 @@ const ChatBot = () => {
     }, 2500);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
 
   // ✅ 메시지 전송
   const handleSendMessage = async () => {
@@ -49,13 +61,18 @@ const ChatBot = () => {
     setInputMessage('');
     setLoading(true);
 
+
+    
     try {
       // ✅ 백엔드 호출 (Spring Boot API)
       const response = await fetch('http://localhost:8080/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
         body: JSON.stringify({
-          userId: 'testuser', // 👉 실제 로그인 유저 ID로 교체 필요
+          userId: userId, // 👉 localStorage에서 가져온 실제 로그인 유저 ID
           messages: [{ role: 'user', content: userInput }]
         })
       });
@@ -65,7 +82,8 @@ const ChatBot = () => {
       }
 
       const data = await response.json();
-
+      // localStorage.setItem("token", data.token);
+      // localStorage.setItem("userId", data.userId);  
       // assistant 응답 꺼내기
       const botReply =
         data?.choices?.[0]?.message?.content ||
@@ -144,14 +162,12 @@ const ChatBot = () => {
           </div>
 
           {/* 메시지 영역 */}
-          <ScrollArea className="flex-1 p-4">
+           <ScrollArea className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-4">
               {messages.map(message => (
                 <div
                   key={message.id}
-                  className={`flex ${
-                    message.isUser ? 'justify-end' : 'justify-start'
-                  }`}
+                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
                     className={`max-w-[80%] p-3 rounded-2xl ${
@@ -184,6 +200,8 @@ const ChatBot = () => {
                   </div>
                 </div>
               ))}
+              {/* ✅ 맨 아래 ref */}
+              <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
 
