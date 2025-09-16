@@ -7,7 +7,7 @@ import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { ArrowLeft, Edit3, Calendar, Heart } from "lucide-react";
+import { Edit3, Calendar, Heart } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import {
   Dialog,
@@ -57,12 +57,13 @@ export default function MyPage({}: MyPageProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [adminCode, setAdminCode] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
   const authHeader = { Authorization: `Bearer ${token}` };
 
-  // Async 함수로 변경
   const fetchBookmarks = async () => {
     if (!token) return;
     try {
@@ -106,7 +107,6 @@ export default function MyPage({}: MyPageProps) {
     if (userInfo?.username) setUsername(userInfo.username);
   }, [userInfo]);
 
-  // 북마크 토글
   const toggleBookmark = async (movieIdx: number) => {
     if (!token) return;
     const existing = bookmarks.find((b) => b.movieIdx === movieIdx);
@@ -132,11 +132,8 @@ export default function MyPage({}: MyPageProps) {
       <div className="max-w-7xl mx-auto px-6">
         {/* 헤더 */}
         <div className="bg-red-600 text-white border-b border-red-700">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/main")}>
-              <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
-            </Button>
-            <div className="flex items-center space-x-4">
+          <div className="px-6 py-4 flex items-center">
+            <div className="ml-auto flex items-center space-x-4">
               {userInfo?.role === "admin" ? (
                 <Button variant="default" size="sm" onClick={() => navigate("/admin")}>
                   관리자 모드
@@ -146,16 +143,6 @@ export default function MyPage({}: MyPageProps) {
                   <Edit3 className="w-4 h-4 mr-2" /> 관리자 코드
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  logout();
-                  navigate("/login");
-                }}
-              >
-                로그아웃
-              </Button>
             </div>
           </div>
         </div>
@@ -204,6 +191,58 @@ export default function MyPage({}: MyPageProps) {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAdminModalOpen(false)}>
+                닫기
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* 삭제 모달 */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>계정 삭제 확인</DialogTitle>
+              <DialogDescription>
+                계정을 삭제하려면 아래 입력란에 <strong>삭제합니다</strong> 를 입력해주세요.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-3">
+              <Input
+                placeholder="삭제합니다"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+              />
+              <Button
+  className="w-full"
+  variant="destructive"
+  onClick={async () => {
+    if (deleteConfirmText !== "삭제합니다") {
+      return alert("정확히 '삭제합니다' 를 입력해야 합니다.");
+    }
+    try {
+      // 하드삭제용
+      const res = await axios.delete("/api/users/me", { headers: authHeader });
+
+      setIsDeleteModalOpen(false);
+      setDeleteConfirmText("");
+      logout();
+      alert(res.data?.message || "계정 삭제가 완료되었습니다!");
+      navigate("/");
+    } catch (err: any) {
+      console.error(err);
+      const msg =
+        err.response?.data?.message ||
+        JSON.stringify(err.response?.data) ||
+        "계정 삭제에 실패했습니다.";
+      alert(msg);
+    }
+  }}
+>
+  삭제
+</Button>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
                 닫기
               </Button>
             </DialogFooter>
@@ -264,109 +303,115 @@ export default function MyPage({}: MyPageProps) {
             </TabsList>
 
             {/* 추천 영화 탭 */}
-<TabsContent value="recommend">
-  {recommendMovies.length > 0 ? (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {recommendMovies.map((movie) => (
-        <Card key={movie.movieIdx} className="cursor-pointer" onClick={() => navigate(`/movies/${movie.movieIdx}`)}>
-          <img
-            src={movie.posterPath ? `${TMDB_BASE_URL}${movie.posterPath}` : "/default.jpg"}
-            alt={movie.title}
-            className="w-full h-48 object-cover rounded-md"
-          />
-          <CardContent className="flex flex-col gap-2">
-            <h3 className="font-bold">{movie.title}</h3>
-            <Button
-              size="sm"
-              variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
-              onClick={(e) => {
-                e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-                toggleBookmark(movie.movieIdx);
-              }}
-            >
-              <Heart className="w-4 h-4 mr-1" /> 북마크
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  ) : (
-    <p>추천 영화가 없습니다.</p>
-  )}
-</TabsContent>
+            <TabsContent value="recommend">
+              {recommendMovies.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {recommendMovies.map((movie) => (
+                    <Card
+                      key={movie.movieIdx}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/movies/${movie.movieIdx}`)}
+                    >
+                      <img
+                        src={movie.posterPath ? `${TMDB_BASE_URL}${movie.posterPath}` : "/default.jpg"}
+                        alt={movie.title}
+                        className="w-full h-48 object-cover rounded-md"
+                      />
+                      <CardContent className="flex flex-col gap-2">
+                        <h3 className="font-bold">{movie.title}</h3>
+                        <Button
+                          size="sm"
+                          variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBookmark(movie.movieIdx);
+                          }}
+                        >
+                          <Heart
+                            className="w-4 h-4 mr-1"
+                            fill={isBookmarked(movie.movieIdx) ? "white" : "none"}
+                            stroke="currentColor"
+                          />{" "}
+                          {isBookmarked(movie.movieIdx) ? "찜안해!" : "찜하기"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p>추천 영화가 없습니다.</p>
+              )}
+            </TabsContent>
 
             {/* 북마크 탭 */}
-<TabsContent value="favorites">
-  {bookmarks.length > 0 ? (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {bookmarks.map((b) => (
-        <Card key={b.bookmarkIdx} className="cursor-pointer" onClick={() => navigate(`/movies/${b.movieIdx}`)}>
-          <img
-            src={b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"}
-            alt={b.title}
-            className="w-full h-48 object-cover rounded-md"
-          />
-          <CardContent className="flex flex-col gap-2">
-            <h3 className="font-bold">{b.title}</h3>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={(e) => {
-                e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-                toggleBookmark(b.movieIdx);
-              }}
-            >
-              <Heart className="w-4 h-4 mr-1" /> 북마크 제거
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  ) : (
-    <p>북마크가 없습니다.</p>
-  )}
-</TabsContent>
+            <TabsContent value="favorites">
+              {bookmarks.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {bookmarks.map((b) => (
+                    <Card
+                      key={b.bookmarkIdx}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/movies/${b.movieIdx}`)}
+                    >
+                      <img
+                        src={b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"}
+                        alt={b.title}
+                        className="w-full h-48 object-cover rounded-md"
+                      />
+                      <CardContent className="flex flex-col gap-2">
+                        <h3 className="font-bold">{b.title}</h3>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBookmark(b.movieIdx);
+                          }}
+                        >
+                          <Heart className="w-4 h-4 mr-1" fill="white" stroke="currentColor" />
+                          찜안해!
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p>북마크가 없습니다.</p>
+              )}
+            </TabsContent>
 
+            {/* 리뷰 탭 */}
             <TabsContent value="reviews">
-  {reviews.length ? (
-    <div className="space-y-4">
-      {reviews.map((r) => (
-        <div
-          key={r.reviewIdx}
-          className="border rounded-lg p-4 bg-gray-50 shadow-sm"
-        >
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold">
-              영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}
-            </h3>
-            <div className="text-sm text-gray-500 flex flex-col">
-              <span>
-                작성일 : {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}
-              </span>
-              <span>
-    수정일 : {r.updateAt ? new Date(r.updateAt).toLocaleDateString() 
-                        : r.createdAt ? new Date(r.createdAt).toLocaleDateString() 
-                        : "-"}
-  </span>
-            </div>
-          </div>
-          <p className="mb-2 text-gray-800">{r.content}</p>
-          <div className="text-sm text-gray-600 mb-2">평점: {r.rating} / 10</div>
-          <Button
-  size="sm"
-  variant="outline"
-  onClick={() => navigate(`/reviews/${r.reviewIdx}`)}
->
-  리뷰 보러가기
-</Button>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p>작성한 리뷰가 없습니다.</p>
-  )}
-</TabsContent>
+              {reviews.length ? (
+                <div className="space-y-4">
+                  {reviews.map((r) => (
+                    <div key={r.reviewIdx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-semibold">
+                          영화 이름 : {r.movieTitle || `영화 #${r.movieIdx}`}
+                        </h3>
+                        <div className="text-sm text-gray-500 flex flex-col">
+                          <span>
+                            작성일 : {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}
+                          </span>
+                          <span>
+                            수정일 : {r.updateAt ? new Date(r.updateAt).toLocaleDateString()
+                              : r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="mb-2 text-gray-800">{r.content}</p>
+                      <div className="text-sm text-gray-600 mb-2">평점: {r.rating} / 10</div>
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/reviews/${r.reviewIdx}`)}>리뷰 보러가기</Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>작성한 리뷰가 없습니다.</p>
+              )}
+            </TabsContent>
 
+            {/* 계정 설정 탭 */}
             <TabsContent value="settings">
               <Card>
                 <CardHeader>
@@ -381,77 +426,48 @@ export default function MyPage({}: MyPageProps) {
                   <div className="space-y-2">
                     <Label htmlFor="username">이름</Label>
                     <div className="flex gap-2">
-                      <Input
-                        id="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                      />
-                      <Button
-                        onClick={async () => {
-                          if (!username.trim()) return alert("이름을 입력해주세요.");
-                          try {
-                            await axios.put(
-                              "/api/users/update",
-                              { username },
-                              { headers: authHeader }
-                            );
-                            alert("이름이 변경되었습니다.");
-                          } catch {
-                            alert("이름 변경에 실패했습니다.");
-                          }
-                        }}
-                      >
-                        변경
-                      </Button>
+                      <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                      <Button onClick={async () => {
+                        if (!username.trim()) return alert("이름을 입력해주세요.");
+                        try {
+                          await axios.put("/api/users/update", { username }, { headers: authHeader });
+                          alert("이름이 변경되었습니다.");
+                        } catch {
+                          alert("이름 변경에 실패했습니다.");
+                        }
+                      }}>변경</Button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="password">비밀번호 변경</Label>
                     <div className="flex flex-col gap-2">
-                      <Input
-                        type="password"
-                        placeholder="현재 비밀번호"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                      />
-                      <Input
-                        type="password"
-                        placeholder="새 비밀번호"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                      />
-                      <Input
-                        type="password"
-                        placeholder="비밀번호 확인"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                      />
-                      <Button
-                        onClick={async () => {
-                          if (!currentPassword || !newPassword || !confirmPassword)
-                            return alert("모든 필드를 입력해주세요.");
-                          if (newPassword !== confirmPassword)
-                            return alert("비밀번호 확인이 일치하지 않습니다.");
-                          try {
-                            await axios.put(
-                              "/api/users/password",
-                              { currentPassword, newPassword },
-                              { headers: authHeader }
-                            );
-                            alert("비밀번호가 변경되었습니다.");
-                            setCurrentPassword("");
-                            setNewPassword("");
-                            setConfirmPassword("");
-                          } catch {
-                            alert("비밀번호 변경에 실패했습니다.");
-                          }
-                        }}
-                      >
-                        변경
-                      </Button>
+                      <Input type="password" placeholder="현재 비밀번호" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                      <Input type="password" placeholder="새 비밀번호" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                      <Input type="password" placeholder="비밀번호 확인" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                      <Button onClick={async () => {
+                        if (!currentPassword || !newPassword || !confirmPassword) return alert("모든 필드를 입력해주세요.");
+                        if (newPassword !== confirmPassword) return alert("비밀번호 확인이 일치하지 않습니다.");
+                        try {
+                          await axios.put("/api/users/password", { currentPassword, newPassword }, { headers: authHeader });
+                          alert("비밀번호가 변경되었습니다.");
+                          setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+                        } catch {
+                          alert("비밀번호 변경에 실패했습니다.");
+                        }
+                      }}>변경</Button>
                     </div>
                   </div>
+
+                  {/* 계정 삭제 버튼 */}
+<div className="flex flex-col items-end mt-4">
+  <Button variant="destructive" onClick={() => setIsDeleteModalOpen(true)}>
+    계정 삭제
+  </Button>
+  <span className="text-sm text-red-300 mt-1">
+    계정 삭제 시 모든 리뷰, 댓글이 삭제됩니다.
+  </span>
+</div>
                 </CardContent>
               </Card>
             </TabsContent>
