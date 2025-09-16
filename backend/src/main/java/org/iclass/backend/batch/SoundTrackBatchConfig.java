@@ -32,7 +32,7 @@ public class SoundTrackBatchConfig {
 
     private final MovieInfoRepository movieInfoRepository;
     private final SoundTrackRepository soundTrackRepository;
-    private final String YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY";
+    private final String YOUTUBE_API_KEY = "AIzaSyD1rmIqvjUmHJ7mh1hvYPpOsFe0DxN1vUg";
 
     public SoundTrackBatchConfig(MovieInfoRepository movieInfoRepository,
                                  SoundTrackRepository soundTrackRepository) {
