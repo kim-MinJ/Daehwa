@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.iclass.backend.dto.MovieInfoDto;
+import org.iclass.backend.entity.MovieCastEntity;
 import org.iclass.backend.entity.MovieCrewEntity;
 import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.repository.MovieCastRepository;

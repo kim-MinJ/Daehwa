@@ -74,3 +74,4 @@ WHERE movie_idx IN (
     )
     WHERE rn > 1
 );
+
