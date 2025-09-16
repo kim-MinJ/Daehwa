@@ -326,7 +326,7 @@ export default function MyPage({}: MyPageProps) {
     fill="white"   // 북마크 탭은 항상 찜되어 있으므로 흰색
     stroke="currentColor"
   />
-  찜안해
+  찜안해!
 </Button>
           </CardContent>
         </Card>

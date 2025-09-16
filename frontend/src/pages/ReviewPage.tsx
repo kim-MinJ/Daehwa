@@ -1,4 +1,4 @@
-import { Star, Heart, MessageCircle, MoreHorizontal, ThumbsUp, Edit3 } from 'lucide-react';
+import { Star, Edit3, MoreHorizontal } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Textarea } from '../components/ui/textarea';
@@ -34,6 +34,8 @@ export interface Review {
 
   movieTitle: string;
   moviePoster: string;
+  directors?: string[];
+  genres?: string[];
 }
 
 interface Comment {
@@ -43,42 +45,53 @@ interface Comment {
   createdAt: string;
 }
 
-const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, isOpen: boolean, onToggle: () => void }) => {
+const CommentAccordion = ({
+  reviewId,
+  isOpen,
+  onToggle,
+}: {
+  reviewId: number;
+  isOpen: boolean;
+  onToggle: () => void;
+}) => {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState("");
+  const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      axios.get(`/api/review/${reviewId}/comments`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      })
-      .then(res => setComments(res.data))
-      .catch(console.error);
+      axios
+        .get(`/api/review/${reviewId}/comments`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        })
+        .then((res) => setComments(res.data))
+        .catch(console.error);
     }
   }, [isOpen, reviewId]);
 
   const handleSubmitComment = () => {
     if (!newComment.trim()) return;
-    axios.post(`/api/review/${reviewId}/comments`, {
-      content: newComment,
-      createdAt: new Date().toISOString()
-    }, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    })
-    .then(res => {
-      setComments(prev => [res.data, ...prev]);
-      setNewComment("");
-    })
-    .catch(console.error);
+    axios
+      .post(
+        `/api/review/${reviewId}/comments`,
+        {
+          content: newComment,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      )
+      .then((res) => {
+        setComments((prev) => [res.data, ...prev]);
+        setNewComment('');
+      })
+      .catch(console.error);
   };
 
   return (
     <div className="mt-2 border-t border-gray-300 pt-3">
-      <button
-        onClick={onToggle}
-        className="font-medium hover:underline mb-2"
-      >
-        {isOpen ? "댓글 접기 ▲" : "댓글 보기 ▼"}
+      <button onClick={onToggle} className="font-medium hover:underline mb-2">
+        {isOpen ? '댓글 접기 ▲' : '댓글 보기 ▼'}
       </button>
 
       {isOpen && (
@@ -91,13 +104,16 @@ const CommentAccordion = ({ reviewId, isOpen, onToggle }: { reviewId: number, is
               placeholder="댓글을 작성하세요."
               className="flex-1 resize-none bg-gray-50 border border-gray-300 rounded-md p-2"
             />
-            <Button onClick={handleSubmitComment} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button
+              onClick={handleSubmitComment}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               등록
             </Button>
           </div>
 
           <div className="space-y-2">
-            {comments.map(c => (
+            {comments.map((c) => (
               <div key={c.commentIdx} className="bg-gray-100 p-2 rounded-md">
                 <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
                   <span>{c.userId}</span>
@@ -124,111 +140,129 @@ export default function ReviewPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isBlind, setIsBlind] = useState(false);
   const [userRating, setUserRating] = useState(0);
-  const [newReview, setNewReview] = useState("");
-  const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null); 
+  const [newReview, setNewReview] = useState('');
+  const [selectedReviewId, setSelectedReviewId] = useState<number | null>(null);
   const [showSpoilers, setShowSpoilers] = useState<boolean>(false);
   const [directors, setDirectors] = useState<string[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
 
   const STAR_COUNT = 10;
 
-  useEffect(() => {
-    axios.get("/api/reviews", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    })
-    .then(async res => {
-      const reviewsData = await Promise.all(
-        res.data.map(async (review: Review) => {
-          try {
-            const movieRes = await axios.get(`/api/movie/${review.movieIdx}`);
-            return {
-              ...review,
-              movieTitle: movieRes.data.title,
-              moviePoster: movieRes.data.posterPath,
-            };
-          } catch (err) {
-            console.error("영화 정보 불러오기 실패:", err);
-            return review;
-          }
-        })
-      );
-      setReviews(reviewsData);
-    })
-    .catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    axios.get<Movie>("/api/movie/random", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    })
-      .then(res => {
-        setTodayMovie(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("랜덤 영화 가져오기 실패", err);
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (!todayMovie) return;
-
-    // 감독
-    // 감독
-axios.get<string[]>(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-})
-.then(res => setDirectors(res.data))
-.catch(console.error);
-
-// 장르
-axios.get<string[]>(`/api/movies/${todayMovie.movieIdx}/genres`, {
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-})
-.then(res => setGenres(res.data))
-.catch(console.error);
-
-  }, [todayMovie]);
-
   const renderStars = (rating: number, size: 'sm' | 'lg' = 'sm') => {
     return Array.from({ length: STAR_COUNT }, (_, i) => (
-      <Star 
+      <Star
         key={i}
-        className={`${size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+        className={`${size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} ${
+          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+        }`}
       />
     ));
   };
 
   const renderRatingStars = (rating: number, onRatingChange?: (rating: number) => void) => {
     return Array.from({ length: STAR_COUNT }, (_, i) => (
-      <Star 
+      <Star
         key={i}
-        className={`h-6 w-6 cursor-pointer transition-colors ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300 hover:text-yellow-200'}`}
+        className={`h-6 w-6 cursor-pointer transition-colors ${
+          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300 hover:text-yellow-200'
+        }`}
         onClick={() => onRatingChange && onRatingChange(i + 1)}
       />
     ));
   };
 
+  useEffect(() => {
+    axios
+      .get('/api/reviews', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      })
+      .then(async (res) => {
+        const reviewsData = await Promise.all(
+          res.data.map(async (review: Review) => {
+            try {
+              const movieRes = await axios.get(`/api/movie/${review.movieIdx}`);
+              const directorsRes = await axios.get(
+                `/api/movies/${movieRes.data.tmdbMovieId}/directors`
+              );
+              const genresRes = await axios.get(`/api/movies/${review.movieIdx}/genres`);
+              return {
+                ...review,
+                movieTitle: movieRes.data.title,
+                moviePoster: movieRes.data.posterPath,
+                directors: directorsRes.data,
+                genres: genresRes.data,
+              };
+            } catch (err) {
+              console.error('영화 정보 불러오기 실패:', err);
+              return review;
+            }
+          })
+        );
+        setReviews(reviewsData);
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    axios
+      .get<Movie>('/api/movie/random', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      })
+      .then((res) => {
+        setTodayMovie(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('랜덤 영화 가져오기 실패', err);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+  if (!todayMovie) return;
+
+  // 감독 정보
+  axios.get<string[]>(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+  })
+  .then(res => {
+    // 중복 제거
+    const uniqueDirectors = Array.from(new Set(res.data));
+    setDirectors(uniqueDirectors);
+  })
+  .catch(console.error);
+
+  // 장르 정보
+  axios.get<string[]>(`/api/movies/${todayMovie.movieIdx}/genres`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+  })
+  .then(res => setGenres(res.data || []))
+  .catch(console.error);
+
+}, [todayMovie]);
+
   const handleSubmitReview = () => {
     if (!todayMovie) return;
-    axios.post("/api/reviews", {
-      movieIdx: todayMovie.movieIdx,
-      rating: userRating,
-      content: newReview,
-      isBlind: isBlind ? 1 : 0,
-      createdAt: new Date().toISOString(),
-    }, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    })
-    .then(res => {
-      alert("리뷰 등록 완료!");
-      setNewReview('');
-      setUserRating(0);
-      setIsBlind(false);
-      setReviews(prev => [res.data, ...prev]);
-    })
-    .catch(console.error);
+    axios
+      .post(
+        '/api/reviews',
+        {
+          movieIdx: todayMovie.movieIdx,
+          rating: userRating,
+          content: newReview,
+          isBlind: isBlind ? 1 : 0,
+          createdAt: new Date().toISOString(),
+        },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      )
+      .then((res) => {
+        alert('리뷰 등록 완료!');
+        setNewReview('');
+        setUserRating(0);
+        setIsBlind(false);
+        setReviews((prev) => [res.data, ...prev]);
+      })
+      .catch(console.error);
   };
 
   return (
@@ -239,119 +273,117 @@ axios.get<string[]>(`/api/movies/${todayMovie.movieIdx}/genres`, {
             <Edit3 className="h-6 w-6 text-red-600" />
             <h1 className="text-2xl font-bold text-black">영화 리뷰</h1>
           </div>
-          <p className="text-black/70 mt-2">영화에 대한 솔직한 리뷰를 작성하고 다른 사용자들의 후기도 확인해보세요</p>
+          <p className="text-black/70 mt-2">
+            영화에 대한 솔직한 리뷰를 작성하고 다른 사용자들의 후기도 확인해보세요
+          </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-8 lg:px-16 py-8">
         {/* 오늘의 영화 */}
         {todayMovie && (
-        <div className="bg-gray-100/50 backdrop-blur-sm rounded-2xl p-8 mb-8 shadow-lg border border-gray-200/30">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Badge className="bg-red-600 text-white hover:bg-red-600 text-sm px-4 py-2">
-                오늘의 영화
-              </Badge>
-              <h2 className="text-2xl font-bold text-black">오늘의 영화에 리뷰를 남겨주세요!</h2>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="flex gap-6">
-              <div className="flex-shrink-0">
-                <div 
-                  className="w-36 h-52 rounded-lg overflow-hidden shadow-lg cursor-pointer group"
-                  onClick={() => navigate(`/movies/${todayMovie.movieIdx}`)}
-                >
-                  <ImageWithFallback
-                    src={`https://image.tmdb.org/t/p/w500/${todayMovie.posterPath}`}
-                    alt={todayMovie.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+          <div className="bg-gray-100/50 backdrop-blur-sm rounded-2xl p-8 mb-8 shadow-lg border border-gray-200/30">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Badge className="bg-red-600 text-white hover:bg-red-600 text-sm px-4 py-2">
+                  오늘의 영화
+                </Badge>
+                <h2 className="text-2xl font-bold text-black">
+                  오늘의 영화에 리뷰를 남겨주세요!
+                </h2>
               </div>
+            </div>
 
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold text-black mb-3">{todayMovie.title}</h3>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 w-12">감독</span>
-                    <span className="text-black">{directors.join(", ") || "정보 없음"}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="flex gap-6">
+                <div className="flex-shrink-0">
+                  <div
+                    className="w-36 h-52 rounded-lg overflow-hidden shadow-lg cursor-pointer group"
+                    onClick={() => navigate(`/movies/${todayMovie.movieIdx}`)}
+                  >
+                    <ImageWithFallback
+                      src={`https://image.tmdb.org/t/p/w500/${todayMovie.posterPath}`}
+                      alt={todayMovie.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
-                  <div className="flex items-center gap-2">
-  <span className="text-sm text-gray-600 w-12">장르</span>
-  {genres.length > 0 ? genres.map((g) => (
-    <Badge key={g} variant="outline" className="border-gray-400 text-black">{g}</Badge>
-  )) : <span className="text-black">정보 없음</span>}
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-black mb-3">{todayMovie.title}</h3>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2">
+  <span className="text-sm text-gray-600 w-12">감독</span>
+  <span className="text-black">{directors.join(", ") || "정보 없음"}</span>
 </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 w-12">개봉</span>
-                    <span className="text-black">{todayMovie.releaseDate?.slice(0, 4)}년</span>
-                  </div>
-                </div>
 
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex gap-1">
-                      {renderStars(Math.round(todayMovie.voteAverage), 'lg')}
+<div className="flex items-center gap-2">
+  <span className="text-sm text-gray-600 w-12">장르</span>
+  {genres.length > 0 
+    ? genres.map((g) => <Badge key={g} variant="outline" className="border-gray-400 text-black">{g}</Badge>) 
+    : <span className="text-black">정보 없음</span>
+  }
+</div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex gap-1">{renderStars(Math.round(todayMovie.voteAverage), 'lg')}</div>
+                      <span className="text-2xl font-bold text-black">{todayMovie.voteAverage}</span>
                     </div>
-                    <span className="text-2xl font-bold text-black">{todayMovie.voteAverage}</span>
+                    <p className="text-sm text-gray-600">오늘의 추천 영화 • 평균 평점</p>
                   </div>
-                  <p className="text-sm text-gray-600">
-                    오늘의 추천 영화 • 평균 평점
-                  </p>
-                </div>
 
-                <p className="text-gray-700 text-sm leading-relaxed mb-4">{todayMovie.overview}</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-4">{todayMovie.overview}</p>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <h3 className="text-xl font-bold text-black mb-6">오늘의 영화 리뷰 작성</h3>
-              <div className="space-y-6">
-                <div>
-                  <label className="block font-medium text-black mb-3">평점</label>
-                  <div className="flex gap-1">{renderRatingStars(userRating, setUserRating)}</div>
-                  {userRating > 0 && <p className="text-sm text-gray-600 mt-2">{userRating}점을 주셨네요!</p>}
+              <div>
+                <h3 className="text-xl font-bold text-black mb-6">오늘의 영화 리뷰 작성</h3>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block font-medium text-black mb-3">평점</label>
+                    <div className="flex gap-1">{renderRatingStars(userRating, setUserRating)}</div>
+                    {userRating > 0 && <p className="text-sm text-gray-600 mt-2">{userRating}점을 주셨네요!</p>}
+                  </div>
+
+                  <div>
+                    <label className="block font-medium text-black mb-3">내용</label>
+                    <Textarea
+                      placeholder="'솔직한 리뷰를 작성해주세요. 다른 분들에게 도움이 되는 후기를 남겨주시면 감사하겠습니다."
+                      value={newReview}
+                      onChange={(e) => setNewReview(e.target.value)}
+                      rows={8}
+                      className="resize-none bg-white border-gray-300 text-black placeholder:text-gray-500"
+                    />
+                    <p className="text-xs text-gray-600 mt-2">{newReview.length}/500자</p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="spoiler"
+                      checked={isBlind}
+                      onChange={(e) => setIsBlind(e.target.checked)}
+                      className="rounded border-gray-400 bg-white"
+                    />
+                    <label htmlFor="spoiler" className="text-sm text-gray-700">
+                      스포일러가 포함되어 있습니다
+                    </label>
+                  </div>
+
+                  <Button
+                    onClick={handleSubmitReview}
+                    disabled={!newReview.trim() || userRating === 0}
+                    className="w-full bg-red-600 hover:bg-red-700 py-3"
+                  >
+                    오늘의 영화 리뷰 등록하기
+                  </Button>
                 </div>
-
-                <div>
-                  <label className="block font-medium text-black mb-3">내용</label>
-                  <Textarea
-                    placeholder="'솔직한 리뷰를 작성해주세요. 다른 분들에게 도움이 되는 후기를 남겨주시면 감사하겠습니다."
-                    value={newReview}
-                    onChange={(e) => setNewReview(e.target.value)}
-                    rows={8}
-                    className="resize-none bg-white border-gray-300 text-black placeholder:text-gray-500"
-                  />
-                  <p className="text-xs text-gray-600 mt-2">{newReview.length}/500자</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <input 
-                    type="checkbox" 
-                    id="spoiler"
-                    checked={isBlind}
-                    onChange={(e) => setIsBlind(e.target.checked)}
-                    className="rounded border-gray-400 bg-white"
-                  />
-                  <label htmlFor="spoiler" className="text-sm text-gray-700">
-                    스포일러가 포함되어 있습니다
-                  </label>
-                </div>
-
-                <Button 
-                  onClick={handleSubmitReview}
-                  disabled={!newReview.trim() || userRating === 0}
-                  className="w-full bg-red-600 hover:bg-red-700 py-3"
-                >
-                  오늘의 영화 리뷰 등록하기
-                </Button>
               </div>
             </div>
           </div>
-        </div>
         )}
 
         {/* 리뷰 목록 */}
@@ -413,6 +445,26 @@ axios.get<string[]>(`/api/movies/${todayMovie.movieIdx}/genres`, {
                       </Badge>
                     </div>
 
+                    {/* 감독과 장르 */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 w-12">감독</span>
+                        <span className="text-black">{review.directors?.join(', ') || '정보 없음'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 w-12">장르</span>
+                        {review.genres?.length ? (
+                          review.genres.map((g) => (
+                            <Badge key={g} variant="outline" className="border-gray-400 text-black">
+                              {g}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-black">정보 없음</span>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="flex items-center gap-3 mb-4">
                       <div className="flex gap-1">{renderStars(review.rating)}</div>
                       <span className="text-yellow-500 font-medium">{review.rating}.0</span>
@@ -423,8 +475,8 @@ axios.get<string[]>(`/api/movies/${todayMovie.movieIdx}/genres`, {
                     <p
                       className={`text-gray-800 mb-4 leading-relaxed transition-all duration-300`}
                       style={{
-                        filter: review.isBlind && !showSpoilers ? "blur(4px)" : "none",
-                        userSelect: review.isBlind && !showSpoilers ? "none" : "auto",
+                        filter: review.isBlind && !showSpoilers ? 'blur(4px)' : 'none',
+                        userSelect: review.isBlind && !showSpoilers ? 'none' : 'auto',
                       }}
                     >
                       {review.content}
