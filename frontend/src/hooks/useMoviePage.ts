@@ -27,7 +27,6 @@ export type MovieDetail = {
   id?: number;
   title?: string;
   overview?: string;
-  runtime?: number;
   poster_path?: string;
   release_date?: string;
   vote_average?: number;
@@ -80,7 +79,6 @@ const mapMovie = (m: any): MovieDetail => ({
   id: m?.movieIdx ?? m?.id,
   title: m?.title,
   overview: m?.overview ?? m?.description ?? "",
-  runtime: m?.runtime ?? 0,
   poster_path: toPath(m?.posterPath ?? m?.posterUrl ?? m?.poster_path),
   release_date: m?.releaseDate ?? m?.release_date ?? "",
   vote_average: typeof m?.voteAverage === "number" ? m.voteAverage : (m?.vote_average ?? 0),

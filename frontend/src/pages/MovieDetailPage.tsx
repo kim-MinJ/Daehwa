@@ -67,7 +67,6 @@ export default function MovieDetailPage() {
       genre: genres,
       director,
       cast: castTop.map((c) => c.name),
-      runtime: movie?.runtime ? `${movie.runtime}분` : "정보 없음",
       description: movie?.overview || "줄거리 정보가 없습니다.",
       posterUrl: img500(movie?.poster_path),
       userRating: userRating5,
@@ -98,7 +97,6 @@ export default function MovieDetailPage() {
       year: m?.release_date ? Number(String(m.release_date).slice(0, 4)) : 0,
       genre: Array.isArray(m?.genres) && m.genres[0]?.name ? m.genres[0].name : "기타",
       rating: Number(m?.vote_average ?? 0),
-      runtime: Number(m?.runtime ?? 0),
       description: m?.overview ?? "",
     }));
   }, [similar]);

@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import { Search, Filter, Grid, List, Star, Calendar, Film } from 'lucide-react';
+import { Search, Grid, List, Star, Calendar, Film } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { Select } from './ui/select';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import Header from './Header';
-import Footer from './Footer';
 
 interface Movie {
   id: string;
@@ -16,7 +13,6 @@ interface Movie {
   year: number;
   genre: string;
   rating: number;
-  runtime: number;
   description?: string;
   rank?: number;
 }
@@ -30,25 +26,41 @@ interface MovieListPageProps {
   onNavigation: (page: Page) => void;
 }
 
-export default function MovieListPage({ movies, onMovieClick, onBack, onNavigation }: MovieListPageProps) {
+export default function MovieListPage({
+  movies,
+  onMovieClick,
+  onBack,
+  onNavigation,
+}: MovieListPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('전체');
   const [sortBy, setSortBy] = useState('latest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const genres = ['전체', '액션', '드라마', '코미디', '스릴러', '로맨스', '호러', 'SF', '범죄'];
+  const genres = [
+    '전체',
+    '액션',
+    '드라마',
+    '코미디',
+    '스릴러',
+    '로맨스',
+    '호러',
+    'SF',
+    '범죄',
+  ];
   const sortOptions = [
     { value: 'latest', label: '최신순' },
     { value: 'rating', label: '평점순' },
     { value: 'title', label: '제목순' },
-    { value: 'year', label: '연도순' }
+    { value: 'year', label: '연도순' },
   ];
 
   // 필터링 및 정렬
   const filteredMovies = movies
-    .filter(movie => {
-      const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           movie.director.toLowerCase().includes(searchQuery.toLowerCase());
+    .filter((movie) => {
+      const matchesSearch =
+        movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        movie.director.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesGenre = selectedGenre === '전체' || movie.genre === selectedGenre;
       return matchesSearch && matchesGenre;
     })
@@ -67,9 +79,6 @@ export default function MovieListPage({ movies, onMovieClick, onBack, onNavigati
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 공통 헤더 */}
-      <Header currentPage="movies" onNavigation={onNavigation} />
-      
       {/* 페이지 제목 */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -81,7 +90,7 @@ export default function MovieListPage({ movies, onMovieClick, onBack, onNavigati
                 <p className="text-gray-600 mt-1">다양한 장르의 영화를 탐색해보세요</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -143,7 +152,7 @@ export default function MovieListPage({ movies, onMovieClick, onBack, onNavigati
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                {sortOptions.map(option => (
+                {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -190,7 +199,9 @@ export default function MovieListPage({ movies, onMovieClick, onBack, onNavigati
                     <span className="text-gray-500 text-xs">{movie.year}년</span>
                     <div className="flex items-center gap-1">
                       <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                      <span className="text-yellow-600 text-xs font-medium">{movie.rating.toFixed(1)}</span>
+                      <span className="text-yellow-600 text-xs font-medium">
+                        {movie.rating.toFixed(1)}
+                      </span>
                     </div>
                   </div>
                   <Badge variant="outline" className="text-xs px-2 py-1">
@@ -227,18 +238,17 @@ export default function MovieListPage({ movies, onMovieClick, onBack, onNavigati
                         <span className="font-semibold">{movie.rating.toFixed(1)}</span>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4 mb-3">
                       <div className="flex items-center gap-1 text-sm text-gray-500">
                         <Calendar className="h-4 w-4" />
                         {movie.year}년
                       </div>
-                      <span className="text-sm text-gray-500">{movie.runtime}분</span>
                       <Badge variant="outline" className="text-xs">
                         {movie.genre}
                       </Badge>
                     </div>
-                    
+
                     <p className="text-gray-700 text-sm line-clamp-2">
                       {movie.description || '이 영화에 대한 상세한 정보를 확인해보세요.'}
                     </p>
@@ -259,9 +269,6 @@ export default function MovieListPage({ movies, onMovieClick, onBack, onNavigati
           </div>
         )}
       </div>
-
-      {/* 공통 푸터 */}
-      <Footer />
     </div>
   );
 }

@@ -11,7 +11,6 @@ interface MovieDetailCardProps {
   genre?: string[];
   director?: string;
   cast?: string[];
-  runtime?: string;
   description?: string;
   posterUrl?: string;
   userRating?: number;
@@ -24,7 +23,6 @@ export function   MovieDetailCard({
   genre = ["액션", "드라마", "스릴러"],
   director = "김감독",
   cast = ["배우1", "배우2", "배우3"],
-  runtime = "120분",
   description = "이곳에는 선택된 영화의 상세한 줄거리와 정보가 표시됩니다. 영화의 배경, 주요 갈등, 캐릭터들의 관계 등이 자세히 설명됩니다.",
   posterUrl = "https://images.unsplash.com/photo-1618410321132-9f4cebb2f7f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3ZpZSUyMHBvc3RlciUyMGNpbmVtYSUyMGZpbG18ZW58MXx8fHwxNzU2NDU2NjA2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   userRating = 4.5
@@ -49,10 +47,6 @@ export function   MovieDetailCard({
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
                 <span>{year}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>{runtime}</span>
               </div>
               <Badge variant="outline">{rating}</Badge>
             </div>

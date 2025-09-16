@@ -22,7 +22,6 @@ interface Movie {
   year: string;
   genre: string;
   rating: number;
-  runtime: number;
   description?: string;
   rank?: number;
   voteCount?: number;
@@ -97,7 +96,6 @@ export default function RankingPage({
           year: m.release_date ? m.release_date.slice(0, 4) : "N/A",
           genre: m.genre_ids.map((id: number) => genreMap[id] || "기타").join(", "),
           rating: m.vote_average,
-          runtime: 0,
           description: m.overview,
           director: "알 수 없음",
           rank: idx + 1,

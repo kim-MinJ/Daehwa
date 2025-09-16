@@ -12,7 +12,6 @@ interface Movie {
   year: number;
   genre: string;
   rating: number;
-  runtime: number;
   description?: string;
   rank?: number;
 }
@@ -168,10 +167,6 @@ export default function MovieDetailPage({ movie, onBack, onNavigation }: MovieDe
                       <Star className="h-5 w-5 text-yellow-400 fill-current" />
                       <span className="font-semibold">{movie.rating.toFixed(1)}</span>
                       <span className="text-gray-500">(3,847명 평가)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-gray-400" />
-                      <span>{movie.runtime}분</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-5 w-5 text-gray-400" />

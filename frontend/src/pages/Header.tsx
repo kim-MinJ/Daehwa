@@ -74,7 +74,7 @@ export default function Header() {
                 location.pathname === '/ranking' ? 'text-red-500' : 'text-white/80 hover:text-white'
               }`}
             >
-              랭킹
+              랭킹/투표
             </button>
             <button
               onClick={() => navigate('/reviews')}

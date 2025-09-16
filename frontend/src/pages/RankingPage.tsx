@@ -14,7 +14,6 @@
     year: string;
     genre: string;
     rating: number;
-    runtime: number;
     description: string;
     director: string;
     rank: number;
@@ -79,7 +78,6 @@
             year: m.year,
             genre: m.genre || "",
             rating: m.rating,
-            runtime: m.runtime,
             description: m.description,
             director: m.director || "알 수 없음",
             rank: idx + 1,
@@ -106,7 +104,7 @@
           <div className="max-w-7xl mx-auto px-8 lg:px-16 py-6">
             <div className="flex items-center gap-3">
               <TrendingUp className="h-6 w-6 text-red-600" />
-              <h1 className="text-2xl font-bold text-black">영화 랭킹</h1>
+              <h1 className="text-2xl font-bold text-black">영화 랭킹/투표</h1>
             </div>
             <p className="text-black/70 mt-2">실시간 업데이트되는 영화 순위를 확인하세요</p>
           </div>

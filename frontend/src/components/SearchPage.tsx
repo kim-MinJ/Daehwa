@@ -18,7 +18,6 @@ interface Movie {
   year: number;
   genre: string;
   rating: number;
-  runtime: number;
   description?: string;
   rank?: number;
 }
@@ -396,7 +395,7 @@ export default function SearchPage({ movies, onMovieClick, onBack, onNavigation,
                           {movie.title}
                         </h3>
                         <p className="text-gray-600 mb-2">감독: {movie.director}</p>
-                        <p className="text-gray-500 text-sm mb-3">{movie.year}년 • {movie.runtime}분 • 평점 {movie.rating.toFixed(1)}</p>
+                        <p className="text-gray-500 text-sm mb-3">{movie.year}년 • 평점 {movie.rating.toFixed(1)}</p>
                         <p className="text-gray-700 text-sm mb-4 line-clamp-2">
                           {movie.description}
                         </p>
