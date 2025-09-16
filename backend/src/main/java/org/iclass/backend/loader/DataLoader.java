@@ -21,8 +21,10 @@ public class DataLoader implements CommandLineRunner {
     private final GenresSave genresSave;
     private final MovieCreditSave movieCreditSave;
     private final MovieVideoSave movieVideoSave;
-    private final JobLauncher jobLauncher;
-    private final Job saveSoundTrackJob;
+
+    // YouTube 에서 동영상 가져오기(실패)
+    // private final JobLauncher jobLauncher;
+    // private final Job saveSoundTrackJob;
 
     @Override
     public void run(String... args) throws Exception {
@@ -31,12 +33,12 @@ public class DataLoader implements CommandLineRunner {
         // movieCreditSave.fetchAndSaveAllCredits(); // MovieCast, MovieCrew 저장
         // movieVideoSave.fetchAndSaveAllVideos(); // Video 저장
         
-        // SoundTrack 저장
-        JobParameters jobParameters = new JobParametersBuilder()
-                .addLong("time", System.currentTimeMillis())
-                .toJobParameters();
-        // Spring Batch Job 실행
-        jobLauncher.run(saveSoundTrackJob, jobParameters);
+        // // SoundTrack 저장(실패)
+        // JobParameters jobParameters = new JobParametersBuilder()
+        //         .addLong("time", System.currentTimeMillis())
+        //         .toJobParameters();
+        // // Spring Batch Job 실행
+        // jobLauncher.run(saveSoundTrackJob, jobParameters);
         
         System.out.println("DataLoader.run() 종료됨");
 
