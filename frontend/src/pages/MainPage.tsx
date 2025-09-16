@@ -315,13 +315,14 @@ function MainPage() {
           <div className="absolute top-2 right-2">
             <Badge className="bg-blue-600 text-white text-xs">NEW</Badge>
           </div>
-          <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-1 rounded-md">
-            <div className="font-semibold line-clamp-1">{movie.title}</div>
-            <div className="flex items-center gap-1">
+          {/* 반투명 검은 박스 */}
+          <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
+            <div className="font-semibold text-sm line-clamp-1">{movie.title}</div>
+            <div className="flex items-center gap-1 text-xs mt-1">
               <Star className="h-3 w-3 text-yellow-400 fill-current" />
               <span>{movie.rating.toFixed(1)}</span>
             </div>
-            <div className="text-white text-xs mt-1">
+            <div className="mt-1 text-xs">
               {movie.year}년<br />
               {movie.genres?.join(", ") ?? "기타"}
             </div>
@@ -332,7 +333,7 @@ function MainPage() {
   </div>
 </div>
 
-              {/* 이번주 인기 영화 */}
+             {/* 이번주 인기 영화 */}
 <div>
   <div className="flex items-center justify-between mb-6">
     <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
@@ -349,13 +350,13 @@ function MainPage() {
           <div className="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
             {index + 1}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
-            <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">{movie.title}</h4>
-            <div className="flex items-center gap-1 text-white text-xs mb-1">
+          <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
+            <h4 className="font-semibold text-sm line-clamp-2">{movie.title}</h4>
+            <div className="flex items-center gap-1 mt-1">
               <Star className="h-3 w-3 text-yellow-400 fill-current" />
               <span>{movie.rating.toFixed(1)}</span>
             </div>
-            <div className="text-white text-xs">
+            <div className="mt-1 text-xs">
               {movie.year}년<br />
               {movie.genres?.join(", ") ?? "기타"}
             </div>
@@ -366,8 +367,7 @@ function MainPage() {
   </div>
 </div>
 
-
-              {/* 추억의 영화 */}
+             {/* 추억의 영화 */}
 <div>
   <div className="flex items-center justify-between mb-6">
     <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
@@ -383,13 +383,13 @@ function MainPage() {
       <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
         <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
           <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
-            <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">{movie.title}</h4>
-            <div className="flex items-center gap-1 text-white text-xs mb-1">
+          <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
+            <h4 className="font-semibold text-sm line-clamp-2">{movie.title}</h4>
+            <div className="flex items-center gap-1 mt-1">
               <Star className="h-3 w-3 text-yellow-400 fill-current" />
               <span>{movie.rating.toFixed(1)}</span>
             </div>
-            <div className="text-white text-xs">
+            <div className="mt-1 text-xs">
               {movie.year}년<br />
               {movie.genres?.join(", ") ?? "기타"}
             </div>
