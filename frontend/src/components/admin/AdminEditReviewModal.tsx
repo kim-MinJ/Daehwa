@@ -30,11 +30,12 @@ export default function AdminEditReviewModal({
   };
 
   const handleDelete = async () => {
-    if (editingReview && confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
-      await deleteReview(editingReview.reviewIdx);
-      setEditingReview(null);
-    }
-  };
+  if (editingReview && confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
+    await deleteReview(editingReview.reviewIdx);
+    setEditingReview(null);
+    alert("리뷰를 삭제했습니다."); // 삭제 성공 메시지
+  }
+};
 
   if (!editingReview) return null;
 

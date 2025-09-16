@@ -1,6 +1,7 @@
 package org.iclass.backend.service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.iclass.backend.dto.UsersDto;
 import org.iclass.backend.entity.UsersEntity;
@@ -19,23 +20,24 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
 
-  public UsersDto register(String userId, String username, String password) {
-    if (usersRepository.existsById(userId))
-      throw new RuntimeException("이미 존재하는 아이디입니다.");
+  public UsersDto registerUser(String userId, String username, String password) {
+    Optional<UsersEntity> existing = usersRepository.findById(userId);
 
-    UsersEntity entity = UsersEntity.builder()
+    // 기존 ID가 있고 status != 3이면 중복 처리
+    if (existing.isPresent() && existing.get().getStatus() != 3) {
+      throw new RuntimeException("이미 존재하는 ID입니다.");
+    }
+
+    UsersEntity newUser = UsersEntity.builder()
         .userId(userId)
         .username(username)
         .password(passwordEncoder.encode(password))
         .role("user")
-        .regDate(LocalDateTime.now())
         .status(0)
         .build();
 
-    usersRepository.save(entity);
-
-    String token = jwtTokenProvider.generateToken(entity.getUserId());
-    return UsersDto.of(entity, token);
+    usersRepository.save(newUser);
+    return UsersDto.of(newUser, null);
   }
 
   public UsersDto login(String userId, String password) {

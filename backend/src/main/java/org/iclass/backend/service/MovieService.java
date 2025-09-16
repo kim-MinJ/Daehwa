@@ -56,6 +56,9 @@ public class MovieService {
     if (genres.isEmpty())
       return Collections.emptyList();
 
+    // 앞쪽 2개 장르만 사용
+    List<String> keyGenres = genres.subList(0, Math.min(2, genres.size()));
+
     // 2️⃣ 인기 영화 상위 100개 가져오기
     Pageable top100 = PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "popularity"));
     List<MovieInfoEntity> popularMovies = movieInfoRepository.findAll(top100).getContent();
@@ -63,7 +66,7 @@ public class MovieService {
     // 3️⃣ 장르 겹치는 영화 필터 + 자신 제외
     List<MovieInfoEntity> similar = popularMovies.stream()
         .filter(m -> !m.getMovieIdx().equals(id)) // 자신 제외
-        .filter(m -> m.getGenres().stream().anyMatch(genres::contains)) // 장르 겹치는 것만
+        .filter(m -> m.getGenres().stream().anyMatch(keyGenres::contains)) // 앞쪽 2개 장르와 겹치는 것만
         .limit(20) // 최대 20개
         .toList();
 

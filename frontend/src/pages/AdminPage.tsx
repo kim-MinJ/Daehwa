@@ -1,7 +1,7 @@
 // src/pages/AdminPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, MessageSquare, MessageCircle } from "lucide-react";
+import { Users, MessageSquare, MessageCircle, CheckSquare } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { User, Review, Comment, Vote, Movie } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
@@ -327,7 +327,7 @@ useEffect(() => {
           </Card>
           {/* 총 투표 수 */}
   <Card onClick={() => setActiveTab("votes")} className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition">
-    <MessageCircle className="h-8 w-8 text-yellow-600 mb-2" />
+    <CheckSquare className="h-8 w-8 text-yellow-600 mb-2" />
     <h2 className="text-lg font-medium text-gray-700">총 투표 수</h2>
     <p className="text-3xl font-bold text-gray-900">{votes.length}</p>
   </Card>

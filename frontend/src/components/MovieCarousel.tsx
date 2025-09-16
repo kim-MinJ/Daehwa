@@ -19,13 +19,13 @@ export function MovieCarousel({ title, movies, onMovieClick, showMoreButton = tr
 
   const scroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return;
-    
+
     const scrollAmount = 320; // 카드 너비 + 간격
     const currentScroll = scrollRef.current.scrollLeft;
     const newScroll = direction === 'left' 
       ? currentScroll - scrollAmount 
       : currentScroll + scrollAmount;
-    
+
     scrollRef.current.scrollTo({
       left: newScroll,
       behavior: 'smooth'
@@ -34,7 +34,7 @@ export function MovieCarousel({ title, movies, onMovieClick, showMoreButton = tr
 
   const handleScroll = () => {
     if (!scrollRef.current) return;
-    
+
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
     setCanScrollLeft(scrollLeft > 0);
     setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
@@ -71,7 +71,7 @@ export function MovieCarousel({ title, movies, onMovieClick, showMoreButton = tr
             <ChevronLeft className="w-4 h-4" />
           </Button>
         )}
-        
+
         {canScrollRight && (
           <Button
             variant="outline"
@@ -105,7 +105,7 @@ export function MovieCarousel({ title, movies, onMovieClick, showMoreButton = tr
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover/card:bg-black/20 transition-colors" />
                 </div>
-                
+
                 {/* 평점 배지 */}
                 <div className="absolute top-2 right-2">
                   <Badge variant={movie.rating >= 8 ? "default" : "secondary"} className="bg-black/70 text-white text-xs">
@@ -116,22 +116,24 @@ export function MovieCarousel({ title, movies, onMovieClick, showMoreButton = tr
               </div>
 
               {/* 영화 정보 */}
-              <div className="space-y-1">
-                <h4 className="text-sm line-clamp-2 group-hover/card:text-blue-600 transition-colors">
-                  {movie.title}
-                </h4>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{movie.year}</span>
-                  <span>•</span>
-                  <span>{movie.genre}</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                  <span>{movie.rating}</span>
-                  <span>•</span>
-                  <span>리뷰 {Math.floor(Math.random() * 100 + 10)}개</span>
-                </div>
-              </div>
+<div className="space-y-1">
+  <h4 className="text-sm line-clamp-2 group-hover/card:text-blue-600 transition-colors">
+    {movie.title}
+  </h4>
+  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+    <span>{movie.year}</span>
+    <span>•</span>
+    <span>
+      {Array.isArray(movie.genre)
+        ? movie.genre.slice(0, 2).join(" / ") + (movie.genre.length > 2 ? " …" : "")
+        : movie.genre}
+    </span>
+  </div>
+  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+    <span>{movie.rating}</span>
+  </div>
+</div>
             </div>
           ))}
         </div>
