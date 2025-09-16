@@ -1,5 +1,6 @@
 package org.iclass.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -76,9 +78,19 @@ public class ReviewService {
   }
 
   // 🔹 리뷰 삭제
-  public void deleteReview(Long reviewIdx) {
+  @Transactional
+  public void deleteReview(Long reviewIdx, String userId) {
     ReviewEntity review = reviewRepository.findById(reviewIdx)
-        .orElseThrow(() -> new RuntimeException("Review not found"));
+        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+
+    UsersEntity user = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+    // 본인 or 관리자만 삭제 가능
+    if (!review.getUser().getUserId().equals(userId) && !"admin".equalsIgnoreCase(user.getRole())) {
+      throw new RuntimeException("본인 또는 관리자만 리뷰를 삭제할 수 있습니다.");
+    }
+
     reviewRepository.delete(review);
   }
 
@@ -87,6 +99,28 @@ public class ReviewService {
     ReviewEntity entity = reviewRepository.findByReviewIdx(reviewIdx)
         .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
     return ReviewDto.of(entity);
+  }
+
+  // 리뷰 수정
+  @Transactional
+  public ReviewDto updateReview(Long reviewIdx, ReviewDto reviewDto, String userId) {
+    ReviewEntity review = reviewRepository.findById(reviewIdx)
+        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+
+    UsersEntity user = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+    // 본인 or 관리자만 수정 가능
+    if (!review.getUser().getUserId().equals(userId) && !"admin".equalsIgnoreCase(user.getRole())) {
+      throw new RuntimeException("본인 또는 관리자만 리뷰를 수정할 수 있습니다.");
+    }
+
+    review.setContent(reviewDto.getContent());
+    review.setRating(reviewDto.getRating());
+    review.setUpdateAt(LocalDateTime.now());
+
+    ReviewEntity saved = reviewRepository.save(review);
+    return ReviewDto.of(saved);
   }
 
 }
