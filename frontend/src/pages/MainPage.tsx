@@ -321,9 +321,10 @@ function MainPage() {
             <div className="flex items-center gap-1 text-xs mt-1">
               <Star className="h-3 w-3 text-yellow-400 fill-current" />
               <span>{movie.rating.toFixed(1)}</span>
+              <span>•</span>
+                              <span>{movie.year}년</span>
             </div>
             <div className="mt-1 text-xs">
-              {movie.year}년<br />
               {movie.genres?.join(", ") ?? "기타"}
             </div>
           </div>
@@ -355,9 +356,10 @@ function MainPage() {
             <div className="flex items-center gap-1 mt-1">
               <Star className="h-3 w-3 text-yellow-400 fill-current" />
               <span>{movie.rating.toFixed(1)}</span>
+              <span>•</span>
+                              <span>{movie.year}년</span>
             </div>
             <div className="mt-1 text-xs">
-              {movie.year}년<br />
               {movie.genres?.join(", ") ?? "기타"}
             </div>
           </div>
@@ -388,9 +390,10 @@ function MainPage() {
             <div className="flex items-center gap-1 mt-1">
               <Star className="h-3 w-3 text-yellow-400 fill-current" />
               <span>{movie.rating.toFixed(1)}</span>
+              <span>•</span>
+                              <span>{movie.year}년</span>
             </div>
             <div className="mt-1 text-xs">
-              {movie.year}년<br />
               {movie.genres?.join(", ") ?? "기타"}
             </div>
           </div>

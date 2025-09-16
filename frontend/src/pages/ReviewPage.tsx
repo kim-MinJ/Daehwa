@@ -330,7 +330,9 @@ export default function ReviewPage() {
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex gap-1">{renderStars(Math.round(todayMovie.voteAverage), 'lg')}</div>
-                      <span className="text-2xl font-bold text-black">{todayMovie.voteAverage}</span>
+                      <span className="text-2xl font-bold text-black">
+  {todayMovie.voteAverage.toFixed(1)}
+</span>
                     </div>
                     <p className="text-sm text-gray-600">오늘의 추천 영화 • 평균 평점</p>
                   </div>
@@ -467,7 +469,9 @@ export default function ReviewPage() {
 
                     <div className="flex items-center gap-3 mb-4">
                       <div className="flex gap-1">{renderStars(review.rating)}</div>
-                      <span className="text-yellow-500 font-medium">{review.rating}.0</span>
+                      <span className="text-yellow-500 font-medium">
+  {review.rating.toFixed(1)}
+</span>
                       <span className="text-gray-500">•</span>
                       <span className="text-sm text-gray-600">{new Date(review.createdAt).toLocaleDateString()}</span>
                     </div>

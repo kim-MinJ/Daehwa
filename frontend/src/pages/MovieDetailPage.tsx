@@ -71,7 +71,7 @@
         token,
       };
     }, [movie, year, genres, castTop, director, token, movieId]);
-
+    
 const similarUi: UIMovie[] = useMemo(() => {
   const list = Array.isArray(similar) ? similar : [];
   return list.map((m: any) => {
@@ -87,8 +87,8 @@ const similarUi: UIMovie[] = useMemo(() => {
       title: m?.title ?? "",
       titleEn: m?.original_title ?? "",
       year: m?.release_date ? Number(m.release_date.slice(0, 4)) : 0,
-      genre: genreList.join(" / "),   // ✅ "장르 / 장르 / 장르" 로 변환
-      rating: Number(m?.vote_average ?? 0),
+      genre: genreList.join(" / "),
+      rating: parseFloat(Number(m?.vote_average ?? 0).toFixed(1)), // ✅ 소수점 한 자리
       poster: img500(m?.poster_path),
       director: m?.director ?? "정보 없음",
       cast: Array.isArray(m?.cast) ? m.cast.map((c: any) => c.name) : [],
