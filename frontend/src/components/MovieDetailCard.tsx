@@ -98,7 +98,7 @@ export function MovieDetailCard({
               <Badge variant="outline">{rating}</Badge>
             </div>
             <div className="flex items-center gap-2">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(10)].map((_, i) => (
                 <Star
                   key={i}
                   className={`w-5 h-5 ${
@@ -108,7 +108,7 @@ export function MovieDetailCard({
                   }`}
                 />
               ))}
-              <span className="ml-2">{userRating}/5.0</span>
+              <span className="ml-2">{userRating}/10.0</span>
             </div>
           </div>
           <div className="space-y-2">

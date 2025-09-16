@@ -2,17 +2,15 @@ package org.iclass.backend.service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
@@ -20,17 +18,24 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class MovieService {
+
   private final MovieInfoRepository movieInfoRepository;
 
-  // TMDB API 연동을 위한 정보 (MoviesService.java에서 가져옴)
+  // TMDB API 연동을 위한 정보 (사용하지 않아도 됨)
   private final String API_KEY = "302b783e860b19b6822ef0a445e7ae53";
 
+  /**
+   * DB ID 기준 단일 영화 조회
+   */
   public MovieInfoDto getMovie(Long id) {
     MovieInfoEntity entity = movieInfoRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found"));
     return MovieInfoDto.of(entity);
   }
 
+  /**
+   * TMDB ID 기준 단일 영화 조회
+   */
   public MovieInfoDto getMovieByTmdbId(Long tmdbId) {
     MovieInfoEntity entity = movieInfoRepository.findByTmdbMovieId(tmdbId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found"));
@@ -38,43 +43,31 @@ public class MovieService {
   }
 
   /**
-   * 비슷한 영화 목록을 가져오는 기능 (추가된 부분)
-   * 
-   * @param id 영화의 DB ID
-   * @return 비슷한 영화 DTO 목록
+   * 비슷한 영화 목록을 DB 기준으로 가져오기
+   * - 인기 영화 상위 100개 중 장르 겹치는 영화
+   * - 자신 영화 제외, 최대 20개 반환
    */
   public List<MovieInfoDto> findSimilar(Long id) {
-    // 1. DB에서 id로 영화를 찾아 TMDB ID를 얻습니다.
+    // 1️⃣ 영화 가져오기
     MovieInfoEntity movie = movieInfoRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found"));
-    Long tmdbId = movie.getTmdbMovieId();
 
-    // 2. TMDB API를 호출하여 비슷한 영화 목록을 가져옵니다.
-    RestTemplate restTemplate = new RestTemplate();
-    String apiUrl = String.format("https://api.themoviedb.org/3/movie/%d/similar?language=ko-KR&page=1&api_key=%s",
-        tmdbId, API_KEY);
+    List<String> genres = movie.getGenres(); // 장르 리스트
+    if (genres.isEmpty())
+      return Collections.emptyList();
 
-    try {
-      ResponseEntity<Map> response = restTemplate.getForEntity(apiUrl, Map.class);
-      Map<String, Object> body = response.getBody();
+    // 2️⃣ 인기 영화 상위 100개 가져오기
+    Pageable top100 = PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "popularity"));
+    List<MovieInfoEntity> popularMovies = movieInfoRepository.findAll(top100).getContent();
 
-      if (body != null && body.containsKey("results")) {
-        List<Map<String, Object>> results = (List<Map<String, Object>>) body.get("results");
+    // 3️⃣ 장르 겹치는 영화 필터 + 자신 제외
+    List<MovieInfoEntity> similar = popularMovies.stream()
+        .filter(m -> !m.getMovieIdx().equals(id)) // 자신 제외
+        .filter(m -> m.getGenres().stream().anyMatch(genres::contains)) // 장르 겹치는 것만
+        .limit(20) // 최대 20개
+        .toList();
 
-        // 3. 반환된 영화 목록을 우리 DB에 있는 영화와 매칭하여 DTO 리스트로 변환합니다.
-        return results.stream()
-            .map(movieData -> ((Number) movieData.get("id")).longValue()) // TMDB ID 추출
-            .map(movieInfoRepository::findByTmdbMovieId) // DB에서 해당 TMDB ID로 영화 검색
-            .filter(Optional::isPresent) // DB에 존재하는 영화만 필터링
-            .map(Optional::get)
-            .map(MovieInfoDto::of) // MovieDto로 변환
-            .collect(Collectors.toList());
-      }
-    } catch (Exception e) {
-      // API 호출 실패 시 로깅을 추가할 수 있습니다.
-      System.err.println("Error fetching similar movies: " + e.getMessage());
-    }
-
-    return Collections.emptyList(); // 결과가 없거나 오류 발생 시 빈 리스트 반환
+    // 4️⃣ DTO 변환 후 반환
+    return similar.stream().map(MovieInfoDto::of).toList();
   }
 }

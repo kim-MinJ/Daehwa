@@ -62,7 +62,7 @@ export default function MovieDetailPage() {
   // MovieDetailCard용 props
   const cardProps = useMemo(() => {
     const vote10 = Number(movie?.vote_average ?? 0);
-    const userRating5 = Math.max(0, Math.min(5, Math.round((vote10 / 2) * 10) / 10));
+    const userRating10 = Math.max(0, Math.min(10, Math.round(vote10  * 10) / 10));
     return {
       title: movie?.title ?? "",
       year: year ?? "정보 없음",
@@ -72,7 +72,7 @@ export default function MovieDetailPage() {
       cast: castTop.map((c) => c.name),
       description: movie?.overview || "줄거리 정보가 없습니다.",
       posterUrl: img500(movie?.poster_path),
-      userRating: userRating5,
+      userRating: userRating10,
       movieIdx: movie?.id ?? movieId, // 북마크 식별용
       token, // ✅ 필수 token 전달
     };
@@ -94,17 +94,23 @@ export default function MovieDetailPage() {
   }, [trailers]);
 
   const similarUi: UIMovie[] = useMemo(() => {
-    const list = Array.isArray(similar) ? similar : [];
-    return list.map((m: any) => ({
-      id: String(m?.id ?? m?.movieIdx ?? ""),
-      title: m?.title ?? "",
-      poster: img500(m?.poster_path),
-      year: m?.release_date ? Number(String(m.release_date).slice(0, 4)) : 0,
-      genre: Array.isArray(m?.genres) && m.genres[0]?.name ? m.genres[0].name : "기타",
-      rating: Number(m?.vote_average ?? 0),
-      description: m?.overview ?? "",
-    }));
-  }, [similar]);
+  const list = Array.isArray(similar) ? similar : [];
+  return list.map((m: any) => ({
+    id: String(m?.id ?? m?.movieIdx ?? ""),
+    title: m?.title ?? "",
+    titleEn: m?.original_title ?? "",
+    year: m?.release_date ? Number(m.release_date.slice(0, 4)) : 0,
+    genre: Array.isArray(m?.genres) ? m.genres.map((g: any) => g.name) : ["기타"],
+    rating: Number(m?.vote_average ?? 0),
+    poster: img500(m?.poster_path),
+    director: m?.director ?? "정보 없음",
+    cast: Array.isArray(m?.cast) ? m.cast.map((c: any) => c.name) : [],
+    plot: m?.overview ?? "",
+    duration: m?.runtime ?? 0,
+    country: m?.country ?? "정보 없음",
+    releaseDate: m?.release_date ?? "",
+  }));
+}, [similar]);
 
   const onSimilarClick = (m: UIMovie) => {
     if (m.id) navigate(`/movies/${m.id}`);
