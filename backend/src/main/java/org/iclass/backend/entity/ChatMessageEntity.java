@@ -20,7 +20,7 @@ public class ChatMessageEntity {
 
   private String role; // user / assistant / system
 
-  @Column(name = "CONTENT")
+  @Column(name = "CONTENT", length = 4000)
   private String content;
 
   private LocalDateTime createdAt;
