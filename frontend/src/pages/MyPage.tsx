@@ -460,9 +460,14 @@ export default function MyPage({}: MyPageProps) {
                   </div>
 
                   {/* 계정 삭제 버튼 */}
-                  <div className="flex justify-end mt-4">
-                    <Button variant="destructive" onClick={() => setIsDeleteModalOpen(true)}>계정 삭제</Button>
-                  </div>
+<div className="flex flex-col items-end mt-4">
+  <Button variant="destructive" onClick={() => setIsDeleteModalOpen(true)}>
+    계정 삭제
+  </Button>
+  <span className="text-sm text-red-300 mt-1">
+    계정 삭제 시 모든 리뷰, 댓글이 삭제됩니다.
+  </span>
+</div>
                 </CardContent>
               </Card>
             </TabsContent>

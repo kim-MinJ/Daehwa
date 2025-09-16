@@ -253,7 +253,7 @@ useEffect(() => {
   const deleteComment = async (commentIdx: number) => {
     if (!token) return;
     try {
-      await api.delete(`/comments/${commentIdx}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/review/comments/${commentIdx}`, { headers: { Authorization: `Bearer ${token}` } });
       setComments(prev => prev.filter(c => c.commentIdx !== commentIdx));
     } catch (err) {
       console.error(err);

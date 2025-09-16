@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.iclass.backend.dto.UsersDto;
+import org.iclass.backend.entity.ReviewEntity;
 import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.repository.BookmarkRepository;
 import org.iclass.backend.repository.CommentsRepository;
@@ -123,17 +124,22 @@ public class UsersService {
     UsersEntity user = usersRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
-    // 댓글 삭제
-    commentsRepository.deleteAllByUser(user);
+    // 사용자가 쓴 리뷰 가져오기
+    List<ReviewEntity> reviews = reviewRepository.findByUser(user);
 
-    // 리뷰 삭제
+    // 각 리뷰에 달린 댓글 삭제 (다른 사용자 댓글 포함)
+    for (ReviewEntity r : reviews) {
+      commentsRepository.deleteAllByReview(r);
+    }
+
+    // 유저가 쓴 리뷰 삭제
     reviewRepository.deleteAllByUser(user);
 
     // 북마크 삭제
     bookmarkRepository.deleteAllByUser(user);
 
-    // 마지막으로 사용자 삭제
-    usersRepository.delete(user);
+    // 사용자 삭제
+    usersRepository.deleteById(userId);
   }
 
   // 마이페이지 데이터

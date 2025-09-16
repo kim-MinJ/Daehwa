@@ -14,11 +14,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
+
+  private final CommentService commentService;
 
   private final ReviewRepository reviewRepository;
   private final UsersRepository usersRepository;
@@ -75,10 +78,16 @@ public class ReviewService {
     reviewRepository.save(review);
   }
 
-  // 🔹 리뷰 삭제
+  // 🔹 리뷰 삭제 + 리뷰 댓글 하드 삭제
+  @Transactional
   public void deleteReview(Long reviewIdx) {
     ReviewEntity review = reviewRepository.findById(reviewIdx)
         .orElseThrow(() -> new RuntimeException("Review not found"));
+
+    // 1️⃣ 해당 리뷰의 댓글 모두 삭제
+    commentService.hardDeleteCommentsByReview(reviewIdx);
+
+    // 2️⃣ 리뷰 삭제
     reviewRepository.delete(review);
   }
 

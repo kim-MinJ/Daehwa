@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import axios from "axios";
 import { Star, Info } from "lucide-react";
+import { HorizontalScrollList } from "@/components/HorizontalScrollList";
 
 // UI 타입
 type UiMovie = {
@@ -21,50 +22,23 @@ type UiMovie = {
 };
 
 const genreMap: Record<number, string> = {
-  28: "액션",
-  12: "모험",
-  16: "애니메이션",
-  35: "코미디",
-  80: "범죄",
-  99: "다큐멘터리",
-  18: "드라마",
-  10751: "가족",
-  14: "판타지",
-  36: "역사",
-  27: "공포",
-  10402: "음악",
-  9648: "미스터리",
-  10749: "로맨스",
-  878: "SF",
-  10770: "TV 영화",
-  53: "스릴러",
-  10752: "전쟁",
-  37: "서부",
+  28: "액션", 12: "모험", 16: "애니메이션", 35: "코미디",
+  80: "범죄", 99: "다큐멘터리", 18: "드라마", 10751: "가족",
+  14: "판타지", 36: "역사", 27: "공포", 10402: "음악",
+  9648: "미스터리", 10749: "로맨스", 878: "SF", 10770: "TV 영화",
+  53: "스릴러", 10752: "전쟁", 37: "서부",
 };
 
 const genreEnToKr: Record<string, string> = {
-  "Action": "액션",
-  "Adventure": "모험",
-  "Animation": "애니메이션",
-  "Comedy": "코미디",
-  "Crime": "범죄",
-  "Documentary": "다큐멘터리",
-  "Drama": "드라마",
-  "Family": "가족",
-  "Fantasy": "판타지",
-  "History": "역사",
-  "Horror": "공포",
-  "Music": "음악",
-  "Mystery": "미스터리",
-  "Romance": "로맨스",
-  "Science Fiction": "SF",
-  "TV Movie": "TV 영화",
-  "Thriller": "스릴러",
-  "War": "전쟁",
+  "Action": "액션", "Adventure": "모험", "Animation": "애니메이션",
+  "Comedy": "코미디", "Crime": "범죄", "Documentary": "다큐멘터리",
+  "Drama": "드라마", "Family": "가족", "Fantasy": "판타지",
+  "History": "역사", "Horror": "공포", "Music": "음악",
+  "Mystery": "미스터리", "Romance": "로맨스", "Science Fiction": "SF",
+  "TV Movie": "TV 영화", "Thriller": "스릴러", "War": "전쟁",
   "Western": "서부",
 };
 
-// 포스터 URL 처리
 const getPosterUrl = (path: string | undefined, size: string = "w500") => {
   if (!path || path.trim() === "") return "/fallback.png";
   return path.startsWith("http") ? path : `https://image.tmdb.org/t/p/${size}${path}`;
@@ -89,7 +63,7 @@ function MainPage() {
   const [popular40, setPopular40] = useState<UiMovie[]>([]);
   const [weeklyTop10, setWeeklyTop10] = useState<UiMovie[]>([]);
   const [personalizedTop3, setPersonalizedTop3] = useState<UiMovie[]>([]);
-  const [latest6, setLatest6] = useState<UiMovie[]>([]);
+  const [latest, setLatest] = useState<UiMovie[]>([]);
   const [reviewEvent3, setReviewEvent3] = useState<UiMovie[]>([]);
   const [oldPopular, setOldPopular] = useState<UiMovie[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -99,16 +73,13 @@ function MainPage() {
   // 인기 영화 & 최신 영화 & 맞춤 추천
   useEffect(() => {
     const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
-
     const fetchPopular = async () => {
-      setLoading(true);
-      setErr(null);
+      setLoading(true); setErr(null);
       try {
         const res = await axios.get("/api/movies/popular", {
           headers: authHeader,
           params: { count: 40 },
         });
-
         const movies: UiMovie[] = res.data.map((m: any) => ({
           id: m.movieIdx,
           title: m.title ?? "제목 없음",
@@ -123,45 +94,34 @@ function MainPage() {
           description: m.overview ?? "",
           releaseDate: m.releaseDate ?? null,
         }));
-
         setPopular40(movies);
         setWeeklyTop10(movies.slice(0, 10));
 
-        // 최신 영화 6개
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-        const latestMovies = movies.filter(
-          (m) => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo
-        );
-        const shuffledLatest = [...latestMovies].sort(() => Math.random() - 0.5);
-        setLatest6(shuffledLatest.slice(0, 6));
+        const latestMovies = movies.filter(m => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo);
+        setLatest([...latestMovies].sort(() => Math.random() - 0.5).slice(0, 10));
 
-        // 맞춤 추천
         const shuffled = [...movies].sort(() => Math.random() - 0.5);
         setPersonalizedTop3(shuffled.slice(0, 3));
         setReviewEvent3(shuffled.slice(3, 6));
       } catch (error) {
         console.error("영화 로딩 실패:", error);
         setErr("영화를 불러오는데 실패했습니다.");
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     };
-
     fetchPopular();
   }, [token]);
 
   // 추억의 영화
   useEffect(() => {
     const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
-
     const fetchOldPopular = async () => {
       try {
         const res = await axios.get("/api/movies/oldpopular", {
           headers: authHeader,
           params: { count: 40 },
         });
-
         const movies: UiMovie[] = res.data.map((m: any) => ({
           id: m.movieIdx,
           title: m.title ?? "제목 없음",
@@ -176,23 +136,18 @@ function MainPage() {
           description: m.overview ?? "",
           releaseDate: m.releaseDate ?? null,
         }));
-
-        const shuffled = [...movies].sort(() => Math.random() - 0.5);
-        setOldPopular(shuffled.slice(0, 10));
+        setOldPopular([...movies].sort(() => Math.random() - 0.5).slice(0, 10));
       } catch (error) {
         console.error("추억의 영화 로딩 실패:", error);
       }
     };
-
     fetchOldPopular();
   }, [token]);
 
-  // featured 선택 (랜덤)
   const featured = useMemo(() => {
-    if (weeklyTop10.length === 0) return personalizedTop3[0] ?? latest6[0];
-    const randomIndex = Math.floor(Math.random() * weeklyTop10.length);
-    return weeklyTop10[randomIndex];
-  }, [weeklyTop10, personalizedTop3, latest6]);
+    if (weeklyTop10.length === 0) return personalizedTop3[0] ?? latest[0];
+    return weeklyTop10[Math.floor(Math.random() * weeklyTop10.length)];
+  }, [weeklyTop10, personalizedTop3, latest]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -245,6 +200,7 @@ function MainPage() {
             )}
 
             <section className="max-w-7xl mx-auto px-8 lg:px-16 pt-[100px] space-y-[100px] pb-16">
+              
               {/* 맞춤 추천 TOP3 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
@@ -256,7 +212,7 @@ function MainPage() {
                   </h2>
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
-                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+                <HorizontalScrollList>
                   {personalizedTop3.map((movie, index) => (
                     <div
                       key={movie.id}
@@ -295,114 +251,104 @@ function MainPage() {
                       </div>
                     </div>
                   ))}
-                </div>
+                </HorizontalScrollList>
               </div>
 
-             {/* 최신 영화 */}
-<div>
-  <div className="flex items-center justify-between mb-6">
-    <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
-      최신 영화
-      <span className="text-sm text-gray-700 font-normal ml-3">이거? 지금 볼만한데? 도전? ㄱ?</span>
-    </h2>
-  </div>
-  <div className="w-full h-px bg-gray-200 mb-6" />
-  <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
-    {latest6.map((movie, index) => (
-      <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
-        <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-          <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
-          <div className="absolute top-2 right-2">
-            <Badge className="bg-blue-600 text-white text-xs">NEW</Badge>
-          </div>
-          {/* 반투명 검은 박스 */}
-          <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
-            <div className="font-semibold text-sm line-clamp-1">{movie.title}</div>
-            <div className="flex items-center gap-1 text-xs mt-1">
-              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-              <span>{movie.rating.toFixed(1)}</span>
-              <span>•</span>
-                              <span>{movie.year}년</span>
-            </div>
-            <div className="mt-1 text-xs">
-              {movie.genres?.join(", ") ?? "기타"}
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
+              {/* 최신 영화 */}
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    최신 영화
+                    <span className="text-sm text-gray-700 font-normal ml-3">이거? 지금 볼만한데? 도전? ㄱ?</span>
+                  </h2>
+                </div>
+                <div className="w-full h-px bg-gray-200 mb-6" />
+                <HorizontalScrollList>
+                  {latest.map((movie, index) => (
+                    <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
+                      <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
+                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-blue-600 text-white text-xs">NEW</Badge>
+                        </div>
+                        <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
+                          <div className="font-semibold text-sm line-clamp-1">{movie.title}</div>
+                          <div className="flex items-center gap-1 text-xs mt-1">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span>{movie.rating.toFixed(1)}</span>
+                            <span>•</span>
+                            <span>{movie.year}년</span>
+                          </div>
+                          <div className="mt-1 text-xs">{movie.genres?.join(", ") ?? "기타"}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </HorizontalScrollList>
+              </div>
 
-             {/* 이번주 인기 영화 */}
-<div>
-  <div className="flex items-center justify-between mb-6">
-    <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
-      이번주 인기 순위
-      <span className="text-sm text-gray-700 font-normal ml-3">지금 이거 놓치면 후회합니다?</span>
-    </h2>
-  </div>
-  <div className="w-full h-px bg-gray-200 mb-6" />
-  <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
-    {weeklyTop10.map((movie, index) => (
-      <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0 relative" onClick={() => onMovieClick(movie)}>
-        <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-          <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
-          <div className="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-            {index + 1}
-          </div>
-          <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
-            <h4 className="font-semibold text-sm line-clamp-2">{movie.title}</h4>
-            <div className="flex items-center gap-1 mt-1">
-              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-              <span>{movie.rating.toFixed(1)}</span>
-              <span>•</span>
-                              <span>{movie.year}년</span>
-            </div>
-            <div className="mt-1 text-xs">
-              {movie.genres?.join(", ") ?? "기타"}
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
+              {/* 이번주 인기 영화 */}
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    이번주 인기 순위
+                    <span className="text-sm text-gray-700 font-normal ml-3">지금 이거 놓치면 후회합니다?</span>
+                  </h2>
+                </div>
+                <div className="w-full h-px bg-gray-200 mb-6" />
+                <HorizontalScrollList>
+                  {weeklyTop10.map((movie, index) => (
+                    <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0 relative" onClick={() => onMovieClick(movie)}>
+                      <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
+                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
+                        <div className="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">{index+1}</div>
+                        <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
+                          <h4 className="font-semibold text-sm line-clamp-2">{movie.title}</h4>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span>{movie.rating.toFixed(1)}</span>
+                            <span>•</span>
+                            <span>{movie.year}년</span>
+                          </div>
+                          <div className="mt-1 text-xs">{movie.genres?.join(", ") ?? "기타"}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </HorizontalScrollList>
+              </div>
 
-             {/* 추억의 영화 */}
-<div>
-  <div className="flex items-center justify-between mb-6">
-    <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
-      추억의 영화
-      <span className="text-sm text-gray-700 font-normal ml-3">
-        옛날 그 감성, 그 기분 지금 다시 느껴보시는건 어떨까요?
-      </span>
-    </h2>
-  </div>
-  <div className="w-full h-px bg-gray-200 mb-6" />
-  <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
-    {oldPopular.map((movie, index) => (
-      <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
-        <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-          <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
-          <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
-            <h4 className="font-semibold text-sm line-clamp-2">{movie.title}</h4>
-            <div className="flex items-center gap-1 mt-1">
-              <Star className="h-3 w-3 text-yellow-400 fill-current" />
-              <span>{movie.rating.toFixed(1)}</span>
-              <span>•</span>
-                              <span>{movie.year}년</span>
-            </div>
-            <div className="mt-1 text-xs">
-              {movie.genres?.join(", ") ?? "기타"}
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
-
+              {/* 추억의 영화 */}
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+                    추억의 영화
+                    <span className="text-sm text-gray-700 font-normal ml-3">
+                      옛날 그 감성, 그 기분 지금 다시 느껴보시는건 어떨까요?
+                    </span>
+                  </h2>
+                </div>
+                <div className="w-full h-px bg-gray-200 mb-6" />
+                <HorizontalScrollList>
+                  {oldPopular.map((movie, index) => (
+                    <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
+                      <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
+                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
+                          <h4 className="font-semibold text-sm line-clamp-2">{movie.title}</h4>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                            <span>{movie.rating.toFixed(1)}</span>
+                            <span>•</span>
+                            <span>{movie.year}년</span>
+                          </div>
+                          <div className="mt-1 text-xs">{movie.genres?.join(", ") ?? "기타"}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </HorizontalScrollList>
+              </div>
 
             </section>
           </>

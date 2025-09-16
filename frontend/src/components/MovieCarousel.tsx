@@ -50,12 +50,6 @@ export function MovieCarousel({ title, movies, onMovieClick, showMoreButton = tr
             {movies.length}
           </Badge>
         </div>
-        {showMoreButton && (
-          <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-            더보기
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        )}
       </div>
 
       {/* 캐러셀 컨테이너 */}
