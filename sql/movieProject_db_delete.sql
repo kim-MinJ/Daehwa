@@ -18,7 +18,7 @@ BEGIN
         WHERE table_name IN (
             'ARTICLES','BOOKMARK','COMMENTS','MOVIE_INFO','REVIEW',
             'NOTICE','GENRES','MOVIE_CAST','MOVIE_CREW','MOVIE_GENRES',
-            'MOVIE_VS','MOVIE_VOTE','RANKING','VIDEOS','SOUND_TRACK','USERS'
+            'MOVIE_VS','MOVIE_VOTE','RANKING','VIDEOS','SOUND_TRACK','USERS', 'CHAT_MESSAGE'
         )
     ) LOOP
         EXECUTE IMMEDIATE 'DROP TABLE ' || t.table_name || ' CASCADE CONSTRAINTS';
@@ -73,5 +73,13 @@ WHERE movie_idx IN (
         FROM Movie_Info
     )
     WHERE rn > 1
+);
+
+-- CHAT_MESSAGE 중복 데이터 삭제 (안정성용)
+DELETE FROM CHAT_MESSAGE
+WHERE id NOT IN (
+    SELECT MIN(id)
+    FROM CHAT_MESSAGE
+    GROUP BY user_id, content, role, createdAt
 );
 

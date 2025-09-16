@@ -1,4 +1,3 @@
-// src/pages/MainPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
@@ -14,6 +13,7 @@ type UiMovie = {
   id: string | number;
   title: string;
   poster: string;
+  backdropPath: string; // ← 여기 추가
   year: number;
   genres: string[];
   rating: number;
@@ -66,6 +66,7 @@ function MainPage() {
   const [latest, setLatest] = useState<UiMovie[]>([]);
   const [reviewEvent3, setReviewEvent3] = useState<UiMovie[]>([]);
   const [oldPopular, setOldPopular] = useState<UiMovie[]>([]);
+  const [featured, setFeatured] = useState<UiMovie | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const onMovieClick = (m: UiMovie) => navigate(`/movies/${m.id}`);
@@ -83,7 +84,8 @@ function MainPage() {
         const movies: UiMovie[] = res.data.map((m: any) => ({
           id: m.movieIdx,
           title: m.title ?? "제목 없음",
-          poster: m.posterPath ?? "",
+          poster: m.backdropPath  ?? "",
+          backdropPath: m.backdropPath ?? "",
           year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
           genres: m.genres?.length
             ? m.genres.map((g: string) => genreEnToKr[g] ?? "기타")
@@ -97,14 +99,24 @@ function MainPage() {
         setPopular40(movies);
         setWeeklyTop10(movies.slice(0, 10));
 
+        // featured: 인기 40개 중 상위 20개에서 랜덤
+        if (movies.length > 0) {
+          const top20 = movies.slice(0, 20);
+          const randomIndex = Math.floor(Math.random() * top20.length);
+          setFeatured(top20[randomIndex]);
+        }
+
+        // 최신 영화 6개월 기준
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
         const latestMovies = movies.filter(m => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo);
         setLatest([...latestMovies].sort(() => Math.random() - 0.5).slice(0, 10));
 
+        // 맞춤 추천 / 리뷰 이벤트
         const shuffled = [...movies].sort(() => Math.random() - 0.5);
         setPersonalizedTop3(shuffled.slice(0, 3));
         setReviewEvent3(shuffled.slice(3, 6));
+
       } catch (error) {
         console.error("영화 로딩 실패:", error);
         setErr("영화를 불러오는데 실패했습니다.");
@@ -144,11 +156,6 @@ function MainPage() {
     fetchOldPopular();
   }, [token]);
 
-  const featured = useMemo(() => {
-    if (weeklyTop10.length === 0) return personalizedTop3[0] ?? latest[0];
-    return weeklyTop10[Math.floor(Math.random() * weeklyTop10.length)];
-  }, [weeklyTop10, personalizedTop3, latest]);
-
   return (
     <div className="min-h-screen bg-white">
       <main className="relative">
@@ -162,7 +169,8 @@ function MainPage() {
                 onClick={() => onMovieClick(featured)}
               >
                 <ImageWithFallback
-                  src={getPosterUrl(featured.poster, "w500")}
+                  // src={getPosterUrl(featured.poster, "w500")}  // 포스터로
+                  src={getPosterUrl(featured.backdropPath, "original")} // 이거로하면 배경화면
                   alt={featured.title}
                   className="w-full h-full object-cover"
                 />
@@ -200,7 +208,7 @@ function MainPage() {
             )}
 
             <section className="max-w-7xl mx-auto px-8 lg:px-16 pt-[100px] space-y-[100px] pb-16">
-              
+
               {/* 맞춤 추천 TOP3 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
@@ -221,7 +229,7 @@ function MainPage() {
                     >
                       <div className="w-80 aspect-[16/9] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
                         <ImageWithFallback
-                          src={getPosterUrl(movie.poster, "w780")}
+                          src={getPosterUrl(movie.poster, "original")}
                           alt={movie.title}
                           className="w-full h-full object-cover"
                         />
@@ -287,7 +295,7 @@ function MainPage() {
                 </HorizontalScrollList>
               </div>
 
-              {/* 이번주 인기 영화 */}
+              {/* weeklyTop10 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
