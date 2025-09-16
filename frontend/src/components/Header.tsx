@@ -140,12 +140,12 @@ export default function Header() {
     )
   )}
 
-  {/* 마이페이지 버튼은 로그인 여부와 관계없이 항상 표시 */}
-  {token && (
-    <Button variant="ghost" size="icon" onClick={() => navigate('/mypage')}>
-      <User className="h-5 w-5 text-white/80 hover:text-white" />
-    </Button>
-  )}
+  {/* 마이페이지 버튼은 로그인 여부와 관계없이, /mypage가 아닐 때만 표시 */}
+{token && location.pathname !== '/mypage' && (
+  <Button variant="ghost" size="icon" onClick={() => navigate('/mypage')}>
+    <User className="h-5 w-5 text-white/80 hover:text-white" />
+  </Button>
+)}
 </div>
 
         </div>

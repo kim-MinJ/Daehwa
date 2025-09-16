@@ -132,32 +132,19 @@ export default function MyPage({}: MyPageProps) {
       <div className="max-w-7xl mx-auto px-6">
         {/* 헤더 */}
         <div className="bg-red-600 text-white border-b border-red-700">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/main")}>
-              <ArrowLeft className="w-4 h-4 mr-2" /> 메인으로 돌아가기
-            </Button>
-            <div className="flex items-center space-x-4">
-              {userInfo?.role === "admin" ? (
-                <Button variant="default" size="sm" onClick={() => navigate("/admin")}>
-                  관리자 모드
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => setIsAdminModalOpen(true)}>
-                  <Edit3 className="w-4 h-4 mr-2" /> 관리자 코드
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  logout();
-                  navigate("/login");
-                }}
-              >
-                로그아웃
-              </Button>
-            </div>
-          </div>
+          <div className="px-6 py-4 flex items-center">
+  <div className="ml-auto flex items-center space-x-4">
+    {userInfo?.role === "admin" ? (
+      <Button variant="default" size="sm" onClick={() => navigate("/admin")}>
+        관리자 모드
+      </Button>
+    ) : (
+      <Button variant="outline" size="sm" onClick={() => setIsAdminModalOpen(true)}>
+        <Edit3 className="w-4 h-4 mr-2" /> 관리자 코드
+      </Button>
+    )}
+  </div>
+</div>
         </div>
 
         {/* 관리자 모달 */}
