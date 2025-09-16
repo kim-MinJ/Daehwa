@@ -30,13 +30,15 @@ public class DataLoader implements CommandLineRunner {
         // movieInfoSave.fetchAndSaveAllPages(); // MovieInfo, MovieGenres 저장
         // movieCreditSave.fetchAndSaveAllCredits(); // MovieCast, MovieCrew 저장
         // movieVideoSave.fetchAndSaveAllVideos(); // Video 저장
+        
+        // SoundTrack 저장
         JobParameters jobParameters = new JobParametersBuilder()
                 .addLong("time", System.currentTimeMillis())
                 .toJobParameters();
-
         // Spring Batch Job 실행
         jobLauncher.run(saveSoundTrackJob, jobParameters);
-        // System.out.println("DataLoader.run() 종료됨");
+        
+        System.out.println("DataLoader.run() 종료됨");
 
         // DB 에 데이터 저장하고 싶으면 주석 풀기
     }

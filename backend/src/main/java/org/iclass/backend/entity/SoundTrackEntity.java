@@ -13,9 +13,8 @@ import lombok.*;
 public class SoundTrackEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "soundtrack_seq")
-    @SequenceGenerator(name = "soundtrack_seq", sequenceName = "SOUNDTRACK_SEQ", allocationSize = 1)
     @Column(name = "soundtrack_idx")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long soundtrackIdx; // OST 인덱스 (PK)
 
     @ManyToOne(fetch = FetchType.LAZY)

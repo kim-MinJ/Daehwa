@@ -25,4 +25,3 @@ tmdb:
 jwt:
   secret: nR8vP6uQx2sLz9F1tYhJkVm3bCeGdHwR
   expiration: 3600000 # 1 hour in milliseconds
-  #깃 저장용
