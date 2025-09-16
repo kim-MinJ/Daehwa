@@ -1,42 +1,41 @@
 package org.iclass.backend.controller;
 
-import java.util.List;
 import java.util.Map;
 
-import org.iclass.backend.dto.MovieVoteDto;
 import org.iclass.backend.service.MovieVoteService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/movie/vote")
+@RequestMapping("/vote")
 @RequiredArgsConstructor
 public class MovieVoteController {
 
     private final MovieVoteService movieVoteService;
 
-    /** ✅ 투표하기 */
-    @PostMapping("/{vsId}/{tmdbMovieId}")
+    // 투표하기
+    @PostMapping
     public ResponseEntity<?> vote(
-    @PathVariable Long vsId,
-    @PathVariable Long tmdbMovieId,
-    @RequestParam String userId
-) {
-    return ResponseEntity.ok(movieVoteService.vote(vsId, tmdbMovieId, userId));
-}
-    /** ✅ 특정 VS 투표 통계 */
-    @GetMapping("/{vsId}/stats")
-    public ResponseEntity<?> getVoteStats(@PathVariable Long vsId) {
-    return ResponseEntity.ok(movieVoteService.getVoteStats(vsId));
-}
-
-    /** ✅ 전체 VS + 영화 정보 조회 */
-    @GetMapping("/all")
-    public List<Map<String, Object>> getAllVsWithMovies() {
-        return movieVoteService.getAllVsWithMovies();
+            @RequestParam Long vsId,
+            @RequestParam Long movieId,
+            @RequestParam String userId) {
+        try {
+            return ResponseEntity.ok(movieVoteService.vote(vsId, movieId, userId));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage()); // 이미 투표한 경우 메시지 반환
+        }
     }
 
-    
+    // 특정 VS 투표 결과
+    @GetMapping("/{vsId}/result")
+    public ResponseEntity<Map<Long, Long>> getVoteResult(@PathVariable Long vsId) {
+        return ResponseEntity.ok(movieVoteService.getVoteResult(vsId));
+    }
 }

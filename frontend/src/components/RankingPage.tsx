@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Header from "./Header";
-import Footer from "./Footer";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
@@ -86,26 +84,42 @@ export default function RankingPage({
     const fetchMovies = async () => {
       try {
         const apiKey = "302b783e860b19b6822ef0a445e7ae53"; // 🔑 실제 TMDB API 키 넣으세요
-
         const res = await axios.get(
           `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=ko-KR&page=1`
         );
 
-        const movieRes: Movie[] = res.data.results.map((m: any, idx: number) => ({
-          id: m.id.toString(),
-          title: m.title,
-          poster: m.poster_path
-            ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
-            : "/fallback.png",
-          year: m.release_date ? m.release_date.slice(0, 4) : "N/A",
-          genre: m.genre_ids.map((id: number) => genreMap[id] || "기타").join(", "),
-          rating: m.vote_average,
-          runtime: 0,
-          description: m.overview,
-          director: m.director,
-          rank: idx + 1,
-          voteCount: m.vote_count,
-        }));
+        const movieRes: Movie[] = await Promise.all(
+  res.data.results.map(async (m: any, idx: number) => {
+    let directorName = "알 수 없음";
+    try {
+      const creditsRes = await axios.get(
+        `https://api.themoviedb.org/3/movie/${m.id}/credits?api_key=${apiKey}&language=ko-KR`
+      );
+      const director = creditsRes.data.crew.find((c: any) => c.job === "Director");
+      if (director) {
+        directorName = director.name;
+      }
+    } catch (e) {
+      console.error(`감독 정보 로드 실패 (${m.title}):`, e);
+    }
+
+    return {
+      id: m.id.toString(),
+      title: m.title,
+      poster: m.poster_path
+        ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
+        : "/fallback.png",
+      year: m.release_date ? m.release_date.slice(0, 4) : "N/A",
+      genre: m.genre_ids.map((id: number) => genreMap[id] || "기타").join(", "),
+      rating: m.vote_average,
+      runtime: 0,
+      description: m.overview,
+      director: directorName,
+      rank: idx + 1,
+      voteCount: m.vote_count,
+    };
+  })
+);
 
         setMovies(movieRes);
         setTopMovie(movieRes[0]);
@@ -175,7 +189,6 @@ export default function RankingPage({
   return (
     <div className="min-h-screen bg-white">
       {/* 공통 헤더 */}
-      <Header currentPage="ranking" onNavigation={onNavigation} />
 
       {/* 페이지 제목 (고정 회색 배경) */}
       <div style={{ backgroundColor: "#E4E4E4" }}>
@@ -650,8 +663,6 @@ export default function RankingPage({
         </div>
       </div>
 
-      {/* 공통 푸터 */}
-      <Footer />
     </div>
   );
 }

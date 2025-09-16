@@ -1,5 +1,7 @@
 package org.iclass.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,7 +24,7 @@ import lombok.ToString;
 @ToString
 @Builder
 @Entity
-@Table(name = "MOVIE_GENRES")
+@Table(name = "Movie_Genres")
 public class MovieGenresEntity {
 
   @Id
@@ -32,6 +34,7 @@ public class MovieGenresEntity {
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
+  @JsonBackReference
   private MovieInfoEntity movie;
 
   @ManyToOne

@@ -19,10 +19,11 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration:86400000}") // 기본 1일
     private long expiration;
 
-    // 푸쉬용
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
+
+    // 커밋용
 
     // -------------------
     // 토큰 생성

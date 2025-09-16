@@ -17,11 +17,11 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder // ← 이거 추가
 @ToString
 @Table(name = "Users")
 @Entity
-@Builder
-public class UsersEntity {  
+public class UsersEntity {
   @Id
   @Column(name = "user_id", length = 100)
   private String userId;
@@ -42,5 +42,6 @@ public class UsersEntity {
 
   @Column
   @Builder.Default
-  private Integer status = 0; // 로그인 상태 1:로그인 0:로그아웃
+  private Integer status = 0; // 로그인 상태 0:로그인 1:로그아웃
+
 }

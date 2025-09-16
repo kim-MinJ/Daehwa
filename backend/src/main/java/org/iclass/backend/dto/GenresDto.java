@@ -1,6 +1,5 @@
 package org.iclass.backend.dto;
 
-
 import org.iclass.backend.entity.GenresEntity;
 
 import jakarta.persistence.Table;

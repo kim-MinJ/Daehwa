@@ -2,74 +2,119 @@ package org.iclass.backend.service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
+import org.iclass.backend.dto.MovieInfoDto;
+import org.iclass.backend.entity.MovieCastEntity;
+import org.iclass.backend.entity.MovieCrewEntity;
 import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.repository.MovieCastRepository;
+import org.iclass.backend.repository.MovieCrewRepository;
+import org.iclass.backend.repository.MovieGenresRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class MoviesService {
 
+  private final MovieCrewRepository movieCrewRepository;
+  private final MovieGenresRepository movieGenresRepository;
   private final MovieInfoRepository movieInfoRepository;
-  private final String API_KEY = "302b783e860b19b6822ef0a445e7ae53";
-  private final String API_URL = "https://api.themoviedb.org/3/movie/popular?language=ko-KR&page=1&api_key=" + API_KEY;
+  private final MovieCastRepository movieCastRepository;
 
-  public MoviesService(MovieInfoRepository movieInfoRepository) {
-    this.movieInfoRepository = movieInfoRepository;
-  }
-
-  // DB에 영화 저장 (TMDB 인기 영화 가져오기)
-  public void fetchAndSaveMovies() {
-    RestTemplate restTemplate = new RestTemplate();
-    ResponseEntity<Map> response = restTemplate.getForEntity(API_URL, Map.class);
-    Map<String, Object> body = response.getBody();
-
-    if (body != null && body.containsKey("results")) {
-      List<Map<String, Object>> results = (List<Map<String, Object>>) body.get("results");
-
-      for (Map<String, Object> movieData : results) {
-        Long tmdbId = ((Number) movieData.get("id")).longValue();
-        if (movieInfoRepository.findByTmdbMovieId(tmdbId).isEmpty()) {
-          MovieInfoEntity movie = MovieInfoEntity.builder()
-              .tmdbMovieId(tmdbId)
-              .title((String) movieData.get("title"))
-              .overview((String) movieData.get("overview"))
-              .posterPath((String) movieData.get("poster_path"))
-              .backdropPath((String) movieData.get("backdrop_path"))
-              .adult((Boolean) movieData.getOrDefault("adult", false))
-              .popularity(((Number) movieData.getOrDefault("popularity", 0.0)).doubleValue())
-              .voteAverage(((Number) movieData.getOrDefault("vote_average", 0.0)).doubleValue())
-              .voteCount(((Number) movieData.getOrDefault("vote_count", 0)).intValue())
-              .releaseDate(parseDate((String) movieData.get("release_date")))
-              .build();
-          movieInfoRepository.save(movie);
-        }
-      }
-    }
-  }
-
-  // 랜덤 영화 1개 반환
+  /** 랜덤 영화 1개 반환 */
   public MovieInfoEntity getRandomMovie() {
-    List<MovieInfoEntity> allMovies = movieInfoRepository.findAll();
-    if (allMovies.isEmpty())
-      return null;
-
-    Random random = new Random();
-    int index = random.nextInt(allMovies.size());
-    return allMovies.get(index);
+    return movieInfoRepository.findRandomMovie();
   }
 
-  // 문자열 → LocalDate
-  private LocalDate parseDate(String dateStr) {
-    try {
-      return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-    } catch (Exception e) {
-      return null;
-    }
+  /** movieIdx 기반 단일 영화 조회 */
+  public MovieInfoDto getMovieById(Long movieIdx) {
+    return movieInfoRepository.findById(movieIdx)
+        .map(MovieInfoDto::of)
+        .orElseThrow(() -> new RuntimeException("영화를 찾을 수 없습니다."));
+  }
+
+  /** 전체 영화 조회 */
+  public List<MovieInfoDto> getAllMovies() {
+    return movieInfoRepository.findAll().stream()
+        .map(MovieInfoDto::of)
+        .toList();
+  }
+
+  /** 장르 가져오기 */
+  public List<String> getGenresByMovieIdx(Long movieIdx) {
+    return movieGenresRepository.findByMovie_MovieIdx(movieIdx)
+        .stream()
+        .map(entity -> entity.getGenre().getName())
+        .toList();
+  }
+
+  /** 감독 가져오기 */
+  public List<String> getDirectorsByTmdbId(Long tmdbMovieId) {
+    return movieCrewRepository.findByTmdbMovieIdAndJob(tmdbMovieId, "Director")
+        .stream()
+        .map(MovieCrewEntity::getCrewName)
+        .toList();
+  }
+
+  /**
+   * 영화 출연진 + 크루 정보 (프론트 TMDB-like)
+   */
+  public Map<String, Object> getCredits(Long movieIdx) {
+    MovieInfoEntity movie = movieInfoRepository.findById(movieIdx)
+        .orElseThrow(() -> new RuntimeException("영화를 찾을 수 없습니다. id=" + movieIdx));
+
+    List<MovieCastEntity> castEntities = movieCastRepository.findByTmdbMovieId(movie.getTmdbMovieId());
+    List<MovieCrewEntity> crewEntities = movieCrewRepository.findByTmdbMovieId(movie.getTmdbMovieId());
+
+    var cast = castEntities.stream()
+        .map(c -> Map.of(
+            "id", c.getTmdbCastId(),
+            "name", c.getCastName() != null ? c.getCastName() : "",
+            "character", c.getCharacter() != null ? c.getCharacter() : "",
+            "profile_path", c.getCastProfilePath() != null ? c.getCastProfilePath() : ""))
+        .toList();
+
+    var crew = crewEntities.stream()
+        .map(c -> Map.of(
+            "id", c.getTmdbCrewId(),
+            "name", c.getCrewName() != null ? c.getCrewName() : "",
+            "job", c.getJob() != null ? c.getJob() : "",
+            "profile_path", c.getCrewProfilePath() != null ? c.getCrewProfilePath() : ""))
+        .toList();
+
+    Map<String, Object> result = new HashMap<>();
+    result.put("id", movie.getMovieIdx());
+    result.put("cast", cast);
+    result.put("crew", crew);
+
+    return result;
+  }
+
+  /** 영화 비디오 정보 (현재 빈 리스트 반환) */
+  public Map<String, Object> getVideos(Long movieIdx) {
+    Map<String, Object> result = new HashMap<>();
+    result.put("id", movieIdx);
+    result.put("results", List.of());
+    return result;
+  }
+
+  /** 2010~2019 인기 영화 */
+  public List<MovieInfoDto> getOldPopularMovies(int count) {
+    return movieInfoRepository.findAll().stream()
+        .filter(m -> m.getReleaseDate() != null)
+        .filter(m -> {
+          int year = m.getReleaseDate().getYear();
+          return year >= 2010 && year <= 2019;
+        })
+        .sorted((a, b) -> Double.compare(b.getPopularity(), a.getPopularity()))
+        .limit(count)
+        .map(MovieInfoDto::of)
+        .toList();
   }
 }

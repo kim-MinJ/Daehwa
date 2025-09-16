@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Search, Bell, User } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Page } from './types';
 
-type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail' | 'search';
+
 
 interface HeaderProps {
   currentPage: Page;
@@ -35,7 +36,7 @@ export default function Header({ currentPage, onNavigation, onSearch }: HeaderPr
 
   return (
     <header className="bg-black/95 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-8 lg:px-16">
         <div className="flex items-center justify-between h-16">
           {/* 로고 */}
           <div className="flex items-center">
@@ -106,7 +107,11 @@ export default function Header({ currentPage, onNavigation, onSearch }: HeaderPr
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5 text-white/80 hover:text-white" />
             </Button>
-            <Button variant="ghost" size="icon">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => onNavigation('admin')}
+            >
               <User className="h-5 w-5 text-white/80 hover:text-white" />
             </Button>
           </div>

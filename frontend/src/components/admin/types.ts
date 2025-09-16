@@ -1,7 +1,5 @@
 // src/types.ts
 
-
-
 // --- 페이지 타입 ---
 export type Page = 'home' | 'movies' | 'ranking' | 'reviews' | 'movie-detail' | 'search' | 'admin';
 
@@ -30,6 +28,17 @@ export interface Movie {
   title: string;
 }
 
+// --- 댓글 타입 ---
+export interface Comment {
+  commentIdx: number;
+  userId: string;      // 작성자 ID
+  reviewIdx: number;   // 연결된 리뷰 ID
+  content: string;
+  createdAt: string;   // ISO 문자열
+  updateAt: string;    // ISO 문자열
+  isBlind: number;     // 0=정상, 1=블라인드 (백엔드에 없으면 기본 0)
+}
+
 // --- 게시글 타입 ---
 export interface Post {
   id: string;
@@ -55,7 +64,11 @@ export interface Notice {
 // --- 투표 타입 ---
 export interface Vote {
   id: string;
+  movieIdx: number;   // DB 연동용
   movieTitle: string;
+  posterPath?: string;  // TMDB 이미지 경로
+  rating?: number;      // 별점
+  year?: string;        // 출시년도
   voter: string;
   voteCount: number;
   status: 'active' | 'inactive';
