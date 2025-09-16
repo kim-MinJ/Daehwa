@@ -277,15 +277,20 @@ export default function MyPage({}: MyPageProps) {
           <CardContent className="flex flex-col gap-2">
             <h3 className="font-bold">{movie.title}</h3>
             <Button
-              size="sm"
-              variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
-              onClick={(e) => {
-                e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-                toggleBookmark(movie.movieIdx);
-              }}
-            >
-              <Heart className="w-4 h-4 mr-1" /> 북마크
-            </Button>
+  size="sm"
+  variant={isBookmarked(movie.movieIdx) ? "destructive" : "outline"}
+  onClick={(e) => {
+    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+    toggleBookmark(movie.movieIdx);
+  }}
+>
+  <Heart
+    className="w-4 h-4 mr-1"
+    fill={isBookmarked(movie.movieIdx) ? "white" : "none"}  // 북마크면 흰색 채움
+    stroke={isBookmarked(movie.movieIdx) ? "currentColor" : "currentColor"} // 테두리 색
+  /> 
+  {isBookmarked(movie.movieIdx) ? "찜안해!" : "찜하기"}
+</Button>
           </CardContent>
         </Card>
       ))}
@@ -309,15 +314,20 @@ export default function MyPage({}: MyPageProps) {
           <CardContent className="flex flex-col gap-2">
             <h3 className="font-bold">{b.title}</h3>
             <Button
-              size="sm"
-              variant="destructive"
-              onClick={(e) => {
-                e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-                toggleBookmark(b.movieIdx);
-              }}
-            >
-              <Heart className="w-4 h-4 mr-1" /> 북마크 제거
-            </Button>
+  size="sm"
+  variant="destructive"
+  onClick={(e) => {
+    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+    toggleBookmark(b.movieIdx);
+  }}
+>
+  <Heart
+    className="w-4 h-4 mr-1"
+    fill="white"   // 북마크 탭은 항상 찜되어 있으므로 흰색
+    stroke="currentColor"
+  />
+  찜안해
+</Button>
           </CardContent>
         </Card>
       ))}

@@ -11,6 +11,7 @@ import { MovieOSTSection } from "@/components/MovieOSTSection";
 import { MovieCarousel } from "@/components/MovieCarousel";
 
 import { useMoviePage, genreMap, CastPerson } from "@/hooks/useMoviePage";
+import { useAuth } from "@/hooks/useAuth";
 import type { Movie as UIMovie } from "@/types/movie";
 
 const img500 = (path?: string) =>
@@ -22,6 +23,7 @@ export default function MovieDetailPage() {
   const { id } = useParams<{ id: string }>();
   const movieId = Number(id);
   const navigate = useNavigate();
+  const { token } = useAuth(); // ✅ JWT 토큰 가져오기
 
   const { loading, error, movie, credits, similar, trailers } = useMoviePage(movieId);
 
@@ -57,6 +59,7 @@ export default function MovieDetailPage() {
     [credits]
   );
 
+  // MovieDetailCard용 props
   const cardProps = useMemo(() => {
     const vote10 = Number(movie?.vote_average ?? 0);
     const userRating5 = Math.max(0, Math.min(5, Math.round((vote10 / 2) * 10) / 10));
@@ -70,8 +73,10 @@ export default function MovieDetailPage() {
       description: movie?.overview || "줄거리 정보가 없습니다.",
       posterUrl: img500(movie?.poster_path),
       userRating: userRating5,
+      movieIdx: movie?.id ?? movieId, // 북마크 식별용
+      token, // ✅ 필수 token 전달
     };
-  }, [movie, year, genres, castTop, director]);
+  }, [movie, year, genres, castTop, director, token, movieId]);
 
   const trailerItems = useMemo(() => {
     const list = Array.isArray(trailers) ? trailers : [];
@@ -123,6 +128,7 @@ export default function MovieDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
             <section className="bg-white rounded-2xl p-0 shadow-sm border border-gray-100">
+              {/* 북마크 기능 포함된 MovieDetailCard */}
               <MovieDetailCard {...cardProps} />
             </section>
 
