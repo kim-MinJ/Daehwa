@@ -30,6 +30,9 @@ public class ReviewService {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     String userId = auth.getName(); // JWT subject (username)
 
+    if (user == null) {
+      throw new RuntimeException("로그인이 필요합니다.");
+    }
     // 🔑 DB에서 유저 엔티티 조회
     UsersEntity users = usersRepository.findByUserId(userId)
         .orElseThrow(() -> new RuntimeException("User not found"));

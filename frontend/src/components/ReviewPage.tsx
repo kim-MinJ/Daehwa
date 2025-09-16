@@ -170,7 +170,7 @@ export default function ReviewPage({ onMovieClick, onNavigation }: any) {
   // 리뷰 목록 불러오기
   useEffect(() => {
     axios
-      .get('/api/review', {
+      .get('/api/reviews', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       .then(async (res) => {
@@ -208,7 +208,7 @@ export default function ReviewPage({ onMovieClick, onNavigation }: any) {
 
     axios
       .post(
-        '/api/review',
+        '/api/reviews',
         {
           movieIdx: todayMovie.movieIdx,
           rating: userRating,
@@ -243,7 +243,7 @@ export default function ReviewPage({ onMovieClick, onNavigation }: any) {
 
     axios
       .patch(
-        `/api/review/${reviewId}`,
+        `/api/reviews/${reviewId}`,
         { content: editContent },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -269,7 +269,7 @@ export default function ReviewPage({ onMovieClick, onNavigation }: any) {
     if (!window.confirm('정말 이 리뷰를 삭제하시겠습니까?')) return;
 
     axios
-      .delete(`/api/review/${reviewId}`, {
+      .delete(`/api/reviews/${reviewId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {
