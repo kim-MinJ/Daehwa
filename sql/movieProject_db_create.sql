@@ -751,7 +751,11 @@ BEGIN
 END;
 /
 
+GRANT CREATE TRIGGER TO C##IDEV;
 
+SELECT * 
+FROM USER_SYS_PRIVS
+WHERE PRIVILEGE LIKE '%TRIGGER%';
 
 -- -- Movie_Info.popularity -> Ranking.ranking_count 연동 트리거
 -- CREATE OR REPLACE TRIGGER trg_update_ranking
@@ -766,3 +770,8 @@ END;
 --     -- 없으면 아무것도 하지 않음 (0행이면 그냥 넘어감)
 -- END;
 -- /
+
+  DELETE FROM MOVIE_GENRES;
+
+-- 필요하면 삭제 확인
+COMMIT;

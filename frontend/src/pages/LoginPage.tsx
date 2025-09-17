@@ -189,6 +189,7 @@ useEffect(() => {
             onChange={(e) => setUserId(e.target.value)}
             className="pl-10 bg-gray-900 text-white placeholder-gray-400"
             required
+            autoComplete="off"
           />
         </div>
       </div>
@@ -207,6 +208,7 @@ useEffect(() => {
             onChange={(e) => setPassword(e.target.value)}
             className="pl-10 pr-10 bg-gray-900 text-white placeholder-gray-400"
             required
+            autoComplete="new-password"
           />
           <Button
             type="button"
