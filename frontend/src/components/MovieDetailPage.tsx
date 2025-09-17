@@ -122,18 +122,7 @@ export default function MovieDetailPage({ movie, onBack, onNavigation }: MovieDe
       {/* 공통 헤더 */}
       <Header currentPage="movie-detail" onNavigation={onNavigation || (() => {})} />
 
-      {/* 페이지 제목 헤더 */}
-      <div style={{ backgroundColor: '#E4E4E4' }}>
-        <div className="max-w-7xl mx-auto px-8 lg:px-16 py-6">
-          <div className="flex items-center gap-3">
-            <Film className="h-6 w-6 text-red-600" />
-            <h1 className="text-2xl font-bold text-black">영화 상세정보</h1>
-          </div>
-          <p className="text-black/70 mt-2">{movie.title}의 상세 정보를 확인하세요</p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-8 lg:px-16 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 뒤로가기 버튼 */}
         <div className="mb-6">
           <Button 

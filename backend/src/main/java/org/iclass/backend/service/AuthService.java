@@ -45,7 +45,16 @@ public class AuthService {
     if (!passwordEncoder.matches(password, entity.getPassword()))
       throw new RuntimeException("비밀번호 불일치");
 
+    // 상태 체크
+    if (entity.getStatus() == 2) {
+      throw new RuntimeException("정지된 계정입니다.");
+    }
+    if (entity.getStatus() == 1) {
+      throw new RuntimeException("접속제한 중인 계정입니다.");
+    }
+
     String token = jwtTokenProvider.generateToken(entity.getUserId());
     return UsersDto.of(entity, token);
+    // 커밋용
   }
 }

@@ -1,4 +1,3 @@
-// frontend/src/lib/api.ts  (REPLACE ALL)
 import axios from "axios";
 
 // 백엔드 프록시를 기본 경로로 사용합니다. (Vite dev 서버에서 /api → 8080으로 프록시)

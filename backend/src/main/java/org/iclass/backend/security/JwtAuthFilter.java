@@ -24,15 +24,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     String header = request.getHeader("Authorization");
     String token = null;
-    String username = null;
+    String userId = null;
 
     if (header != null && header.startsWith("Bearer ")) {
       token = header.substring(7);
-      username = jwtTokenProvider.generateToken(token);
+      userId = jwtTokenProvider.getUserId(token); // getUsernameFromToken -> getUserId
     }
 
-    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-      UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+    if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+      UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
 
       if (jwtTokenProvider.validateToken(token)) {
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
@@ -41,6 +41,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authToken);
       }
     }
+        // 커밋용
 
     chain.doFilter(request, response);
   }

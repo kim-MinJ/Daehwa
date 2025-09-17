@@ -7,7 +7,7 @@ export interface AuthResponse {
 
 export class AuthService {
   static async login(userId: string, password: string): Promise<AuthResponse> {
-    const res = await fetch("http://192.168.0.23:8080/api/auth/login", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, password }),
@@ -20,7 +20,7 @@ export class AuthService {
   }
 
   static async register(userId: string, password: string, username: string): Promise<AuthResponse> {
-    const res = await fetch("http://192.168.0.23:8080/api/auth/register", {
+    const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, password, username }),

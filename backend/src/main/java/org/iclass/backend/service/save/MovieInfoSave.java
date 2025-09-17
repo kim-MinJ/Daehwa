@@ -34,7 +34,7 @@ public class MovieInfoSave {
     private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4"; // 실제
                                                                                                                                                                                                                                                                                                   // 키로
                                                                                                                                                                                                                                                                                                   // 교체
-    private final int TOTAL_PAGE = 224;
+    private final int TOTAL_PAGE = 40; // 223
 
     public MovieInfoSave(MovieInfoRepository movieInfoRepository,
             MovieGenresRepository movieGenresRepository,
@@ -100,7 +100,10 @@ public class MovieInfoSave {
                     .map(entity -> {
                         entity.setTitle(dto.getTitle());
                         entity.setPopularity(dto.getPopularity() != null ? dto.getPopularity() : 0.0);
-                        entity.setVoteCount(dto.getVote_count() != null ? dto.getVote_count() : 0);
+                        entity.setVoteCount(
+                        (dto.getVote_count() != null ? dto.getVote_count() : 0)
+                        + (entity.getVoteCount() != null ? entity.getVoteCount() : 0)
+                        );
                         entity.setVoteAverage(dto.getVote_average() != null ? dto.getVote_average() : 0.0);
                         entity.setAdult(dto.getAdult() != null ? dto.getAdult() : false);
                         entity.setOverview(dto.getOverview());
@@ -114,7 +117,7 @@ public class MovieInfoSave {
                                 .tmdbMovieId(dto.getTmdb_movie_id())
                                 .title(dto.getTitle())
                                 .popularity(dto.getPopularity() != null ? dto.getPopularity() : 0.0)
-                                .voteCount(dto.getVote_count() != null ? dto.getVote_count() : 0)
+                                .voteCount((dto.getVote_count() != null ? dto.getVote_count() : 0))
                                 .voteAverage(dto.getVote_average() != null ? dto.getVote_average() : 0.0)
                                 .adult(dto.getAdult() != null ? dto.getAdult() : false)
                                 .overview(dto.getOverview())
@@ -143,4 +146,33 @@ public class MovieInfoSave {
             }
         }
     }
+
+    @Transactional
+public void saveMovieById(Long tmdbMovieId) throws Exception {
+    String url = "https://api.themoviedb.org/3/movie/" + tmdbMovieId 
+               + "?language=ko-KR";
+
+    Request request = new Request.Builder()
+            .url(url)
+            .get()
+            .addHeader("accept", "application/json")
+            .addHeader("Authorization", API_KEY)
+            .build();
+
+    try (Response response = client.newCall(request).execute()) {
+        if (!response.isSuccessful()) {
+            throw new RuntimeException("API 호출 실패: " + response);
+        }
+
+        String jsonData = response.body().string();
+        MovieInfoResponse.MovieInfoApiDto dto = mapper.readValue(jsonData, MovieInfoResponse.MovieInfoApiDto.class);
+
+        // ✅ 1개 DTO를 saveMovies 재사용
+        MovieInfoResponse wrapper = new MovieInfoResponse();
+        wrapper.setResults(List.of(dto));
+
+        saveMovies(wrapper);
+    }
+    
+}
 }
