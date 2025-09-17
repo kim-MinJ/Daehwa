@@ -35,7 +35,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   const [maxRound, setMaxRound] = useState(1);
   const PAGE_SIZE = 12;
 
-  // 전체 영화 데이터 불러오기
+  // -------------------- 전체 영화 데이터 불러오기 --------------------
   useEffect(() => {
     (async () => {
       try {
@@ -69,7 +69,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
     })();
   }, []);
 
-  // MovieVote 리스트 불러오기
+  // -------------------- MovieVote 리스트 불러오기 --------------------
   const fetchMovieVotes = async () => {
     try {
       setLoadingVotes(true);
@@ -98,55 +98,15 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   };
 
   useEffect(() => {
-    fetchMovieVotes();
+    fetchMovieVotes(); // 초기 한 번만
   }, []);
 
-  // endDate +7일 지난 항목 자동 active=0 처리
-useEffect(() => {
-  const interval = setInterval(async () => {
-    let updated = false;
-    const now = Date.now();
+  const visibleMovieVotes = useMemo(
+    () => movieVotes.filter((mv) => mv.active !== 3),
+    [movieVotes]
+  );
 
-    for (const mv of movieVotes) {
-      if (!mv.active) continue;
-
-      const expireTime = mv.startDate
-        ? new Date(mv.startDate).getTime() + 1 * 60 * 1000 // 7일
-        : null;
-
-      if (expireTime && now > expireTime) {
-        try {
-          // active=0만 보내기, endDate는 백엔드에서 처리됨
-          await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ active: 0 }),
-          });
-          updated = true;
-        } catch (err) {
-          console.error("자동 만료 처리 실패", err);
-        }
-      }
-    }
-
-    if (updated) fetchMovieVotes(); // 즉시 UI 갱신
-  }, 1000 * 60); // 1분마다 체크
-
-  return () => clearInterval(interval);
-}, [movieVotes]);
-
-// MovieVote 리스트
-const visibleMovieVotes = useMemo(
-  () => movieVotes.filter((mv) => mv.active !== 3),
-  [movieVotes]
-);
-
-useEffect(() => {
-  const interval = setInterval(fetchMovieVotes, 1000 * 60); // 1분마다
-  return () => clearInterval(interval);
-}, []);
-
-  // 검색 & 필터링
+  // -------------------- 검색 & 필터링 --------------------
   const filteredMovies = useMemo(() => {
     return allMovies.filter(
       (movie) =>
@@ -155,12 +115,12 @@ useEffect(() => {
     );
   }, [allMovies, searchQuery]);
 
-  // 페이징
   const pagedMovies = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredMovies.slice(start, start + PAGE_SIZE);
   }, [filteredMovies, currentPage]);
 
+  // -------------------- VS 선택 --------------------
   const handleCardClick = (movie: Movie) => {
     if (!vsMovie1) return setVsMovie1(movie);
     if (!vsMovie2) return setVsMovie2(movie);
@@ -188,7 +148,7 @@ useEffect(() => {
 
       alert("✅ VS 등록 완료");
       if (onApplyVsMovies) onApplyVsMovies(vsMovie1, vsMovie2);
-      fetchMovieVotes();
+      fetchMovieVotes(); // 필요한 시점에만 갱신
     } catch (err) {
       console.error(err);
       alert("❌ VS 등록 중 오류 발생");
@@ -359,129 +319,120 @@ useEffect(() => {
         </CardContent>
       )}
 
-          {/* MovieVote 리스트 */}
-<CardContent className="space-y-4 mt-4">
-  <h3 className="font-semibold text-lg">MovieVote 리스트</h3>
-  {loadingVotes ? (
-    <LoadingSpinner />
-  ) : visibleMovieVotes.length === 0 ? (
-    <p className="text-gray-500 text-center">MovieVote가 없습니다.</p>
-  ) : (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-center">
-        <thead>
-          <tr className="border-b bg-gray-100">
-            <th className="p-2">번호-회차-순번</th>
-            <th className="p-2">Movie 1</th>
-            <th className="p-2">Movie 2</th>
-            <th className="p-2">Start Date</th>
-            <th className="p-2">End Date</th>
-            <th className="p-2">Active</th>
-          </tr>
-        </thead>
-        <tbody>
-          {visibleMovieVotes.map((mv: any) => {
-            const expired =
-              mv.endDate &&
-              new Date(mv.endDate).getTime() + 1 * 60 * 1000 < Date.now();
-            const effectiveActive = expired ? 0 : mv.active ?? 0;
+      {/* MovieVote 리스트 */}
+      <CardContent className="space-y-4 mt-4">
+        <h3 className="font-semibold text-lg">MovieVote 리스트</h3>
+        {loadingVotes ? (
+          <LoadingSpinner />
+        ) : visibleMovieVotes.length === 0 ? (
+          <p className="text-gray-500 text-center">MovieVote가 없습니다.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-center">
+              <thead>
+                <tr className="border-b bg-gray-100">
+                  <th className="p-2">번호-회차-순번</th>
+                  <th className="p-2">Movie 1</th>
+                  <th className="p-2">Movie 2</th>
+                  <th className="p-2">Start Date</th>
+                  <th className="p-2">End Date</th>
+                  <th className="p-2">Active</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleMovieVotes.map((mv: any) => {
+                  const expired =
+                    mv.endDate &&
+                    new Date(mv.endDate).getTime() + 1 * 60 * 1000 < Date.now();
+                  const effectiveActive = expired ? 0 : mv.active ?? 0;
 
-            return (
-              <tr key={mv.vsIdx} className="border-b">
-                {/* 번호-회차-순번 */}
-                <td className="p-2">{mv.vsIdx} - {mv.vsRound} - {mv.pair}</td>
+                  return (
+                    <tr key={mv.vsIdx} className="border-b">
+                      <td className="p-2">{mv.vsIdx} - {mv.vsRound} - {mv.pair}</td>
+                      <td className="p-2 text-center">
+                        <div className="flex flex-col items-center">
+                          <ImageWithFallback
+                            src={`https://image.tmdb.org/t/p/w92${mv.movieVs1?.posterPath ?? ""}`}
+                            alt={mv.movieVs1?.title ?? "?"}
+                            className="w-24 h-32 object-cover rounded"
+                          />
+                          <p className="mt-1 font-semibold w-24 truncate">{mv.movieVs1?.title ?? "?"}</p>
+                        </div>
+                      </td>
+                      <td className="p-2 text-center">
+                        <div className="flex flex-col items-center">
+                          <ImageWithFallback
+                            src={`https://image.tmdb.org/t/p/w92${mv.movieVs2?.posterPath ?? ""}`}
+                            alt={mv.movieVs2?.title ?? "?"}
+                            className="w-24 h-32 object-cover rounded"
+                          />
+                          <p className="mt-1 font-semibold w-24 truncate">{mv.movieVs2?.title ?? "?"}</p>
+                        </div>
+                      </td>
+                      <td className="p-2">{mv.startDate ? new Date(mv.startDate).toLocaleDateString() : "-"}</td>
+                      <td className="p-2">{mv.endDate ? new Date(mv.endDate).toLocaleDateString() : "-"}</td>
+                      <td className="p-2">
+                        <div className="flex flex-col items-center gap-2">
+                          <Button
+                            size="sm"
+                            className={`w-24 px-3 py-1 rounded ${
+                              mv.active === 1
+                                ? "bg-green-600 hover:bg-green-700 text-white"
+                                : "bg-gray-400 hover:bg-gray-500 text-white"
+                            }`}
+                            onClick={async () => {
+                              try {
+                                const newActive = mv.active === 1 ? 0 : 1;
+                                if (newActive === 1) {
+                                  const confirmActivate = window.confirm("이 MovieVote를 활성화하시겠습니까?");
+                                  if (!confirmActivate) return;
+                                }
+                                await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ active: newActive }),
+                                });
+                                fetchMovieVotes();
+                              } catch (err) {
+                                console.error("토글 실패", err);
+                              }
+                            }}
+                          >
+                            {mv.active === 1 ? "활성화" : "비활성화"}
+                          </Button>
 
-                {/* Movie 1 */}
-                <td className="p-2 text-center">
-                  <div className="flex flex-col items-center">
-                    <ImageWithFallback
-                      src={`https://image.tmdb.org/t/p/w92${mv.movieVs1?.posterPath ?? ""}`}
-                      alt={mv.movieVs1?.title ?? "?"}
-                      className="w-24 h-32 object-cover rounded"
-                    />
-                    <p className="mt-1 font-semibold w-24 truncate">{mv.movieVs1?.title ?? "?"}</p>
-                  </div>
-                </td>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="w-24 px-3 py-1 rounded"
+                            onClick={async () => {
+                              const confirmDelete = window.confirm("정말 이 MovieVote를 삭제하시겠습니까?");
+                              if (!confirmDelete) return;
 
-                {/* Movie 2 */}
-                <td className="p-2 text-center">
-                  <div className="flex flex-col items-center">
-                    <ImageWithFallback
-                      src={`https://image.tmdb.org/t/p/w92${mv.movieVs2?.posterPath ?? ""}`}
-                      alt={mv.movieVs2?.title ?? "?"}
-                      className="w-24 h-32 object-cover rounded"
-                    />
-                    <p className="mt-1 font-semibold w-24 truncate">{mv.movieVs2?.title ?? "?"}</p>
-                  </div>
-                </td>
-
-                {/* Start / End Date */}
-                <td className="p-2">{mv.startDate ? new Date(mv.startDate).toLocaleDateString() : "-"}</td>
-                <td className="p-2">{mv.endDate ? new Date(mv.endDate).toLocaleDateString() : "-"}</td>
-
-              {/* Active & 삭제 버튼 */}
-<td className="p-2">
-  <div className="flex flex-col items-center gap-2">
-<Button
-  size="sm"
-  className={`w-24 px-3 py-1 rounded ${
-    mv.active === 1
-      ? "bg-green-600 hover:bg-green-700 text-white"
-      : "bg-gray-400 hover:bg-gray-500 text-white"
-  }`}
-  onClick={async () => {
-    try {
-      const newActive = mv.active === 1 ? 0 : 1;
-      if (newActive === 1) {
-        const confirmActivate = window.confirm("이 MovieVote를 활성화하시겠습니까?");
-        if (!confirmActivate) return;
-      }
-      await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active: newActive }),
-      });
-      fetchMovieVotes(); // UI 즉시 갱신
-    } catch (err) {
-      console.error("토글 실패", err);
-    }
-  }}
->
-  {mv.active === 1 ? "활성화" : "비활성화"}
-</Button>
-
-<Button
-  size="sm"
-  variant="destructive"
-  className="w-24 px-3 py-1 rounded"
-  onClick={async () => {
-    const confirmDelete = window.confirm("정말 이 MovieVote를 삭제하시겠습니까?");
-    if (!confirmDelete) return;
-
-    try {
-      await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active: 3 }),
-      });
-      fetchMovieVotes(); // UI 즉시 갱신
-    } catch (err) {
-      console.error("삭제 실패", err);
-    }
-  }}
->
-  삭제
-</Button>
-  </div>
-</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  )}
-</CardContent>
+                              try {
+                                await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ active: 3 }),
+                                });
+                                fetchMovieVotes();
+                              } catch (err) {
+                                console.error("삭제 실패", err);
+                              }
+                            }}
+                          >
+                            삭제
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }
