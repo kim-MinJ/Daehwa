@@ -28,7 +28,14 @@ public class ChatController {
     @PostMapping
     public ChatResponse chat(@RequestBody ChatRequest request, Authentication authentication) {
         // system role 추가
-        String userId = authentication.getName();
+        String userId;
+        if (authentication != null) {
+            // 로그인 사용자
+            userId = authentication.getName();
+        } else {
+            // 비회원 사용자 → 임시 guest 아이디 부여
+            userId = "guest-" + System.currentTimeMillis();
+        }
         log.info("컨트롤러 요청 userId: {}", request.getUserId());
         ChatRequest.Message systemMessage = new ChatRequest.Message();
         systemMessage.setRole("system");
