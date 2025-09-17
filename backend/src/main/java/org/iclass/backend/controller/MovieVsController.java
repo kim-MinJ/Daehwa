@@ -66,8 +66,25 @@ public class MovieVsController {
     }
 
     @GetMapping("/movievote")
-public ResponseEntity<List<MovieVsEntity>> getMovieVoteList() {
-    List<MovieVsEntity> vsList = movieVsService.getAllVs();
-    return ResponseEntity.ok(vsList);
-}
+    public ResponseEntity<List<MovieVsEntity>> getMovieVoteList() {
+        List<MovieVsEntity> vsList = movieVsService.getAllVs();
+        return ResponseEntity.ok(vsList);
+    }
+
+    // VS의 active 상태 변경
+    @PatchMapping("/movievote/{id}/active")
+    public ResponseEntity<?> updateActive(
+            @PathVariable Long id,
+            @RequestBody Map<String, Integer> body) {
+        Integer active = body.get("active");
+        if (active == null) {
+            return ResponseEntity.badRequest().body("active 값이 필요합니다.");
+        }
+
+        movieVsService.updateActive(id, active);
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", id);
+        response.put("active", active);
+        return ResponseEntity.ok(response);
+    }
 }

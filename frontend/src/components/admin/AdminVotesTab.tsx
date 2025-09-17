@@ -1,8 +1,7 @@
-// src/components/admin/AdminVotesTab.tsx
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Search, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { Movie } from "../../pages/RankingPage";
 
@@ -22,7 +21,7 @@ function LoadingSpinner() {
 
 export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabProps) {
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
-  const [movieVotes, setMovieVotes] = useState<Movie[]>([]);
+  const [movieVotes, setMovieVotes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [vsMovie1, setVsMovie1] = useState<Movie | null>(null);
@@ -36,7 +35,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   const [maxRound, setMaxRound] = useState(1);
   const PAGE_SIZE = 12;
 
-  // 전체 영화 데이터 한 번만 불러오기
+  // 전체 영화 데이터 불러오기
   useEffect(() => {
     (async () => {
       try {
@@ -70,7 +69,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
     })();
   }, []);
 
-  // MovieVote 리스트
+  // MovieVote 리스트 불러오기
   const fetchMovieVotes = async () => {
     try {
       setLoadingVotes(true);
@@ -84,49 +83,9 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
         return;
       }
 
-      // 각 VS에서 두 영화 모두 추가
-      const mapped: Movie[] = data.flatMap((m) => [
-        m.movieVs1
-          ? {
-              movieIdx: String(m.movieVs1.movieIdx),
-              tmdbMovieId: "",
-              title: m.movieVs1.title ?? "",
-              poster: m.movieVs1.posterPath
-                ? `https://image.tmdb.org/t/p/w500${m.movieVs1.posterPath}`
-                : "",
-              year: m.movieVs1.releaseDate?.split("-")[0] ?? "",
-              genre: "",
-              rating: m.movieVs1.voteAverage ?? 0,
-              runtime: 0,
-              description: "",
-              director: "",
-              rank: 0,
-              voteCount: m.movieVs1.voteCount ?? 0,
-            }
-          : null,
-        m.movieVs2
-          ? {
-              movieIdx: String(m.movieVs2.movieIdx),
-              tmdbMovieId: "",
-              title: m.movieVs2.title ?? "",
-              poster: m.movieVs2.posterPath
-                ? `https://image.tmdb.org/t/p/w500${m.movieVs2.posterPath}`
-                : "",
-              year: m.movieVs2.releaseDate?.split("-")[0] ?? "",
-              genre: "",
-              rating: m.movieVs2.voteAverage ?? 0,
-              runtime: 0,
-              description: "",
-              director: "",
-              rank: 0,
-              voteCount: m.movieVs2.voteCount ?? 0,
-            }
-          : null,
-      ]).filter(Boolean) as Movie[];
+      setMovieVotes(data);
 
-      setMovieVotes(mapped);
-
-      // 현재 최대 회차 구하기
+      // 현재 최대 회차
       const max = data.reduce((acc, cur) => (cur.vsRound > acc ? cur.vsRound : acc), 1);
       setMaxRound(max);
       if (selectedRound > max) setSelectedRound(max);
@@ -141,6 +100,35 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   useEffect(() => {
     fetchMovieVotes();
   }, []);
+
+  // endDate +7일 지난 항목 자동 active=0 처리
+useEffect(() => {
+  (async () => {
+    let updated = false;
+    for (const mv of movieVotes) {
+      const expired =
+        mv.endDate &&
+        new Date(mv.endDate).getTime() + 7 * 24 * 60 * 60 * 1000 < Date.now();
+
+      if (expired && mv.active === 1) {
+        try {
+          await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ active: 0 }),
+          });
+          updated = true;
+        } catch (err) {
+          console.error("만료 토글 실패", err);
+        }
+      }
+    }
+
+    // ✅ 최소 1개라도 바뀐 경우에만 다시 불러오기
+    if (updated) fetchMovieVotes();
+  })();
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, []); // ✅ 최초 1번만 실행
 
   // 검색 & 필터링
   const filteredMovies = useMemo(() => {
@@ -176,7 +164,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
         },
         body: JSON.stringify({
           movieIds: [Number(vsMovie1.movieIdx), Number(vsMovie2.movieIdx)],
-          round: selectedRound, // 선택된 회차 포함
+          round: selectedRound,
         }),
       });
 
@@ -184,7 +172,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
       alert("✅ VS 등록 완료");
       if (onApplyVsMovies) onApplyVsMovies(vsMovie1, vsMovie2);
-      fetchMovieVotes(); // 리스트 갱신
+      fetchMovieVotes();
     } catch (err) {
       console.error(err);
       alert("❌ VS 등록 중 오류 발생");
@@ -355,25 +343,100 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
         </CardContent>
       )}
 
-      {/* MovieVote 리스트 */}
-      <CardContent className="space-y-4 mt-4">
-        <h3 className="font-semibold text-lg">MovieVote 리스트</h3>
-        {loadingVotes ? (
-          <LoadingSpinner />
-        ) : movieVotes.length === 0 ? (
-          <p className="text-gray-500 text-center">MovieVote가 없습니다.</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {movieVotes.map((movie) => (
-              <div key={movie.movieIdx} className="border rounded-lg overflow-hidden p-1">
-                <ImageWithFallback src={movie.poster} alt={movie.title} className="w-full h-48 object-cover" />
-                <p className="mt-1 text-sm font-medium text-gray-800 line-clamp-1">{movie.title}</p>
-                <p className="text-xs text-gray-500">Votes: {movie.voteCount}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
+          {/* MovieVote 리스트 */}
+<CardContent className="space-y-4 mt-4">
+  <h3 className="font-semibold text-lg">MovieVote 리스트</h3>
+  {loadingVotes ? (
+    <LoadingSpinner />
+  ) : movieVotes.length === 0 ? (
+    <p className="text-gray-500 text-center">MovieVote가 없습니다.</p>
+  ) : (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-center">
+        <thead>
+          <tr className="border-b bg-gray-100">
+            <th className="p-2">번호-회차-순번</th>
+            <th className="p-2">Movie 1</th>
+            <th className="p-2">Movie 2</th>
+            <th className="p-2">Start Date</th>
+            <th className="p-2">End Date</th>
+            <th className="p-2">Active</th>
+          </tr>
+        </thead>
+        <tbody>
+          {movieVotes.map((mv: any) => {
+            const expired =
+              mv.endDate &&
+              new Date(mv.endDate).getTime() + 7 * 24 * 60 * 60 * 1000 < Date.now();
+            const effectiveActive = expired ? 0 : mv.active ?? 0;
+
+            return (
+              <tr key={mv.vsIdx} className="border-b">
+                {/* 번호-회차-순번 */}
+                <td className="p-2">{mv.vsIdx} - {mv.vsRound} - {mv.pair}</td>
+
+                {/* Movie 1 */}
+                <td className="p-2 text-center">
+                  <div className="flex flex-col items-center">
+                    <ImageWithFallback
+                      src={`https://image.tmdb.org/t/p/w92${mv.movieVs1?.posterPath ?? ""}`}
+                      alt={mv.movieVs1?.title ?? "?"}
+                      className="w-24 h-32 object-cover rounded"
+                    />
+                    <p className="mt-1 font-semibold w-24 truncate">{mv.movieVs1?.title ?? "?"}</p>
+                  </div>
+                </td>
+
+                {/* Movie 2 */}
+                <td className="p-2 text-center">
+                  <div className="flex flex-col items-center">
+                    <ImageWithFallback
+                      src={`https://image.tmdb.org/t/p/w92${mv.movieVs2?.posterPath ?? ""}`}
+                      alt={mv.movieVs2?.title ?? "?"}
+                      className="w-24 h-32 object-cover rounded"
+                    />
+                    <p className="mt-1 font-semibold w-24 truncate">{mv.movieVs2?.title ?? "?"}</p>
+                  </div>
+                </td>
+
+                {/* Start / End Date */}
+                <td className="p-2">{mv.startDate ? new Date(mv.startDate).toLocaleDateString() : "-"}</td>
+                <td className="p-2">{mv.endDate ? new Date(mv.endDate).toLocaleDateString() : "-"}</td>
+
+                {/* Active 버튼 */}
+                <td className="p-2">
+                  <Button
+                    size="sm"
+                    className={`px-3 py-1 rounded ${
+                      effectiveActive === 1
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : "bg-gray-400 hover:bg-gray-500 text-white"
+                    }`}
+                    onClick={async () => {
+                      try {
+                        const newValue = effectiveActive === 1 ? 0 : 1;
+                        await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ active: newValue }),
+                        });
+                        fetchMovieVotes();
+                      } catch (err) {
+                        console.error("토글 실패", err);
+                      }
+                    }}
+                  >
+                    {effectiveActive === 1 ? "활성화" : "비활성화"}
+                  </Button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  )}
+</CardContent>
     </Card>
   );
 }

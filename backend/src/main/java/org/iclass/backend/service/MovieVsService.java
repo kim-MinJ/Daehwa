@@ -76,6 +76,15 @@ public class MovieVsService {
         return movieVSRepository.findByActive(1).orElse(null);
     }
 
+    @Transactional
+    public void updateActive(Long id, Integer active) {
+        MovieVsEntity vs = movieVSRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("VS not found with id: " + id));
+
+        vs.setActive(active);
+        movieVSRepository.save(vs);
+    }
+
     // DTO 변환
     private MovieVsDto toDto(MovieVsEntity entity) {
         return MovieVsDto.builder()
