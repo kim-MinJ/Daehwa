@@ -84,9 +84,14 @@ public class ReviewService {
 
   // 🔹 리뷰 삭제 + 리뷰 댓글 하드 삭제
   @Transactional
-  public void deleteReview(Long reviewIdx) {
+  public void deleteReview(Long reviewIdx, String userId) {
     ReviewEntity review = reviewRepository.findById(reviewIdx)
         .orElseThrow(() -> new RuntimeException("Review not found"));
+
+    // Optional: 삭제 권한 체크
+    if (!review.getUser().getUserId().equals(userId)) {
+      throw new RuntimeException("권한이 없습니다.");
+    }
 
     // 1️⃣ 해당 리뷰의 댓글 모두 삭제
     commentService.hardDeleteCommentsByReview(reviewIdx);
