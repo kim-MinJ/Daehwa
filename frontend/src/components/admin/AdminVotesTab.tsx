@@ -103,15 +103,20 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   // endDate +7일 지난 항목 자동 active=0 처리
 useEffect(() => {
-  (async () => {
+  const interval = setInterval(async () => {
     let updated = false;
-    for (const mv of movieVotes) {
-      const expired =
-        mv.endDate &&
-        new Date(mv.endDate).getTime() + 7 * 24 * 60 * 60 * 1000 < Date.now();
+    const now = Date.now();
 
-      if (expired && mv.active === 1) {
+    for (const mv of movieVotes) {
+      if (!mv.active) continue;
+
+      const expireTime = mv.startDate
+        ? new Date(mv.startDate).getTime() + 1 * 60 * 1000 // 7일
+        : null;
+
+      if (expireTime && now > expireTime) {
         try {
+          // active=0만 보내기, endDate는 백엔드에서 처리됨
           await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -119,16 +124,16 @@ useEffect(() => {
           });
           updated = true;
         } catch (err) {
-          console.error("만료 토글 실패", err);
+          console.error("자동 만료 처리 실패", err);
         }
       }
     }
 
-    // ✅ 최소 1개라도 바뀐 경우에만 다시 불러오기
-    if (updated) fetchMovieVotes();
-  })();
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, []); // ✅ 최초 1번만 실행
+    if (updated) fetchMovieVotes(); // 즉시 UI 갱신
+  }, 1000 * 60); // 1분마다 체크
+
+  return () => clearInterval(interval);
+}, [movieVotes]);
 
   // 검색 & 필터링
   const filteredMovies = useMemo(() => {
@@ -367,7 +372,7 @@ useEffect(() => {
           {movieVotes.map((mv: any) => {
             const expired =
               mv.endDate &&
-              new Date(mv.endDate).getTime() + 7 * 24 * 60 * 60 * 1000 < Date.now();
+              new Date(mv.endDate).getTime() + 1 * 60 * 1000 < Date.now();
             const effectiveActive = expired ? 0 : mv.active ?? 0;
 
             return (
@@ -406,28 +411,42 @@ useEffect(() => {
                 {/* Active 버튼 */}
                 <td className="p-2">
                   <Button
-                    size="sm"
-                    className={`px-3 py-1 rounded ${
-                      effectiveActive === 1
-                        ? "bg-green-600 hover:bg-green-700 text-white"
-                        : "bg-gray-400 hover:bg-gray-500 text-white"
-                    }`}
-                    onClick={async () => {
-                      try {
-                        const newValue = effectiveActive === 1 ? 0 : 1;
-                        await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ active: newValue }),
-                        });
-                        fetchMovieVotes();
-                      } catch (err) {
-                        console.error("토글 실패", err);
-                      }
-                    }}
-                  >
-                    {effectiveActive === 1 ? "활성화" : "비활성화"}
-                  </Button>
+  size="sm"
+  className={`px-3 py-1 rounded ${
+    effectiveActive === 1
+      ? "bg-green-600 hover:bg-green-700 text-white"
+      : "bg-gray-400 hover:bg-gray-500 text-white"
+  }`}
+  onClick={async () => {
+    try {
+      if (effectiveActive === 0) {
+        // 활성화 시 확인
+        const confirmActivate = window.confirm(
+          "이 MovieVote를 활성화하시겠습니까?"
+        );
+        if (!confirmActivate) return;
+
+        await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ active: 1 }),
+        });
+      } else {
+        // 비활성화
+        await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ active: 0 }),
+        });
+      }
+      fetchMovieVotes(); // 즉시 UI 갱신
+    } catch (err) {
+      console.error("토글 실패", err);
+    }
+  }}
+>
+  {effectiveActive === 1 ? "활성화" : "비활성화"}
+</Button>
                 </td>
               </tr>
             );

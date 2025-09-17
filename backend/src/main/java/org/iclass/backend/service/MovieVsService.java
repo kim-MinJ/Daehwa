@@ -81,6 +81,15 @@ public class MovieVsService {
         MovieVsEntity vs = movieVSRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("VS not found with id: " + id));
 
+        if (active == 1) {
+            // 활성화 시점: startDate 갱신, endDate 초기화
+            vs.setStartDate(new Date());
+            vs.setEndDate(null);
+        } else {
+            // 비활성화 시점: endDate 기록
+            vs.setEndDate(new Date());
+        }
+
         vs.setActive(active);
         movieVSRepository.save(vs);
     }
