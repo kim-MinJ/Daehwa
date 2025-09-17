@@ -1,5 +1,6 @@
 package org.iclass.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,9 @@ public class ReviewService {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     String userId = auth.getName(); // JWT subject (username)
 
+    if (user == null) {
+      throw new RuntimeException("로그인이 필요합니다.");
+    }
     // 🔑 DB에서 유저 엔티티 조회
     UsersEntity users = usersRepository.findByUserId(userId)
         .orElseThrow(() -> new RuntimeException("User not found"));
@@ -96,6 +100,28 @@ public class ReviewService {
     ReviewEntity entity = reviewRepository.findByReviewIdx(reviewIdx)
         .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
     return ReviewDto.of(entity);
+  }
+
+  // 리뷰 수정
+  @Transactional
+  public ReviewDto updateReview(Long reviewIdx, ReviewDto reviewDto, String userId) {
+    ReviewEntity review = reviewRepository.findById(reviewIdx)
+        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+
+    UsersEntity user = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+    // 본인 or 관리자만 수정 가능
+    if (!review.getUser().getUserId().equals(userId) && !"admin".equalsIgnoreCase(user.getRole())) {
+      throw new RuntimeException("본인 또는 관리자만 리뷰를 수정할 수 있습니다.");
+    }
+
+    review.setContent(reviewDto.getContent());
+    review.setRating(reviewDto.getRating());
+    review.setUpdateAt(LocalDateTime.now());
+
+    ReviewEntity saved = reviewRepository.save(review);
+    return ReviewDto.of(saved);
   }
 
 }
