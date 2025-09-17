@@ -123,7 +123,7 @@ const CommentAccordion = ({
 
   const handleEditComment = (comment: Comment) => {
     setEditingCommentId(comment.commentIdx);
-  setNewComment(comment.content);
+   setEditedCommentContent(comment.content);
   // 수정 모드로 전환 후 PUT 요청 처리하면 됨
 };
 
@@ -441,6 +441,7 @@ const handleEditReview = (review: Review) => {
   setUserRating(review.rating);
   setSelectedReviewId(Number(review.reviewIdx));
   setEditedReviewContent(review.content);
+  setEditingReviewId(review.reviewIdx);
   // 수정 모드용 state를 따로 두고 patch 요청하면 됨
 };
 
@@ -681,54 +682,68 @@ const handleDeleteReview = async (reviewIdx: number) => {
                       <span className="text-sm text-gray-600">{new Date(review.createdAt).toLocaleDateString()}</span>
                     </div>
 
-                    {selectedReviewId === review.reviewIdx ? (
-                        <div>
-                          <Textarea
-                            value={editedReviewContent}
-                            onChange={(e) => setEditedReviewContent(e.target.value)}
-                            rows={4}
-                            className="w-full border border-gray-300 rounded-md p-2"
-                          />
-                          <div className="flex gap-2 mt-2">
-                            <Button
-                              className="bg-red-600 text-white"
-                              onClick={async () => {
-                                try {
-                                  await axios.patch(`/api/reviews/${review.reviewIdx}`, {
-                                    content: editedReviewContent,
-                                    rating: review.rating,
-                                  }, {
-                                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                                  });
-                                  setReviews((prev) =>
-                                    prev.map((r) =>
-                                      r.reviewIdx === review.reviewIdx ? { ...r, content: editedReviewContent } : r
-                                    )
-                                  );
-                                  setEditingReviewId(Number(review.reviewIdx));
-                                } catch (err) {
-                                  console.error(err);
-                                  alert("리뷰 수정 실패");
-                                }
-                              }}
-                            >
-                              확인
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setEditingReviewId(null);
-                                setEditedReviewContent("");
-                              }}
-                            >
-                              취소
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-gray-800 mb-4">{review.content}</p>
-                      )}
+                    {editingReviewId === review.reviewIdx ? (
+  <div className="space-y-3">
+    {/* ⭐ 별점 수정 */}
+    <div className="flex items-center gap-2">
+      {renderRatingStars(userRating, setUserRating)}
+      <span className="ml-2 text-sm text-gray-600">{userRating} 점</span>
+    </div>
 
+    {/* 리뷰 내용 수정 */}
+    <Textarea
+      value={editedReviewContent}
+      onChange={(e) => setEditedReviewContent(e.target.value)}
+      rows={4}
+      className="w-full border border-gray-300 rounded-md p-2"
+    />
+
+    <div className="flex gap-2 mt-2">
+      <Button
+        className="bg-red-600 text-white"
+        onClick={async () => {
+          try {
+            await axios.patch(
+              `/api/reviews/${review.reviewIdx}`,
+              {
+                content: editedReviewContent,
+                rating: userRating,                // ✅ 수정한 별점 반영
+                updateAt: new Date().toISOString() // ✅ 수정 시점 저장
+              },
+              { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+            );
+
+            setReviews((prev) =>
+              prev.map((r) =>
+                r.reviewIdx === review.reviewIdx
+                  ? { ...r, content: editedReviewContent, rating: userRating }
+                  : r
+              )
+            );
+            setEditingReviewId(null);
+          } catch (err) {
+            console.error(err);
+            alert("리뷰 수정 실패");
+          }
+        }}
+      >
+        확인
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => {
+          setEditingReviewId(null);
+          setEditedReviewContent("");
+          setUserRating(0);
+        }}
+      >
+        취소
+      </Button>
+    </div>
+  </div>
+    ) : (
+      <p className="text-gray-800 mb-4">{review.content}</p>
+    )}
                     <CommentAccordion
                       reviewId={review.reviewIdx}
                       isOpen={isOpen}
