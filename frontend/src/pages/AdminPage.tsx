@@ -333,8 +333,10 @@ useEffect(() => {
   </Card>
         </div>
 
-        {/* 검색바 */}
-        <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        {/* 검색바 (votes 탭일 땐 숨김) */}
+{activeTab !== "votes" && (
+  <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+)}
 
         {/* 탭 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>

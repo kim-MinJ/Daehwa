@@ -37,10 +37,12 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">연결하기</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><a href="#" className="hover:text-white">인스타그램</a></li>
-              <li><a href="#" className="hover:text-white">페이스북</a></li>
-              <li><a href="#" className="hover:text-white">트위터</a></li>
-              <li><a href="#" className="hover:text-white">유튜브</a></li>
+              <li><a href="#" className="hover:text-white">로그인</a></li>
+              <li><a href="#" className="hover:text-white">메인</a></li>
+              <li><a href="#" className="hover:text-white">검색</a></li>
+              <li><a href="#" className="hover:text-white">랭킹</a></li>
+              <li><a href="#" className="hover:text-white">리뷰</a></li>
+              <li><a href="#" className="hover:text-white">상세</a></li>
             </ul>
           </div>
         </div>
