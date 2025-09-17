@@ -712,9 +712,6 @@ BEGIN
 END;
 /
 
-SELECT COUNT(*) FROM MOVIE_INFO;
-DESC MOVIE_VOTE;
-SELECT * FROM MOVIE_VOTE;
 
 -- -- Movie_Info.popularity -> Ranking.ranking_count 연동 트리거
 -- CREATE OR REPLACE TRIGGER trg_update_ranking

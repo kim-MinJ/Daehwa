@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "../components/ui/button";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
@@ -19,17 +20,19 @@ interface Movie {
   director: string;
   poster: string;
   year: string;
-  genre: string;
+  genres: string[];
   rating: number;
   runtime: number;
   description?: string;
   rank?: number;
   voteCount?: number;
+  popularity?: number;
+  totalScore?: number;   // ✅ 종합 점수
 }
 
 type Page = "home" | "movies" | "ranking" | "reviews" | "movie-detail";
 
-// TMDB 장르 매핑 (DB에서 genres 배열 내려주면 join해서 문자열로 변환)
+// TMDB 장르 매핑
 const genreMap: { [key: number]: string } = {
   28: "액션",
   12: "모험",
@@ -52,70 +55,151 @@ const genreMap: { [key: number]: string } = {
   37: "서부",
 };
 
+const genreTranslation: { [key: string]: string } = {
+  "액션": "Action",
+  "모험": "Adventure",
+  "애니메이션": "Animation",
+  "코미디": "Comedy",
+  "범죄": "Crime",
+  "다큐멘터리": "Documentary",
+  "드라마": "Drama",
+  "가족": "Family",
+  "판타지": "Fantasy",
+  "역사": "History",
+  "공포": "Horror",
+  "음악": "Music",
+  "미스터리": "Mystery",
+  "로맨스": "Romance",
+  "SF": "Science Fiction",
+  "TV 영화": "TV Movie",
+  "스릴러": "Thriller",
+  "전쟁": "War",
+  "서부": "Western",
+};
+
 interface RankingPageProps {
-  onMovieClick?: (movie: Movie) => void;   // ← ? 추가
-  onNavigation?: (page: Page) => void;     // ← ? 추가
+  onMovieClick?: (movie: Movie) => void;
+  onNavigation?: (page: Page) => void;
+}
+
+// 로딩 스피너
+function LoadingSpinner() {
+  return (
+    <div className="flex justify-center items-center py-6">
+      <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <span className="ml-2 text-gray-600">로딩중...</span>
+    </div>
+  );
 }
 
 export default function RankingPage({
   onMovieClick,
   onNavigation,
 }: RankingPageProps) {
+  const navigate = useNavigate();   // ✅ 네비게이터 생성
+
   const [movies, setMovies] = useState<Movie[]>([]);
   const [topMovie, setTopMovie] = useState<Movie | null>(null);
   const [secondMovie, setSecondMovie] = useState<Movie | null>(null);
 
+  const [selectedVote, setSelectedVote] = useState<"first" | "second" | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
-  const [selectedVote, setSelectedVote] = useState<"first" | "second" | null>(
-    null
-  );
+  const [currentPage, setCurrentPage] = useState<Page>("ranking");
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-   const handleMovieClick = (movie: Movie) => {
-    if (onMovieClick) onMovieClick(movie);
-    else console.warn("onMovieClick prop이 전달되지 않았습니다.");
+  const handleMovieClick = (movie: Movie) => {
+    // 상세페이지로 이동
+    navigate(`/movies/${movie.id}`, { state: { movie } }); 
   };
 
-  // ✅ 장르 필터/슬라이드 상태
+  // 장르 상태
   const [selectedGenre, setSelectedGenre] = useState("액션");
   const [genreCurrentSlide, setGenreCurrentSlide] = useState(0);
 
-  // ✅ 박스오피스 슬라이드 상태
+  // 박스오피스 슬라이드 상태
   const [currentSlide, setCurrentSlide] = useState(0);
   const moviesPerSlide = 4;
 
-  // ✅ 백엔드에서 데이터 로드
-  useEffect(() => {
-    const fetchMovies = async () => {
-      try {
-        const res = await axios.get("http://localhost:8080/api/movie/ranking");
+  // TMDB API
+  const TMDB_API_KEY = "302b783e860b19b6822ef0a445e7ae53";
+  const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+  const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
-        // 백엔드 응답(JSON → React Movie 타입 변환)
-        const movieRes: Movie[] = res.data.map((m: any, idx: number) => ({
-          id: m.movieIdx.toString(),
-          title: m.title,
-          poster: m.posterPath ? m.posterPath : "/fallback.png",
-          year: m.releaseDate ? m.releaseDate.slice(0, 4) : "N/A",
-          genre: m.genres ? m.genres.join(", ") : "기타", // 백엔드 DTO에서 내려주는 장르 배열
-          rating: m.voteAverage || 0,
-          runtime: m.runtime || 0,
-          description: m.overview,
-          director: m.director || "알 수 없음",
-          rank: idx + 1,
-          voteCount: m.voteCount || 0, // 백엔드에서 내려줄 경우
-        }));
+  // 포스터 캐싱
+  const getCachedPoster = (title: string): string | null => {
+    return localStorage.getItem(`poster_${title}`);
+  };
 
-        setMovies(movieRes);
-        setTopMovie(movieRes[0]);
-        setSecondMovie(movieRes[1]);
-      } catch (err) {
-        console.error("백엔드 데이터 로드 실패:", err);
+  const setCachedPoster = (title: string, posterUrl: string) => {
+    localStorage.setItem(`poster_${title}`, posterUrl);
+  };
+
+  // TMDB 포스터 가져오기
+  const fetchPosterFromTMDB = async (title: string, year?: string) => {
+    const cached = getCachedPoster(title);
+    if (cached) return cached;
+
+    try {
+      const res = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
+        params: {
+          api_key: TMDB_API_KEY,
+          query: title,
+          language: "ko-KR",
+          include_adult: false,
+          year: year || undefined,
+        },
+      });
+
+      if (res.data.results && res.data.results.length > 0) {
+        const posterUrl = `${TMDB_IMAGE_BASE}${res.data.results[0].poster_path}`;
+        setCachedPoster(title, posterUrl);
+        return posterUrl;
       }
-    };
+    } catch (err) {
+      console.error("TMDB 포스터 가져오기 실패:", err);
+    }
 
-    fetchMovies();
-  }, []);
+    return "/fallback.png";
+  };
 
-  // ✅ 투표 수 (DB voteCount 사용)
+  // 주간 투표 수
+const [trending, setTrending] = useState<Movie[]>([]);
+
+// ✅ 백엔드에서 데이터 로드
+useEffect(() => {
+  const fetchMovies = async () => {
+    try {
+      // ✅ 백엔드에서 이미 정렬된 데이터 가져옴
+      const res = await axios.get("http://localhost:8080/api/movies/trending");
+
+      const movieRes: Movie[] = res.data.map((m: any, idx: number) => ({
+        id: m.movieIdx ? m.movieIdx.toString() : m.tmdbMovieId.toString(), // 안전하게 처리
+        title: m.title,
+        poster: m.posterPath
+          ? `https://image.tmdb.org/t/p/w500${m.posterPath}`
+          : "/fallback.png",
+        year: m.year ? m.year.slice(0, 4) : "N/A",
+        genres: m.genres || [],
+        rating: m.rating || 0,
+        runtime: m.runtime || 0,
+        description: m.overview,
+        director: m.director || "알 수 없음",
+        voteCount: m.voteCount || 0, // ✅ DB 투표 수
+        rank: idx + 1,
+      }));
+
+      setMovies(movieRes);
+      setTopMovie(movieRes[0] || null);
+      setSecondMovie(movieRes[1] || null);
+    } catch (err) {
+      console.error("데이터 로드 실패:", err);
+    }
+  };
+
+  fetchMovies();
+}, []);
+
+  // 투표 수 계산
   const topMovieVotes = topMovie?.voteCount || 0;
   const secondMovieVotes = secondMovie?.voteCount || 0;
   const totalVotes = topMovieVotes + secondMovieVotes;
@@ -124,30 +208,45 @@ export default function RankingPage({
   const secondMoviePercentage = totalVotes > 0 ? 100 - topMoviePercentage : 0;
 
   const handleVote = (choice: "first" | "second") => {
-    setSelectedVote(choice);
-    setHasVoted(true);
-    // TODO: 백엔드 /vote API 호출 (MovieVoteController 연동)
+  setSelectedVote(choice);
+  setHasVoted(true);
+  // TODO: /vote API 호출
   };
+  
 
-  // ✅ 박스오피스 TOP 10
+
+  // 박스오피스
   const boxOfficeMovies = movies.slice(0, 10);
-  const totalSlides = Math.ceil(Math.max(boxOfficeMovies.length, 1) / moviesPerSlide);
+  const totalSlides = Math.ceil(
+    Math.max(boxOfficeMovies.length, 1) / moviesPerSlide
+  );
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % totalSlides);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  const prevSlide = () =>
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
   const getCurrentSlideMovies = () => {
     const start = currentSlide * moviesPerSlide;
     return boxOfficeMovies.slice(start, start + moviesPerSlide);
   };
 
-  // ✅ 장르별 영화
-  const getMoviesByGenre = (genre: string) =>
-    movies.filter((movie) => movie.genre.includes(genre)).sort((a, b) => b.rating - a.rating);
+  // 장르별 영화
+  const getMoviesByGenre = (genre: string) => {
+  const englishGenre = genreTranslation[genre] || genre;
+  return movies
+    .filter((movie) => movie.genres?.includes(englishGenre))
+    .sort((a, b) => b.rating - a.rating);
+};
 
   const genreMovies = getMoviesByGenre(selectedGenre);
-  const genreTotalSlides = Math.ceil(Math.max(genreMovies.length, 1) / moviesPerSlide);
-  const nextGenreSlide = () => setGenreCurrentSlide((prev) => (prev + 1) % genreTotalSlides);
-  const prevGenreSlide = () => setGenreCurrentSlide((prev) => (prev - 1 + genreTotalSlides) % genreTotalSlides);
+  const genreTotalSlides = Math.ceil(
+    Math.max(genreMovies.length, 1) / moviesPerSlide
+  );
+  const nextGenreSlide = () =>
+    setGenreCurrentSlide((prev) => (prev + 1) % genreTotalSlides);
+  const prevGenreSlide = () =>
+    setGenreCurrentSlide(
+      (prev) => (prev - 1 + genreTotalSlides) % genreTotalSlides
+    );
   const getCurrentGenreSlideMovies = () => {
     const start = genreCurrentSlide * moviesPerSlide;
     return genreMovies.slice(start, start + moviesPerSlide);
@@ -158,7 +257,7 @@ export default function RankingPage({
     setGenreCurrentSlide(0);
   };
 
-  // ✅ 장르별 통계 계산
+  // 장르 통계
   const genreAvg =
     genreMovies.length > 0
       ? genreMovies.reduce((sum, m) => sum + m.rating, 0) / genreMovies.length
@@ -167,7 +266,7 @@ export default function RankingPage({
   const genreBest = genreMovies.length > 0 ? genreMovies[0].rating : 0;
 
   if (!topMovie || !secondMovie) {
-    return <div className="text-center py-12">로딩 중...</div>;
+    return <LoadingSpinner />;
   }
   return (
     <div className="min-h-screen bg-white">
@@ -201,7 +300,7 @@ export default function RankingPage({
             <div className="flex items-center justify-center gap-12">
               {/* 1위 영화 */}
               <div className="text-center flex flex-col items-center">
-                <div className="group cursor-pointer" onClick={() => onMovieClick?.(topMovie)}>
+                <div className="group cursor-pointer" onClick={() => handleMovieClick(topMovie)}>
                   <div className="relative mb-4">
                     <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
                       <ImageWithFallback
@@ -273,7 +372,7 @@ export default function RankingPage({
 
               {/* 2위 영화 */}
               <div className="text-center flex flex-col items-center">
-                <div className="group cursor-pointer" onClick={() => onMovieClick?.(secondMovie)}>
+                <div className="group cursor-pointer" onClick={() => handleMovieClick(secondMovie)}>
                   <div className="relative mb-4">
                     <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
                       <ImageWithFallback
@@ -385,7 +484,7 @@ export default function RankingPage({
                   <div
                     key={movie.id}
                     className="group cursor-pointer bg-white/80 rounded-lg p-4 hover:bg-white/90 transition-all duration-300 hover:scale-105 shadow-sm border border-gray-300"
-                    onClick={() => onMovieClick?.(movie)}
+                    onClick={() => handleMovieClick(movie)}
                   >
                     <div className="relative mb-4">
                       <div className="aspect-[2/3] rounded-lg overflow-hidden">
@@ -507,7 +606,7 @@ export default function RankingPage({
                       <div
                         key={movie.id}
                         className="group cursor-pointer"
-                        onClick={() => onMovieClick?.(movie)}
+                        onClick={() => handleMovieClick(movie)}
                       >
                         <div className="w-full aspect-[2/3] rounded-lg overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 relative">
                           <ImageWithFallback
