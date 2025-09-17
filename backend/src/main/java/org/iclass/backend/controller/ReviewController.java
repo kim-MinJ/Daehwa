@@ -5,7 +5,9 @@ import java.util.List;
 import org.iclass.backend.dto.ReviewDto;
 // import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.UsersEntity;
+import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.service.ReviewService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,10 +29,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class ReviewController {
 
   private final ReviewService reviewService;
+  private final UsersRepository usersRepository;  
 
   @PostMapping
-  public ResponseEntity<ReviewDto> saveReview(@RequestBody ReviewDto reviewDto,
-      @AuthenticationPrincipal UsersEntity user) {
+  public ResponseEntity<?> saveReview(@RequestBody ReviewDto reviewDto, Authentication authentication) {
+    if (authentication == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body("로그인 후 리뷰 작성이 가능합니다.");
+    }
+
+    String userId = authentication.getName();
+    UsersEntity user = usersRepository.findByUserId(userId)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
     ReviewDto saved = reviewService.saveReview(reviewDto, user);
     return ResponseEntity.ok(saved);
   }
@@ -64,8 +75,16 @@ public class ReviewController {
 
   // 🔹 리뷰 삭제
   @DeleteMapping("/{reviewIdx}")
-  public ResponseEntity<Void> deleteReview(@PathVariable Long reviewIdx) {
-    reviewService.deleteReview(reviewIdx);
+  public ResponseEntity<Void> deleteReview(
+      @PathVariable Long reviewIdx,
+      Authentication authentication) {
+    if (authentication == null) {
+      return ResponseEntity.status(401).build(); // 로그인 안됨
+    }
+
+    String userId = authentication.getName(); // JWT에서 추출한 userId
+    reviewService.deleteReview(reviewIdx, userId);
+
     return ResponseEntity.ok().build();
   }
 
@@ -74,4 +93,20 @@ public class ReviewController {
     ReviewDto review = reviewService.getReviewByIdx(reviewIdx);
     return ResponseEntity.ok(review);
   }
+
+  @PatchMapping("/{reviewIdx}")
+  public ResponseEntity<ReviewDto> updateReview(
+      @PathVariable Long reviewIdx,
+      @RequestBody ReviewDto reviewDto,
+      Authentication authentication) {
+    if (authentication == null) {
+      return ResponseEntity.status(401).build(); // 로그인 안됨
+    }
+
+    String userId = authentication.getName(); // JWT에서 추출한 userId
+    ReviewDto updated = reviewService.updateReview(reviewIdx, reviewDto, userId);
+
+    return ResponseEntity.ok(updated);
+  }
+
 }
