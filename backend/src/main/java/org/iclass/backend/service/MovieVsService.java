@@ -94,6 +94,14 @@ public class MovieVsService {
         movieVSRepository.save(vs);
     }
 
+    @Transactional
+public void softDeleteVs(Long id) {
+    MovieVsEntity vs = movieVSRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("VS not found with id: " + id));
+    vs.setActive(3);
+    movieVSRepository.save(vs);
+}
+
     // DTO 변환
     private MovieVsDto toDto(MovieVsEntity entity) {
         return MovieVsDto.builder()

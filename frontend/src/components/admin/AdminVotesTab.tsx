@@ -184,6 +184,8 @@ useEffect(() => {
     }
   };
 
+  const visibleMovieVotes = movieVotes.filter(mv => mv.active !== 3);
+
   return (
     <Card>
       <CardHeader className="flex justify-between items-center">
@@ -353,7 +355,7 @@ useEffect(() => {
   <h3 className="font-semibold text-lg">MovieVote 리스트</h3>
   {loadingVotes ? (
     <LoadingSpinner />
-  ) : movieVotes.length === 0 ? (
+  ) : visibleMovieVotes.length === 0 ? (
     <p className="text-gray-500 text-center">MovieVote가 없습니다.</p>
   ) : (
     <div className="overflow-x-auto">
@@ -369,7 +371,7 @@ useEffect(() => {
           </tr>
         </thead>
         <tbody>
-          {movieVotes.map((mv: any) => {
+          {visibleMovieVotes.map((mv: any) => {
             const expired =
               mv.endDate &&
               new Date(mv.endDate).getTime() + 1 * 60 * 1000 < Date.now();
@@ -408,46 +410,73 @@ useEffect(() => {
                 <td className="p-2">{mv.startDate ? new Date(mv.startDate).toLocaleDateString() : "-"}</td>
                 <td className="p-2">{mv.endDate ? new Date(mv.endDate).toLocaleDateString() : "-"}</td>
 
-                {/* Active 버튼 */}
-                <td className="p-2">
-                  <Button
-  size="sm"
-  className={`px-3 py-1 rounded ${
-    effectiveActive === 1
-      ? "bg-green-600 hover:bg-green-700 text-white"
-      : "bg-gray-400 hover:bg-gray-500 text-white"
-  }`}
-  onClick={async () => {
-    try {
-      if (effectiveActive === 0) {
-        // 활성화 시 확인
-        const confirmActivate = window.confirm(
-          "이 MovieVote를 활성화하시겠습니까?"
-        );
-        if (!confirmActivate) return;
+              {/* Active & 삭제 버튼 */}
+<td className="p-2">
+  <div className="flex flex-col items-center gap-2">
+    {/* 활성화/비활성화 버튼 */}
+    <Button
+      size="sm"
+      className={`w-24 px-3 py-1 rounded ${
+        effectiveActive === 1
+          ? "bg-green-600 hover:bg-green-700 text-white"
+          : "bg-gray-400 hover:bg-gray-500 text-white"
+      }`}
+      onClick={async () => {
+        try {
+          if (effectiveActive === 0) {
+            const confirmActivate = window.confirm(
+              "이 MovieVote를 활성화하시겠습니까?"
+            );
+            if (!confirmActivate) return;
 
-        await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ active: 1 }),
-        });
-      } else {
-        // 비활성화
-        await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ active: 0 }),
-        });
-      }
-      fetchMovieVotes(); // 즉시 UI 갱신
-    } catch (err) {
-      console.error("토글 실패", err);
-    }
-  }}
->
-  {effectiveActive === 1 ? "활성화" : "비활성화"}
-</Button>
-                </td>
+            await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ active: 1 }),
+            });
+          } else {
+            await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ active: 0 }),
+            });
+          }
+          fetchMovieVotes(); // UI 즉시 갱신
+        } catch (err) {
+          console.error("토글 실패", err);
+        }
+      }}
+    >
+      {effectiveActive === 1 ? "활성화" : "비활성화"}
+    </Button>
+
+    {/* 삭제 버튼 */}
+    <Button
+      size="sm"
+      variant="destructive"
+      className="w-24 px-3 py-1 rounded"
+      onClick={async () => {
+        const confirmDelete = window.confirm(
+          "정말 이 MovieVote를 삭제하시겠습니까?"
+        );
+        if (!confirmDelete) return;
+
+        try {
+          await fetch(`/api/vs/movievote/${mv.vsIdx}/active`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ active: 3 }),
+          });
+          fetchMovieVotes(); // UI 즉시 갱신
+        } catch (err) {
+          console.error("삭제 실패", err);
+        }
+      }}
+    >
+      삭제
+    </Button>
+  </div>
+</td>
               </tr>
             );
           })}
