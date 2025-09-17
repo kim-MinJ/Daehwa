@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { Movie } from "../../pages/RankingPage";
 
@@ -28,21 +28,25 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   const [vsMovie1, setVsMovie1] = useState<Movie | null>(null);
   const [vsMovie2, setVsMovie2] = useState<Movie | null>(null);
   const [selecting, setSelecting] = useState<"movie1" | "movie2" | null>(null);
-  const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [loadingMovies, setLoadingMovies] = useState(false);
+  const [loadingVotes, setLoadingVotes] = useState(false);
+  const [roundSelectOpen, setRoundSelectOpen] = useState(false);
+  const [selectedRound, setSelectedRound] = useState(1);
+  const [maxRound, setMaxRound] = useState(1);
   const PAGE_SIZE = 12;
 
   // 전체 영화 데이터 한 번만 불러오기
   useEffect(() => {
     (async () => {
       try {
-        setLoading(true);
+        setLoadingMovies(true);
         const res = await fetch("/api/searchMovie?page=1&limit=1000");
         const data: any[] = await res.json();
 
         const mapped: Movie[] = data
-          .filter(m => m.posterPath)
-          .map(m => ({
+          .filter((m) => m.posterPath)
+          .map((m) => ({
             movieIdx: String(m.movieIdx),
             tmdbMovieId: m.tmdbMovieId ?? "",
             title: m.title,
@@ -61,7 +65,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        setLoadingMovies(false);
       }
     })();
   }, []);
@@ -69,27 +73,68 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   // MovieVote 리스트
   const fetchMovieVotes = async () => {
     try {
+      setLoadingVotes(true);
       const res = await fetch("/api/vs/movievote");
-      const data: any[] = await res.json();
+      if (!res.ok) throw new Error("MovieVote 조회 실패");
+      const data: any = await res.json();
 
-      const mapped: Movie[] = data.map(m => ({
-        movieIdx: String(m.movie1Idx || m.movie2Idx),
-        tmdbMovieId: "",
-        title: m.movie1Title || m.movie2Title,
-        poster: m.movie1Poster || m.movie2Poster ? `https://image.tmdb.org/t/p/w500${m.movie1Poster || m.movie2Poster}` : "",
-        year: m.movie1Year || m.movie2Year || "",
-        genre: "",
-        rating: m.movie1Rating || m.movie2Rating || 0,
-        runtime: 0,
-        description: "",
-        director: "",
-        rank: 0,
-        voteCount: m.totalVotes ?? 0,
-      }));
+      if (!Array.isArray(data)) {
+        console.warn("MovieVote 데이터가 배열이 아님", data);
+        setMovieVotes([]);
+        return;
+      }
+
+      // 각 VS에서 두 영화 모두 추가
+      const mapped: Movie[] = data.flatMap((m) => [
+        m.movieVs1
+          ? {
+              movieIdx: String(m.movieVs1.movieIdx),
+              tmdbMovieId: "",
+              title: m.movieVs1.title ?? "",
+              poster: m.movieVs1.posterPath
+                ? `https://image.tmdb.org/t/p/w500${m.movieVs1.posterPath}`
+                : "",
+              year: m.movieVs1.releaseDate?.split("-")[0] ?? "",
+              genre: "",
+              rating: m.movieVs1.voteAverage ?? 0,
+              runtime: 0,
+              description: "",
+              director: "",
+              rank: 0,
+              voteCount: m.movieVs1.voteCount ?? 0,
+            }
+          : null,
+        m.movieVs2
+          ? {
+              movieIdx: String(m.movieVs2.movieIdx),
+              tmdbMovieId: "",
+              title: m.movieVs2.title ?? "",
+              poster: m.movieVs2.posterPath
+                ? `https://image.tmdb.org/t/p/w500${m.movieVs2.posterPath}`
+                : "",
+              year: m.movieVs2.releaseDate?.split("-")[0] ?? "",
+              genre: "",
+              rating: m.movieVs2.voteAverage ?? 0,
+              runtime: 0,
+              description: "",
+              director: "",
+              rank: 0,
+              voteCount: m.movieVs2.voteCount ?? 0,
+            }
+          : null,
+      ]).filter(Boolean) as Movie[];
 
       setMovieVotes(mapped);
+
+      // 현재 최대 회차 구하기
+      const max = data.reduce((acc, cur) => (cur.vsRound > acc ? cur.vsRound : acc), 1);
+      setMaxRound(max);
+      if (selectedRound > max) setSelectedRound(max);
     } catch (err) {
       console.error(err);
+      setMovieVotes([]);
+    } finally {
+      setLoadingVotes(false);
     }
   };
 
@@ -99,10 +144,10 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   // 검색 & 필터링
   const filteredMovies = useMemo(() => {
-    if (!allMovies) return [];
-    return allMovies.filter(movie =>
-      movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      movie.director.toLowerCase().includes(searchQuery.toLowerCase())
+    return allMovies.filter(
+      (movie) =>
+        movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        movie.director.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [allMovies, searchQuery]);
 
@@ -120,30 +165,31 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   };
 
   const handleApply = async () => {
-  if (!vsMovie1 || !vsMovie2) return;
+    if (!vsMovie1 || !vsMovie2) return;
 
-  try {
-    const res = await fetch("/api/vs/ranking", {
-      method: "POST", // ❌ PATCH → ✅ POST
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        movieIds: [Number(vsMovie1.movieIdx), Number(vsMovie2.movieIdx)],
-      }),
-    });
+    try {
+      const res = await fetch("/api/vs/ranking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          movieIds: [Number(vsMovie1.movieIdx), Number(vsMovie2.movieIdx)],
+          round: selectedRound, // 선택된 회차 포함
+        }),
+      });
 
-    if (!res.ok) throw new Error("VS 등록 실패");
+      if (!res.ok) throw new Error("VS 등록 실패");
 
-    alert("✅ VS 등록 완료");
-    if (onApplyVsMovies) onApplyVsMovies(vsMovie1, vsMovie2);
-    fetchMovieVotes(); // 리스트 갱신
-  } catch (err) {
-    console.error(err);
-    alert("❌ VS 등록 중 오류 발생");
-  }
-};
+      alert("✅ VS 등록 완료");
+      if (onApplyVsMovies) onApplyVsMovies(vsMovie1, vsMovie2);
+      fetchMovieVotes(); // 리스트 갱신
+    } catch (err) {
+      console.error(err);
+      alert("❌ VS 등록 중 오류 발생");
+    }
+  };
 
   return (
     <Card>
@@ -162,31 +208,83 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
       {!collapsed && (
         <CardContent className="space-y-6">
-          {/* 검색창 */}
-          <div className="flex items-center gap-2 mb-4">
-            <Search className="h-4 w-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="검색"
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border p-2 rounded w-full"
-            />
-          </div>
+          {/* 검색창 + 회차 선택 + 회차 추가 */}
+          {loadingMovies ? (
+            <LoadingSpinner />
+          ) : (
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex-1 flex items-center gap-2">
+                <Search className="h-4 w-4 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="검색"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border p-2 rounded w-full"
+                />
+              </div>
+
+              {/* 회차 선택 드롭다운 */}
+              <div className="relative">
+                <Button
+                  size="sm"
+                  onClick={() => setRoundSelectOpen((prev) => !prev)}
+                  className="flex items-center gap-1"
+                >
+                  {selectedRound}회차
+                </Button>
+                {roundSelectOpen && (
+                  <div className="absolute right-0 mt-2 w-24 bg-white border rounded shadow z-10">
+                    {Array.from({ length: maxRound }, (_, i) => i + 1).map((r) => (
+                      <div
+                        key={r}
+                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setSelectedRound(r);
+                          setRoundSelectOpen(false);
+                        }}
+                      >
+                        {r}회차
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 회차 추가 버튼 */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setMaxRound((prev) => prev + 1);
+                  setSelectedRound(maxRound + 1);
+                }}
+              >
+                회차 추가
+              </Button>
+            </div>
+          )}
 
           {/* VS 선택 카드 */}
           <div className="flex items-center justify-center gap-4 mb-6">
             <div
-              className={`text-center cursor-pointer ${selecting === "movie1" ? "ring-4 ring-yellow-400 rounded-xl" : ""}`}
+              className={`text-center cursor-pointer ${
+                selecting === "movie1" ? "ring-4 ring-yellow-400 rounded-xl" : ""
+              }`}
               onClick={() => setSelecting("movie1")}
             >
               {vsMovie1 ? (
-                <img src={vsMovie1.poster} className="w-48 h-64 object-cover rounded-xl border-4 border-yellow-400" />
+                <img
+                  src={vsMovie1.poster}
+                  className="w-48 h-64 object-cover rounded-xl border-4 border-yellow-400"
+                />
               ) : (
-                <div className="w-48 h-64 bg-gray-200 rounded-xl flex items-center justify-center">무비1 선택</div>
+                <div className="w-48 h-64 bg-gray-200 rounded-xl flex items-center justify-center">
+                  무비1 선택
+                </div>
               )}
               <p className="mt-2 font-semibold">무비1</p>
             </div>
@@ -194,13 +292,20 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
             <div className="text-2xl font-bold flex-shrink-0 self-center">VS</div>
 
             <div
-              className={`text-center cursor-pointer ${selecting === "movie2" ? "ring-4 ring-yellow-400 rounded-xl" : ""}`}
+              className={`text-center cursor-pointer ${
+                selecting === "movie2" ? "ring-4 ring-yellow-400 rounded-xl" : ""
+              }`}
               onClick={() => setSelecting("movie2")}
             >
               {vsMovie2 ? (
-                <img src={vsMovie2.poster} className="w-48 h-64 object-cover rounded-xl border-4 border-yellow-400" />
+                <img
+                  src={vsMovie2.poster}
+                  className="w-48 h-64 object-cover rounded-xl border-4 border-yellow-400"
+                />
               ) : (
-                <div className="w-48 h-64 bg-gray-200 flex items-center justify-center rounded-xl">무비2 선택</div>
+                <div className="w-48 h-64 bg-gray-200 flex items-center justify-center rounded-xl">
+                  무비2 선택
+                </div>
               )}
               <p className="mt-2 font-semibold">무비2</p>
             </div>
@@ -212,11 +317,12 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
             </Button>
           </div>
 
-          {loading ? (
+          {/* 전체 영화 카드 */}
+          {loadingMovies ? (
             <LoadingSpinner />
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {pagedMovies.map(movie => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {pagedMovies.map((movie) => (
                 <div
                   key={movie.movieIdx}
                   className={`cursor-pointer relative rounded-lg overflow-hidden border ${
@@ -236,10 +342,14 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
           {/* 페이지 네비게이션 */}
           <div className="flex justify-center gap-2 mt-4">
             {currentPage > 1 && (
-              <Button size="sm" onClick={() => setCurrentPage(prev => prev - 1)}>이전</Button>
+              <Button size="sm" onClick={() => setCurrentPage((prev) => prev - 1)}>
+                이전
+              </Button>
             )}
             {currentPage * PAGE_SIZE < filteredMovies.length && (
-              <Button size="sm" onClick={() => setCurrentPage(prev => prev + 1)}>다음</Button>
+              <Button size="sm" onClick={() => setCurrentPage((prev) => prev + 1)}>
+                다음
+              </Button>
             )}
           </div>
         </CardContent>
@@ -248,15 +358,21 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
       {/* MovieVote 리스트 */}
       <CardContent className="space-y-4 mt-4">
         <h3 className="font-semibold text-lg">MovieVote 리스트</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {movieVotes.map(movie => (
-            <div key={movie.movieIdx} className="border rounded-lg overflow-hidden p-1">
-              <ImageWithFallback src={movie.poster} alt={movie.title} className="w-full h-48 object-cover" />
-              <p className="mt-1 text-sm font-medium text-gray-800 line-clamp-1">{movie.title}</p>
-              <p className="text-xs text-gray-500">Votes: {movie.voteCount}</p>
-            </div>
-          ))}
-        </div>
+        {loadingVotes ? (
+          <LoadingSpinner />
+        ) : movieVotes.length === 0 ? (
+          <p className="text-gray-500 text-center">MovieVote가 없습니다.</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {movieVotes.map((movie) => (
+              <div key={movie.movieIdx} className="border rounded-lg overflow-hidden p-1">
+                <ImageWithFallback src={movie.poster} alt={movie.title} className="w-full h-48 object-cover" />
+                <p className="mt-1 text-sm font-medium text-gray-800 line-clamp-1">{movie.title}</p>
+                <p className="text-xs text-gray-500">Votes: {movie.voteCount}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

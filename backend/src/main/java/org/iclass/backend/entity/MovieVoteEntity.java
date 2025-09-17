@@ -1,22 +1,12 @@
 package org.iclass.backend.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import java.util.Date;
 
-@Setter
+import jakarta.persistence.*;
+import lombok.*;
+
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
@@ -31,6 +21,10 @@ public class MovieVoteEntity {
   private Long voteIdx;
 
   @ManyToOne
+  @JoinColumn(name = "VS_idx", nullable = false)
+  private MovieVsEntity movieVS;
+
+  @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
   private MovieInfoEntity movie;
 
@@ -38,7 +32,8 @@ public class MovieVoteEntity {
   @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 
-  @ManyToOne
-  @JoinColumn(name = "VS_idx", nullable = false)
-  private MovieVsEntity movieVS;
+  @Column(name = "VS_date", nullable = false)
+  @Temporal(TemporalType.TIMESTAMP)
+  @Builder.Default
+  private Date vsDate = new Date();
 }
