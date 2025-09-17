@@ -5,6 +5,7 @@ import java.util.List;
 import org.iclass.backend.dto.ReviewDto;
 // import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.UsersEntity;
+import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.service.ReviewService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,14 +29,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class ReviewController {
 
   private final ReviewService reviewService;
+  private final UsersRepository usersRepository;  
 
   @PostMapping
-  public ResponseEntity<?> saveReview(@RequestBody ReviewDto reviewDto,
-      @AuthenticationPrincipal UsersEntity user) {
-    if (user == null) {
+  public ResponseEntity<?> saveReview(@RequestBody ReviewDto reviewDto, Authentication authentication) {
+    if (authentication == null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
           .body("로그인 후 리뷰 작성이 가능합니다.");
     }
+
+    String userId = authentication.getName();
+    UsersEntity user = usersRepository.findByUserId(userId)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
     ReviewDto saved = reviewService.saveReview(reviewDto, user);
     return ResponseEntity.ok(saved);
   }
