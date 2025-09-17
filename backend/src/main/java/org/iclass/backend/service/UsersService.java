@@ -4,26 +4,41 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.iclass.backend.dto.UsersDto;
+import org.iclass.backend.entity.ReviewEntity;
 import org.iclass.backend.entity.UsersEntity;
+import org.iclass.backend.repository.BookmarkRepository;
+import org.iclass.backend.repository.CommentsRepository;
+import org.iclass.backend.repository.ReviewRepository;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 
 @Service
 public class UsersService {
+
+  private final ReviewRepository reviewRepository;
+
+  private final BookmarkRepository bookmarkRepository;
+
+  private final CommentsRepository commentsRepository;
 
   private final UsersRepository usersRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final PasswordEncoder passwordEncoder;
 
   public UsersService(UsersRepository usersRepository, JwtTokenProvider jwtTokenProvider,
-      PasswordEncoder passwordEncoder) {
+      PasswordEncoder passwordEncoder, CommentsRepository commentsRepository, BookmarkRepository bookmarkRepository,
+      ReviewRepository reviewRepository) {
     this.usersRepository = usersRepository;
     this.jwtTokenProvider = jwtTokenProvider;
     this.passwordEncoder = passwordEncoder;
+    this.commentsRepository = commentsRepository;
+    this.bookmarkRepository = bookmarkRepository;
+    this.reviewRepository = reviewRepository;
   }
 
   // JWT 토큰에서 사용자 정보 가져오기
@@ -102,6 +117,29 @@ public class UsersService {
         .status(entity.getStatus())
         .token(token)
         .build();
+  }
+
+  @Transactional
+  public void hardDeleteUser(String userId) {
+    UsersEntity user = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+    // 사용자가 쓴 리뷰 가져오기
+    List<ReviewEntity> reviews = reviewRepository.findByUser(user);
+
+    // 각 리뷰에 달린 댓글 삭제 (다른 사용자 댓글 포함)
+    for (ReviewEntity r : reviews) {
+      commentsRepository.deleteAllByReview(r);
+    }
+
+    // 유저가 쓴 리뷰 삭제
+    reviewRepository.deleteAllByUser(user);
+
+    // 북마크 삭제
+    bookmarkRepository.deleteAllByUser(user);
+
+    // 사용자 삭제
+    usersRepository.deleteById(userId);
   }
 
   // 마이페이지 데이터

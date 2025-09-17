@@ -22,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReviewService {
 
+  private final CommentService commentService;
+
   private final ReviewRepository reviewRepository;
   private final UsersRepository usersRepository;
   private final MovieInfoRepository movieInfoRepository;
@@ -80,20 +82,16 @@ public class ReviewService {
     reviewRepository.save(review);
   }
 
-  // 🔹 리뷰 삭제
+  // 🔹 리뷰 삭제 + 리뷰 댓글 하드 삭제
   @Transactional
-  public void deleteReview(Long reviewIdx, String userId) {
+  public void deleteReview(Long reviewIdx) {
     ReviewEntity review = reviewRepository.findById(reviewIdx)
-        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+        .orElseThrow(() -> new RuntimeException("Review not found"));
 
-    UsersEntity user = usersRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    // 1️⃣ 해당 리뷰의 댓글 모두 삭제
+    commentService.hardDeleteCommentsByReview(reviewIdx);
 
-    // 본인 or 관리자만 삭제 가능
-    if (!review.getUser().getUserId().equals(userId) && !"admin".equalsIgnoreCase(user.getRole())) {
-      throw new RuntimeException("본인 또는 관리자만 리뷰를 삭제할 수 있습니다.");
-    }
-
+    // 2️⃣ 리뷰 삭제
     reviewRepository.delete(review);
   }
 
