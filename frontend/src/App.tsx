@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Header from "./pages/Header";
+import Header from "./components/Header";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SearchPage from "./pages/SearchPage";
@@ -9,6 +9,7 @@ import ReviewPage from "./pages/ReviewPage";
 import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
 import  MyPage from "./pages/MyPage";
+import ChatBot from "./components/Chatbot";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           </Routes>
         </main>
         <Footer />
+        <ChatBot></ChatBot>
       </div>
     </BrowserRouter>
   );
