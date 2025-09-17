@@ -84,7 +84,7 @@ function MainPage() {
         const movies: UiMovie[] = res.data.map((m: any) => ({
           id: m.movieIdx,
           title: m.title ?? "제목 없음",
-          poster: m.backdropPath  ?? "",
+          poster: m.posterPath  ?? "",
           backdropPath: m.backdropPath ?? "",
           year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
           genres: m.genres?.length
