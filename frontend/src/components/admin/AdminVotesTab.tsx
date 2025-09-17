@@ -8,6 +8,7 @@ import { Movie } from "../../pages/RankingPage";
 interface AdminVotesTabProps {
   token: string;
   onApplyVsMovies?: (movie1: Movie | null, movie2: Movie | null) => void;
+  onVotesChange?: (votes: any[]) => void;
 }
 
 function LoadingSpinner() {
@@ -105,6 +106,25 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
     () => movieVotes.filter((mv) => mv.active !== 3),
     [movieVotes]
   );
+
+  // AdminVotesTab 내부, return 직전 useMemo 추가
+const filteredMovieVotes = useMemo(() => {
+  if (!searchQuery) return visibleMovieVotes;
+
+  const q = searchQuery.toLowerCase().replace(/\s/g, "");
+  return visibleMovieVotes.filter((mv: any) => {
+    // vs_idx-회차-순번 문자열 생성
+    const vsString = `${mv.vsIdx}-${mv.vsRound}-${mv.pair}`.replace(/\s/g, "");
+    const movie1Title = mv.movieVs1?.title?.toLowerCase() ?? "";
+    const movie2Title = mv.movieVs2?.title?.toLowerCase() ?? "";
+
+    return (
+      movie1Title.includes(q) ||
+      movie2Title.includes(q) ||
+      vsString.includes(q)
+    );
+  });
+}, [visibleMovieVotes, searchQuery]);
 
   // -------------------- 검색 & 필터링 --------------------
   const filteredMovies = useMemo(() => {
@@ -321,7 +341,17 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
       {/* MovieVote 리스트 */}
       <CardContent className="space-y-4 mt-4">
-        <h3 className="font-semibold text-lg">MovieVote 리스트</h3>
+        <h3 className="font-semibold text-lg">영화 투표 리스트</h3>
+        <div className="flex items-center gap-2 mb-2">
+  <Search className="h-4 w-4 text-gray-500" />
+  <input
+    type="text"
+    placeholder="영화 제목 또는 vsIdx-회차-순번으로 검색"
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="border p-2 rounded w-full"
+  />
+</div>
         {loadingVotes ? (
           <LoadingSpinner />
         ) : visibleMovieVotes.length === 0 ? (
@@ -340,7 +370,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
                 </tr>
               </thead>
               <tbody>
-                {visibleMovieVotes.map((mv: any) => {
+                {filteredMovieVotes.map((mv: any) => {
                   const expired =
                     mv.endDate &&
                     new Date(mv.endDate).getTime() + 1 * 60 * 1000 < Date.now();

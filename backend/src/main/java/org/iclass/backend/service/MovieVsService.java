@@ -36,20 +36,16 @@ public class MovieVsService {
         Integer maxPair = movieVSRepository.findMaxPairByRound(round);
         int pair = (maxPair == null ? 1 : maxPair + 1);
 
+        // ✅ 기존 활성화 VS는 건드리지 않음
         MovieVsEntity entity = MovieVsEntity.builder()
                 .movieVs1(movie1)
                 .movieVs2(movie2)
                 .vsRound(round)
                 .pair(pair)
-                .active(0)
-                .startDate(new Date())
+                .active(0) // 기본 비활성
+                .startDate(new Date()) // NOT NULL 제약 때문에 생성 시점으로 저장
+                .endDate(null) // 아직 종료 안 됨
                 .build();
-
-        // 기존 활성 VS 비활성화
-        movieVSRepository.findByActive(1).ifPresent(oldVs -> {
-            oldVs.setActive(0);
-            movieVSRepository.save(oldVs);
-        });
 
         MovieVsEntity saved = movieVSRepository.saveAndFlush(entity);
         return toDto(saved);
@@ -77,17 +73,17 @@ public class MovieVsService {
         return movieVSRepository.findByActive(1).orElse(null);
     }
 
+    // -------------------- 수정된 updateActive --------------------
     @Transactional
     public void updateActive(Long id, Integer active) {
         MovieVsEntity vs = movieVSRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("VS not found with id: " + id));
 
-        if (active == 1) {
-            // 활성화 시점: startDate 갱신, endDate 초기화
+        if (active == 1 && (vs.getStartDate() == null || vs.getActive() != 1)) {
+            // 처음 활성화할 때만 startDate 갱신
             vs.setStartDate(new Date());
             vs.setEndDate(null);
-        } else {
-            // 비활성화 시점: endDate 기록
+        } else if (active == 0) {
             vs.setEndDate(new Date());
         }
 
@@ -103,22 +99,28 @@ public class MovieVsService {
         movieVSRepository.save(vs);
     }
 
-    @Scheduled(fixedRate = 1000 * 60) // 1분마다 체크
+    // -------------------- 스케줄러: DB startDate 기준으로 만료 --------------------
+    @Scheduled(fixedRate = 1000 * 30) // 30초마다 체크
     @Transactional
     public void expireOldVs() {
         Date now = new Date();
 
-        // active=1, endDate=null 기준만 체크
         List<MovieVsEntity> activeVsList = movieVSRepository.findAllByActive(1);
         for (MovieVsEntity vs : activeVsList) {
             if (vs.getStartDate() == null || vs.getEndDate() != null)
                 continue;
 
-            long expireTime = vs.getStartDate().getTime() + 1 * 60 * 1000; // 1분 기준
+            long expireTime = vs.getStartDate().getTime() + 30 * 1000;
             if (now.getTime() > expireTime) {
-                vs.setActive(0);
+                // ✅ endDate 먼저 저장
                 vs.setEndDate(now);
-                movieVSRepository.save(vs);
+                movieVSRepository.saveAndFlush(vs);
+
+                // ✅ active 나중에 저장
+                vs.setActive(0);
+                movieVSRepository.saveAndFlush(vs);
+
+                System.out.println("⏰ 만료 처리됨 VS: " + vs.getVsIdx());
             }
         }
     }

@@ -84,7 +84,6 @@ public class MovieVsController {
         if (active == null) {
             return ResponseEntity.badRequest().body("active 값이 필요합니다.");
         }
-
         movieVsService.updateActive(id, active);
         Map<String, Object> response = new HashMap<>();
         response.put("id", id);

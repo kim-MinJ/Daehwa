@@ -375,7 +375,10 @@ useEffect(() => {
   />
 </TabsContent>
 <TabsContent value="votes">
-  <AdminVotesTab token={token!} />
+  <AdminVotesTab
+    token={token!}
+    onVotesChange={(updatedVotes) => setVotes(updatedVotes)} // ✅ 상위 상태 즉시 반영
+  />
 </TabsContent>
 
         </Tabs>
