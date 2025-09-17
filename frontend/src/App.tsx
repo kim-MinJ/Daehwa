@@ -10,6 +10,7 @@ import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
 import  MyPage from "./pages/MyPage";
 import ChatBot from "./components/ChatBot";
+import DetailReviewPage from "./pages/DetailReviewPage";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/mypage" element={<MyPage />} />
+            <Route path="/movies/:id/review" element={<DetailReviewPage />} />
           </Routes>
         </main>
         <Footer />

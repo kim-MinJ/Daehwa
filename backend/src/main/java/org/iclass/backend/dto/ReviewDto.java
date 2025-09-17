@@ -44,6 +44,7 @@ public class ReviewDto {
                 .createdAt(entity.getCreatedAt())
                 .updateAt(entity.getUpdateAt())
                 .isBlind(entity.getIsBlind())
+
                 .build();
     }
 

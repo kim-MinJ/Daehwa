@@ -40,7 +40,7 @@ public class ChatController {
         ChatRequest.Message systemMessage = new ChatRequest.Message();
         systemMessage.setRole("system");
         systemMessage.setContent(
-                "You are a friendly chatbot who talks about movies with empathy, like a supportive friend.");
+                "You are a friendly chatbot who talks about movies with empathy, like a supportive friend. 주로 영화에 대해 대화할꺼고 영화외의 주제에 대해 사용자가 말을 걸면 자연스럽게 영화에 대한 주제로 옮겨가도록 해.");
 
         request.getMessages().add(0, systemMessage);
 

@@ -30,19 +30,21 @@ public class CommentController {
 
   // 특정 리뷰의 댓글 목록 조회
   @GetMapping("/{reviewId}/comments")
-  public List<CommentsEntity> getComments(@PathVariable Long reviewId) {
-    return commentService.getCommentsByReview(reviewId);
+  public List<CommentsDto> getComments(@PathVariable Long reviewId) {
+    return commentService.getCommentsByReview(reviewId).stream()
+        .map(CommentsDto::of) // Entity → DTO 변환
+        .toList();
   }
 
   // 댓글 작성
   @PostMapping("/{reviewId}/comments")
-  public CommentsEntity addComment(
+  public CommentsDto addComment(
       @PathVariable Long reviewId,
       @RequestBody CommentsDto dto,
       @AuthenticationPrincipal UserDetails userDetails) {
-
+    String userId = userDetails.getUsername();
     String username = userDetails.getUsername();
-    return commentService.addComment(reviewId, username, dto);
+    return commentService.addComment(reviewId, username, userId, dto);
   }
 
   // 단일 댓글 삭제

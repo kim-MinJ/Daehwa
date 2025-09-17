@@ -6,8 +6,12 @@ import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Page } from '../components/types';
-
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "../components/ui/dropdown-menu";
 interface Movie {
   movieIdx: number;
   tmdbMovieId: number;
@@ -45,6 +49,52 @@ interface Comment {
   createdAt: string;
 }
 
+function CommentMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => setAnchorEl(null);
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="h-6 w-6 flex items-center justify-center rounded hover:bg-gray-200 text-gray-600"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          align="end"
+          className="bg-white border border-gray-200 rounded-md shadow-lg"
+        >
+          <DropdownMenuItem
+            onClick={() => {
+              onEdit();
+            }}
+            className="cursor-pointer"
+          >
+            수정
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              onDelete();
+            }}
+            className="cursor-pointer text-red-600"
+          >
+            삭제
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
 const CommentAccordion = ({
   reviewId,
   isOpen,
@@ -54,6 +104,8 @@ const CommentAccordion = ({
   isOpen: boolean;
   onToggle: () => void;
 }) => {
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editedCommentContent, setEditedCommentContent] = useState("");
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
 
@@ -68,7 +120,32 @@ const CommentAccordion = ({
     }
   }, [isOpen, reviewId]);
 
+
+  const handleEditComment = (comment: Comment) => {
+    setEditingCommentId(comment.commentIdx);
+  setNewComment(comment.content);
+  // 수정 모드로 전환 후 PUT 요청 처리하면 됨
+};
+
+const handleDeleteComment = async (commentIdx: number) => {
+  if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
+  try {
+    await axios.delete(`/api/review/comments/${commentIdx}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    setComments((prev) => prev.filter((c) => c.commentIdx !== commentIdx));
+  } catch (err) {
+    console.error(err);
+    alert("삭제 실패");
+  }
+};
   const handleSubmitComment = () => {
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    if (!token) {
+      alert("로그인 후 이용 가능합니다.");
+      return;
+    }
     if (!newComment.trim()) return;
     axios
       .post(
@@ -106,7 +183,7 @@ const CommentAccordion = ({
             />
             <Button
               onClick={handleSubmitComment}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-red-600 hover:bg-gray-700 text-white"
             >
               등록
             </Button>
@@ -114,14 +191,71 @@ const CommentAccordion = ({
 
           <div className="space-y-2">
             {comments.map((c) => (
-              <div key={c.commentIdx} className="bg-gray-100 p-2 rounded-md">
-                <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                  <span>{c.userId}</span>
-                  <span>{new Date(c.createdAt).toLocaleDateString()}</span>
-                </div>
-                <p className="text-gray-800">{c.content}</p>
-              </div>
-            ))}
+  <div key={c.commentIdx} className="bg-gray-100 p-2 rounded-md">
+    <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+      <span>{c.userId}</span>
+      <div className="flex items-center gap-2">
+        <span>{new Date(c.createdAt).toLocaleDateString()}</span>
+        
+        {/* 로그인 유저와 동일할 때만 수정/삭제 메뉴 */}
+        {c.userId === localStorage.getItem("userId") && (
+           <CommentMenu
+              onEdit={() => handleEditComment(c)}
+              onDelete={() => handleDeleteComment(c.commentIdx)}
+            />
+        )}
+      </div>
+    </div>
+    {editingCommentId === c.commentIdx ? (
+        <div>
+          <Textarea
+            value={editedCommentContent}
+            onChange={(e) => setEditedCommentContent(e.target.value)}
+            rows={2}
+            className="w-full border border-gray-300 rounded-md p-2"
+          />
+          <div className="flex gap-2 mt-2">
+            <Button
+              className="bg-red-600 text-white"
+              onClick={async () => {
+                try {
+                  await axios.put(`/api/review/comments/${c.commentIdx}`, {
+                    content: editedCommentContent,
+                  }, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                  });
+                  setComments((prev) =>
+                    prev.map((comment) =>
+                      comment.commentIdx === c.commentIdx
+                        ? { ...comment, content: editedCommentContent }
+                        : comment
+                    )
+                  );
+                  setEditingCommentId(null);
+                } catch (err) {
+                  console.error(err);
+                  alert("댓글 수정 실패");
+                }
+              }}
+            >
+              확인
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingCommentId(null);
+                setEditedCommentContent("");
+              }}
+            >
+              취소
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-gray-800">{c.content}</p>
+      )}
+  </div>
+))}
             {comments.length === 0 && (
               <p className="text-gray-400 text-sm">댓글이 없습니다.</p>
             )}
@@ -134,7 +268,8 @@ const CommentAccordion = ({
 
 export default function ReviewPage() {
   const navigate = useNavigate();
-
+  const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
+  const [editedReviewContent, setEditedReviewContent] = useState("");
   const [todayMovie, setTodayMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -241,29 +376,87 @@ export default function ReviewPage() {
 
 }, [todayMovie]);
 
-  const handleSubmitReview = () => {
-    if (!todayMovie) return;
-    axios
-      .post(
-        '/api/reviews',
-        {
-          movieIdx: todayMovie.movieIdx,
-          rating: userRating,
-          content: newReview,
-          isBlind: isBlind ? 1 : 0,
-          createdAt: new Date().toISOString(),
-        },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      )
-      .then((res) => {
-        alert('리뷰 등록 완료!');
-        setNewReview('');
-        setUserRating(0);
-        setIsBlind(false);
-        setReviews((prev) => [res.data, ...prev]);
-      })
-      .catch(console.error);
-  };
+const handleSubmitReview = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("로그인 후 이용 가능합니다.");
+    return;
+  }
+  if (!todayMovie) return;
+
+  try {
+    // 1. 리뷰 등록 요청
+    const postRes = await axios.post(
+      "/api/reviews",
+      {
+        movieIdx: todayMovie.movieIdx,
+        rating: userRating,
+        content: newReview,
+        isBlind: isBlind ? 1 : 0,
+        createdAt: new Date().toISOString(),
+      },
+      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+    );
+
+    const createdReview = postRes.data; // 서버에서 내려준 reviewIdx 포함됨
+
+    // 2. DB 기준 최신 리뷰 + 감독 + 장르 데이터 다시 조회
+    const [reviewRes, directorRes, genreRes] = await Promise.all([
+      axios.get(`/api/reviews/${createdReview.reviewIdx}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }),
+      axios.get(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }),
+      axios.get(`/api/movies/${todayMovie.movieIdx}/genres`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }),
+    ]);
+
+    // 3. 프론트에서 사용할 Review 객체 조립
+    const newReviewObj: Review = {
+      ...reviewRes.data,
+      movieTitle: todayMovie.title,
+      moviePoster: todayMovie.posterPath,
+      directors: directorRes.data,
+      genres: genreRes.data,
+    };
+
+    // 4. 기존 리뷰 목록 앞에 새 리뷰 추가
+    setReviews((prev) => [newReviewObj, ...prev]);
+
+    // 5. 입력 초기화
+    setNewReview("");
+    setUserRating(0);
+    setIsBlind(false);
+
+    alert("리뷰 등록 완료!");
+  } catch (err) {
+    console.error("[handleSubmitReview]", err);
+    alert("리뷰 등록 실패");
+  }
+};
+const handleEditReview = (review: Review) => {
+  setNewReview(review.content);
+  setUserRating(review.rating);
+  setSelectedReviewId(Number(review.reviewIdx));
+  setEditedReviewContent(review.content);
+  // 수정 모드용 state를 따로 두고 patch 요청하면 됨
+};
+
+const handleDeleteReview = async (reviewIdx: number) => {
+  if (!window.confirm("리뷰를 삭제하시겠습니까?")) return;
+  try {
+    await axios.delete(`/api/reviews/${reviewIdx}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    setReviews((prev) => prev.filter((r) => r.reviewIdx !== reviewIdx));
+  } catch (err) {
+    console.error(err);
+    alert("삭제 실패");
+  }
+};
+
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
@@ -314,25 +507,25 @@ export default function ReviewPage() {
 
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2">
-  <span className="text-sm text-gray-600 w-12">감독</span>
-  <span className="text-black">{directors.join(", ") || "정보 없음"}</span>
-</div>
+                      <span className="text-sm text-gray-600 w-12">감독</span>
+                      <span className="text-black">{directors.join(", ") || "정보 없음"}</span>
+                    </div>
 
-<div className="flex items-center gap-2">
-  <span className="text-sm text-gray-600 w-12">장르</span>
-  {genres.length > 0 
-    ? genres.map((g) => <Badge key={g} variant="outline" className="border-gray-400 text-black">{g}</Badge>) 
-    : <span className="text-black">정보 없음</span>
-  }
-</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 w-12">장르</span>
+                      {genres.length > 0 
+                        ? genres.map((g) => <Badge key={g} variant="outline" className="border-gray-400 text-black">{g}</Badge>) 
+                        : <span className="text-black">정보 없음</span>
+                      }
+                    </div>
                   </div>
 
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex gap-1">{renderStars(Math.round(todayMovie.voteAverage), 'lg')}</div>
                       <span className="text-2xl font-bold text-black">
-  {todayMovie.voteAverage.toFixed(1)}
-</span>
+                        {todayMovie.voteAverage.toFixed(1)}
+                      </span>
                     </div>
                     <p className="text-sm text-gray-600">오늘의 추천 영화 • 평균 평점</p>
                   </div>
@@ -410,7 +603,7 @@ export default function ReviewPage() {
         <div className="space-y-6">
           {reviews.map((review) => {
             const isOpen = selectedReviewId === review.reviewIdx;
-
+            console.log("review.userId:", review.userId, "local userId:", localStorage.getItem("userId"));
             return (
               <div
                 key={review.reviewIdx}
@@ -432,13 +625,25 @@ export default function ReviewPage() {
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-black">{review.userId}</span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-gray-600 hover:text-black hover:bg-gray-200"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      {review.userId === localStorage.getItem("userId") && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="h-8 w-8 text-gray-600 hover:text-black hover:bg-gray-200"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditReview(review)}>
+                            수정
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteReview(review.reviewIdx)}>
+                            삭제
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                     </div>
 
                     <div className="mb-3">
@@ -470,21 +675,59 @@ export default function ReviewPage() {
                     <div className="flex items-center gap-3 mb-4">
                       <div className="flex gap-1">{renderStars(review.rating)}</div>
                       <span className="text-yellow-500 font-medium">
-  {review.rating.toFixed(1)}
-</span>
+                        {review.rating.toFixed(1)}
+                      </span>
                       <span className="text-gray-500">•</span>
                       <span className="text-sm text-gray-600">{new Date(review.createdAt).toLocaleDateString()}</span>
                     </div>
 
-                    <p
-                      className={`text-gray-800 mb-4 leading-relaxed transition-all duration-300`}
-                      style={{
-                        filter: review.isBlind && !showSpoilers ? 'blur(4px)' : 'none',
-                        userSelect: review.isBlind && !showSpoilers ? 'none' : 'auto',
-                      }}
-                    >
-                      {review.content}
-                    </p>
+                    {selectedReviewId === review.reviewIdx ? (
+                        <div>
+                          <Textarea
+                            value={editedReviewContent}
+                            onChange={(e) => setEditedReviewContent(e.target.value)}
+                            rows={4}
+                            className="w-full border border-gray-300 rounded-md p-2"
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              className="bg-red-600 text-white"
+                              onClick={async () => {
+                                try {
+                                  await axios.patch(`/api/reviews/${review.reviewIdx}`, {
+                                    content: editedReviewContent,
+                                    rating: review.rating,
+                                  }, {
+                                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                                  });
+                                  setReviews((prev) =>
+                                    prev.map((r) =>
+                                      r.reviewIdx === review.reviewIdx ? { ...r, content: editedReviewContent } : r
+                                    )
+                                  );
+                                  setEditingReviewId(Number(review.reviewIdx));
+                                } catch (err) {
+                                  console.error(err);
+                                  alert("리뷰 수정 실패");
+                                }
+                              }}
+                            >
+                              확인
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setEditingReviewId(null);
+                                setEditedReviewContent("");
+                              }}
+                            >
+                              취소
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-800 mb-4">{review.content}</p>
+                      )}
 
                     <CommentAccordion
                       reviewId={review.reviewIdx}
