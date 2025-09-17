@@ -8,6 +8,7 @@ import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.MovieVsEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.repository.MovieVSRepository;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,12 +96,32 @@ public class MovieVsService {
     }
 
     @Transactional
-public void softDeleteVs(Long id) {
-    MovieVsEntity vs = movieVSRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("VS not found with id: " + id));
-    vs.setActive(3);
-    movieVSRepository.save(vs);
-}
+    public void softDeleteVs(Long id) {
+        MovieVsEntity vs = movieVSRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("VS not found with id: " + id));
+        vs.setActive(3);
+        movieVSRepository.save(vs);
+    }
+
+    @Scheduled(fixedRate = 1000 * 60) // 1분마다 체크
+    @Transactional
+    public void expireOldVs() {
+        Date now = new Date();
+
+        // active=1, endDate=null 기준만 체크
+        List<MovieVsEntity> activeVsList = movieVSRepository.findAllByActive(1);
+        for (MovieVsEntity vs : activeVsList) {
+            if (vs.getStartDate() == null || vs.getEndDate() != null)
+                continue;
+
+            long expireTime = vs.getStartDate().getTime() + 1 * 60 * 1000; // 1분 기준
+            if (now.getTime() > expireTime) {
+                vs.setActive(0);
+                vs.setEndDate(now);
+                movieVSRepository.save(vs);
+            }
+        }
+    }
 
     // DTO 변환
     private MovieVsDto toDto(MovieVsEntity entity) {
