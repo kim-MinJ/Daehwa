@@ -3,8 +3,6 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getDB } from "@/utils/indexedDB";
 import { useMovieStore } from "@/store/movieStore";
-import { useCreditsStore } from "@/store/creditsStore";
-import { useTrailersStore } from "@/store/trailersStore";
 import { useScrollStore } from "@/store/scrollStore";
 import { useBackspaceNavigate } from "@/hooks/useBackspaceNavigate";
 
@@ -22,11 +20,7 @@ import MyPage from "./pages/MyPage";
 function AppContent() {
   const location = useLocation();
   const fetchFirstPage = useMovieStore((state) => state.fetchFirstPage);
-  const fetchAllBackground = useMovieStore((state) => state.fetchAllBackground);
   const movies = useMovieStore((state) => state.movies);
-
-  const creditsStore = useCreditsStore();
-  const trailersStore = useTrailersStore();
   const scrollStore = useScrollStore();
 
   const [loading, setLoading] = useState(true);
@@ -37,31 +31,8 @@ function AppContent() {
       await getDB();
 
       // 1️⃣ 첫 페이지 UI용 데이터 fetch
-      const firstPageMovies = await fetchFirstPage(20);
+      await fetchFirstPage(20);
       setLoading(false); // 화면 바로 렌더링
-
-      // 2️⃣ 백그라운드 chunked fetch
-      const allMovies = useMovieStore.getState().allMovies;
-      const allMovieIds = allMovies.map((m) => m.movieIdx);
-
-      const chunkedFetch = async (ids: number[], chunkSize = 50) => {
-        for (let i = 0; i < ids.length; i += chunkSize) {
-          const chunk = ids.slice(i, i + chunkSize);
-          await creditsStore.fetchAllBackground(chunk);
-          await trailersStore.fetchAllBackground(chunk);
-        }
-      };
-
-      const fetchBackground = () => {
-        void fetchAllBackground(); // MovieStore 전체 fetch
-        void chunkedFetch(allMovieIds); // credits/trailers chunked fetch
-      };
-
-      if ("requestIdleCallback" in window) {
-        requestIdleCallback(fetchBackground);
-      } else {
-        setTimeout(fetchBackground, 2000);
-      }
     };
 
     initApp();

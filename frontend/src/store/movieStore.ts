@@ -15,7 +15,8 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   isBackgroundFetching: false,
 
   setMovies: (movies) => {
-    const uniqueMovies = Array.from(new Map(movies.map(m => [m.movieIdx, m])).values());
+    const filtered = movies.filter(m => m.posterPath && m.title);
+    const uniqueMovies = Array.from(new Map(filtered.map(m => [m.movieIdx, m])).values());
     set({ movies: uniqueMovies });
   },
 
@@ -46,6 +47,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     return Array.from(new Map(filtered.slice(offset, offset + limit).map(m => [m.movieIdx, m])).values());
   },
 
+  // 🔹 첫 페이지 fetch: poster와 title 없는 영화 제외
   fetchFirstPage: async (limit = 20) => {
     set({ loading: true });
     if (uiAbortController) uiAbortController.abort();
@@ -57,11 +59,14 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const raw = await res.json();
-      const data: Movie[] = Array.isArray(raw)
+      let data: Movie[] = Array.isArray(raw)
         ? raw
         : Array.isArray(raw.content)
         ? raw.content
         : [];
+
+      // 🔹 poster/title 없는 영화 제거
+      data = data.filter(m => m.posterPath && m.title);
 
       const uniqueData = Array.from(new Map(data.map(m => [m.movieIdx, m])).values());
       set({ movies: uniqueData });
@@ -76,6 +81,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     }
   },
 
+  // 🔹 백그라운드 전체 fetch: poster/title 없는 영화 제거
   fetchAllBackground: async () => {
     if (get().isBackgroundFetched || get().isBackgroundFetching) return;
     set({ isBackgroundFetching: true });
@@ -92,16 +98,18 @@ export const useMovieStore = create<MovieState>((set, get) => ({
           if (!res.ok) break;
 
           const raw = await res.json();
-          const batch: Movie[] = Array.isArray(raw)
+          let batch: Movie[] = Array.isArray(raw)
             ? raw
             : Array.isArray(raw.content)
             ? raw.content
             : [];
-          if (!batch || batch.length === 0) break;
+
+          // 🔹 poster/title 없는 영화 제거
+          batch = batch.filter(m => m.posterPath && m.title);
+          if (!batch.length) break;
 
           const combined = [...get().allMovies, ...batch];
           const uniqueMovies = Array.from(new Map(combined.map(m => [m.movieIdx, m])).values());
-
           set({ allMovies: uniqueMovies });
           await DB.movies.save(uniqueMovies);
 
