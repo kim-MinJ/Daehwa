@@ -13,6 +13,8 @@ import {
   Medal,
   Filter,
 } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+
 
 interface Movie {
   id: string;
@@ -97,6 +99,8 @@ export default function RankingPage({
   onNavigation,
 }: RankingPageProps) {
   const navigate = useNavigate();   // ✅ 네비게이터 생성
+
+  const { userInfo, token, isLoggedIn } = useAuth();
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [topMovie, setTopMovie] = useState<Movie | null>(null);
@@ -209,8 +213,7 @@ useEffect(() => {
 
 // 로그인된 유저 정보 가져오기
 const getCurrentUser = () => {
-  const userStr = localStorage.getItem("user");
-  return userStr ? JSON.parse(userStr) : null;
+  return userInfo; // userInfo는 useAuth에서 관리됨
 };
 
 const handleVote = async (choice: "first" | "second") => {
@@ -221,14 +224,18 @@ const handleVote = async (choice: "first" | "second") => {
     return;
   }
 
-  try {
-    const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
-    if (!movieId) return;
+  // ✅ 여기서 movieId를 먼저 정의
+  const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
+  if (!movieId) return;
 
+  try {
     await axios.post("http://localhost:8080/api/movies/vote", null, {
       params: {
-        movieId: Number(movieId),
-        userId: currentUser.userId,   // ✅ 로그인된 유저 ID 사용
+        movieId: Number(movieId),     // ✅ 정의한 movieId 사용
+        userId: currentUser.userId,   // ✅ 로그인한 유저의 ID
+      },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ 토큰 추가
       },
     });
 
