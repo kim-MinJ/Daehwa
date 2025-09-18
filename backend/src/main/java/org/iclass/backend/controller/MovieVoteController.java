@@ -27,7 +27,7 @@ public class MovieVoteController {
             @RequestParam Long movieId,
             @RequestParam String userId) {
         try {
-            return ResponseEntity.ok(movieVoteService.vote(vsId, movieId, userId));
+            return ResponseEntity.ok(movieVoteService.vote(movieId, userId));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage()); // 이미 투표한 경우
         }

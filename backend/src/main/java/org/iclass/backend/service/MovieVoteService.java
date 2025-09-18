@@ -3,7 +3,6 @@ package org.iclass.backend.service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,59 +31,89 @@ public class MovieVoteService {
     private final MovieVSRepository movieVSRepository;
     private final UsersRepository usersRepository;
 
-    // ✅ 투표하기
-    
-        public MovieVoteDto vote(Long vsId, Long movieId, String userId) {
-        MovieVsEntity vs = movieVSRepository.findById(vsId)
-                .orElseThrow(() -> new IllegalArgumentException("VS 없음: " + vsId));
+    /**
+     * ✅ VS 기반 투표 (대결 모드)
+     */
+ public MovieVoteDto vote(Long movieId, String userId) {
+    // 영화 & 유저 조회
+    MovieInfoEntity movie = movieInfoRepository.findById(movieId)
+            .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
 
+    UsersEntity user = usersRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
+
+//     // 오늘 자정 ~ 오늘 23:59:59 (중복 투표 방지용이므로 테스트할 때 주석 처리)
+//     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+//     LocalDateTime endOfDay = LocalDate.now().atTime(23, 59, 59);
+
+//     // 🔒 오늘 이미 투표했는지 체크
+//     movieVoteRepository.findTodayVote(movie, user, startOfDay, endOfDay)
+//             .ifPresent(v -> {
+//                 throw new IllegalStateException("오늘 이미 이 영화에 투표했습니다.");
+//             });
+
+    // 투표 생성
+    MovieVoteEntity vote = MovieVoteEntity.builder()
+            .movie(movie)
+            .user(user)
+            .vsDate(LocalDateTime.now())
+            .build();
+
+    MovieVoteEntity saved = movieVoteRepository.save(vote);
+
+    // ✅ voteCount 증가
+    Integer current = movie.getVoteCount();
+    if (current == null) current = 0;
+    movie.setVoteCount(current + 1);
+    movieInfoRepository.saveAndFlush(movie);
+
+    return MovieVoteDto.of(saved);
+}
+
+    /**
+     * ✅ 단일 영화 투표 (VS 없이)
+     */
+    public MovieVoteDto voteSingle(Long movieId, String userId) {
         MovieInfoEntity movie = movieInfoRepository.findByTmdbMovieId(movieId)
-        .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
+                .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
 
         UsersEntity user = usersRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
 
-        // 🔒 중복 투표 방지
-        movieVoteRepository.findByMovieVSAndUser(vs, user).ifPresent(v -> {
-                throw new IllegalStateException("이미 투표한 유저입니다.");
+        // 🔒 중복 투표 방지 (영화+유저 기준)
+        movieVoteRepository.findByMovieAndUser(movie, user).ifPresent(v -> {
+            throw new IllegalStateException("이미 이 영화에 투표했습니다.");
         });
 
-        MovieVoteEntity vote = new MovieVoteEntity();
-        vote.setMovie(movie);
-        vote.setMovieVS(vs);
-        vote.setUser(user);
+        MovieVoteEntity vote = MovieVoteEntity.builder()
+                .movie(movie)
+                .user(user)
+                .vsDate(LocalDateTime.now())
+                .build();
 
-        // 투표 저장
         MovieVoteEntity saved = movieVoteRepository.save(vote);
 
-// ✅ Movie_Info 테이블의 voteCount 증가
-        Integer current = movie.getVoteCount();
-        if (current == null) current = 0;
-
-        movie.setVoteCount(current + 1);
-
-        // ✅ 즉시 반영
-        movieInfoRepository.saveAndFlush(movie);
-
-        System.out.println("투표 저장됨: " + saved.getVoteIdx() +
-                " | 누적 voteCount=" + movie.getVoteCount());
-
-        // ✅ 별도 메서드로 vote_count 증가
-        updateVoteCount(movieId);
+        // ✅ Movie_Info 테이블의 voteCount 증가
+        incrementVoteCount(movie);
 
         return MovieVoteDto.of(saved);
-        }
+    }
 
-        @Transactional
-        public void updateVoteCount(Long movieId) {
-        MovieInfoEntity movieInfoEntity = movieInfoRepository.findById(movieId)
-                .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
+    /**
+     * ✅ Movie_Info.voteCount +1
+     */
+    private void incrementVoteCount(MovieInfoEntity movie) {
+        Integer current = movie.getVoteCount();
+        movie.setVoteCount((current == null ? 0 : current) + 1);
+        movieInfoRepository.saveAndFlush(movie);
 
-        
-        System.out.println("vote_count 업데이트됨: " + movieInfoEntity.getVoteCount());
-        }
+        System.out.println("투표 반영됨 | movieIdx=" + movie.getMovieIdx()
+                + " | 누적 voteCount=" + movie.getVoteCount());
+    }
 
-    // ✅ 특정 VS의 투표 결과 조회
+    /**
+     * ✅ 특정 VS의 투표 결과 집계
+     */
     public Map<Long, Long> getVoteResult(Long vsId) {
         MovieVsEntity vs = movieVSRepository.findById(vsId)
                 .orElseThrow(() -> new IllegalArgumentException("VS 없음: " + vsId));
@@ -95,8 +124,10 @@ public class MovieVoteService {
                 .collect(Collectors.groupingBy(v -> v.getMovie().getMovieIdx(), Collectors.counting()));
     }
 
-    // ✅ 이번 주 기준 영화별 투표 수 집계
-        public Map<Long, Long> getWeeklyVoteCounts() {
+    /**
+     * ✅ 이번 주 기준 영화별 투표 수 집계
+     */
+    public Map<Long, Long> getWeeklyVoteCounts() {
         LocalDate now = LocalDate.now();
         LocalDate start = now.with(DayOfWeek.MONDAY);
         LocalDate end = now.with(DayOfWeek.SUNDAY);
@@ -108,23 +139,27 @@ public class MovieVoteService {
 
         return results.stream()
                 .collect(Collectors.toMap(
-                        r -> (Long) r[0],  // movieIdx
-                        r -> (Long) r[1]   // vote count
+                        r -> (Long) r[0],  // movieId
+                        r -> (Long) r[1]   // count
                 ));
-        }
+    }
 
+    /**
+     * ✅ 특정 영화 TMDB 기준 투표 수 조회
+     */
+    public long getVoteCountByTmdbId(Long tmdbMovieId) {
+        return movieVoteRepository.countByMovie_TmdbMovieId(tmdbMovieId);
+    }
+
+    /**
+     * ✅ DTO 변환 유틸
+     */
     private MovieVoteDto toDto(MovieVoteEntity entity) {
         return MovieVoteDto.builder()
                 .voteIdx(entity.getVoteIdx())
                 .movieIdx(entity.getMovie().getMovieIdx())
-                .vsIdx(entity.getMovieVS().getVsIdx())
+                .vsIdx(entity.getMovieVS() != null ? entity.getMovieVS().getVsIdx() : null)
                 .userId(entity.getUser().getUserId())
                 .build();
     }
-
-    // 이번 주 or 전체 투표 수 집계
-    public long getVoteCountByTmdbId(Long tmdbMovieId) {
-        return movieVoteRepository.countByMovie_TmdbMovieId(tmdbMovieId);
-}
-
 }
