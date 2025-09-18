@@ -1,7 +1,6 @@
 package org.iclass.backend.dto;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import org.iclass.backend.entity.MovieInfoEntity;
 
@@ -33,9 +32,6 @@ public class MovieInfoDto {
     private String posterPath;
     private LocalDate releaseDate;
 
-    // ✅ 장르 이름 리스트
-    private List<String> genres;
-
     // ✅ Entity → DTO 변환
     public static MovieInfoDto of(MovieInfoEntity entity) {
         return MovieInfoDto.builder()
@@ -50,7 +46,6 @@ public class MovieInfoDto {
                 .backdropPath(entity.getBackdropPath())
                 .posterPath(entity.getPosterPath())
                 .releaseDate(entity.getReleaseDate())
-                .genres(entity.getGenres()) // ✅ 장르 이름 추가
                 .build();
     }
 

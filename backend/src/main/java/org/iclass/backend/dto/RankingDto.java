@@ -19,7 +19,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Builder
-@Table(name = "RANKING")
+@Table
 public class RankingDto {
     private Long rankingIdx;
     private Long movieIdx; // MovieInfoEntity의 movieIdx
@@ -38,11 +38,10 @@ public class RankingDto {
 
     // ✅ DTO → Entity 변환
     public RankingEntity toEntity(MovieInfoEntity movie) {
-        return RankingEntity.builder()
-                .rankingIdx(this.rankingIdx)
-                .movie(movie) // 연관관계 매핑 (MovieInfoEntity)
-                .rankingCount(this.rankingCount)
-                .createdDate(this.createdDate)
-                .build();
-    }
+    return RankingEntity.builder()
+            .movie(movie)
+            .rankingCount(this.rankingCount)
+            .createdDate(this.createdDate != null ? this.createdDate : LocalDateTime.now())
+            .build();
+}
 }
