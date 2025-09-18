@@ -402,7 +402,13 @@ export default function MyPage({}: MyPageProps) {
                       </div>
                       <p className="mb-2 text-gray-800">{r.content}</p>
                       <div className="text-sm text-gray-600 mb-2">평점: {r.rating} / 10</div>
-                      <Button size="sm" variant="outline" onClick={() => navigate(`/reviews/${r.reviewIdx}`)}>리뷰 보러가기</Button>
+                      <Button
+  size="sm"
+  variant="outline"
+  onClick={() => navigate(`/movies/${r.movieIdx}/review#review-${r.reviewIdx}`)}
+>
+  리뷰 보러가기
+</Button>
                     </div>
                   ))}
                 </div>

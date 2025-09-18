@@ -51,8 +51,13 @@ export function MovieDetailCard({
   }, [movieIdx, token]);
 
   // 2️⃣ 북마크 토글
-  const toggleBookmark = async () => {
-    if (!movieIdx) return;
+  // 2️⃣ 북마크 토글
+const toggleBookmark = async () => {
+  if (!token) {
+    alert("로그인해야 찜할 수 있어요!");
+    return;
+  }
+  if (!movieIdx) return;
     try {
       if (bookmarked) {
         // DB에서 해당 북마크 찾아서 삭제

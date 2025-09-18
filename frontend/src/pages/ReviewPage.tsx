@@ -742,8 +742,16 @@ const handleDeleteReview = async (reviewIdx: number) => {
     </div>
   </div>
     ) : (
+  <>
+    {review.isBlind === 1 && !showSpoilers ? (
+      <p className="text-gray-800 mb-4 blur-sm select-none">
+        {review.content}
+      </p>
+    ) : (
       <p className="text-gray-800 mb-4">{review.content}</p>
     )}
+  </>
+)}
                     <CommentAccordion
                       reviewId={review.reviewIdx}
                       isOpen={isOpen}
