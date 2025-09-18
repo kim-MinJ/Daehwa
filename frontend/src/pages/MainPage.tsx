@@ -28,13 +28,13 @@ export default function MainPage() {
 
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
-  // 1️⃣ UI용 데이터 즉시 계산
+  // 🔹 UI용 데이터 즉시 계산
   const uiMovies: UiMovie[] = useMemo(
     () => movieStore.movies.map(mapToUiMovie),
     [movieStore.movies]
   );
 
-  // 2️⃣ 백그라운드 fetch + 중단 지원
+  // 🔹 백그라운드 fetch + 중단 지원
   useEffect(() => {
     if (!uiMovies.length) return;
     const movieIds = uiMovies.map((m) => m.id);
@@ -46,7 +46,9 @@ export default function MainPage() {
       trailersStore.stopBackgroundFetch();
       creditsStore.stopBackgroundFetch();
     };
-  }, [uiMovies, trailersStore, creditsStore]);
+    // store instance는 변하지 않으므로 의존성 제외
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uiMovies]);
 
   const onMovieClick = (m: UiMovie) => navigate(`/movie/${m.id}`);
 
@@ -60,14 +62,18 @@ export default function MainPage() {
     [uiMovies]
   );
 
-  // 3️⃣ Featured 영화: 첫 렌더 시 랜덤 선택
+  // 🔹 Featured 영화
   const featured = useMemo(() => {
     if (weeklyTop10.length > 0)
       return weeklyTop10[Math.floor(Math.random() * weeklyTop10.length)];
     return personalizedTop3[0] ?? latest6[0];
+  }, [weeklyTop10, personalizedTop3, latest6]);
+
+  // 🔹 SectionCarousel renderMovie 콜백
+  const handleImageLoad = useCallback(() => {
+    setImagesLoaded((prev) => prev || true); // 무한 setState 방지
   }, []);
 
-  // 4️⃣ SectionCarousel renderMovie 콜백
   const renderMovie = useCallback(
     (movie: UiMovie, size: "w154" | "w92") => (
       <ImageWithFallback
@@ -78,7 +84,7 @@ export default function MainPage() {
             ? "w-36 h-52 object-cover"
             : "w-24 h-36 object-cover"
         } transition-opacity duration-700`}
-        onLoad={() => setImagesLoaded(true)}
+        onLoad={handleImageLoad}
         placeholder={
           <MovieSkeleton
             width={size === "w154" ? "w-36" : "w-24"}
@@ -87,7 +93,7 @@ export default function MainPage() {
         }
       />
     ),
-    []
+    [handleImageLoad]
   );
 
   if (!uiMovies.length) {
@@ -113,7 +119,7 @@ export default function MainPage() {
   const rowVirtualizer = useVirtualizer({
     count: uiMovies.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 180, // 각 row 높이
+    estimateSize: () => 180,
   });
 
   return (
@@ -131,7 +137,7 @@ export default function MainPage() {
                 alt={featured.title}
                 className="w-full h-full object-cover transition-opacity duration-700"
                 placeholder={<MovieSkeleton width="w-full" height="h-[85vh]" />}
-                onLoad={() => setImagesLoaded(true)}
+                onLoad={handleImageLoad}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
@@ -212,7 +218,7 @@ export default function MainPage() {
                     const movie = uiMovies[virtualRow.index];
                     return (
                       <div
-                        key={virtualRow.key}
+                        key={movie.id} // 안정적인 key
                         ref={rowVirtualizer.measureElement}
                         data-index={virtualRow.index}
                         className="absolute top-0 left-0 w-full flex items-center gap-4 py-2 cursor-pointer"
