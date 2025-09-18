@@ -441,6 +441,23 @@ COMMENT ON COLUMN CHAT_MESSAGES.role IS '역할';
 
 COMMENT ON COLUMN CHAT_MESSAGES.content IS '대화 내용';
 
+-- 1-18. Feeling_Genres
+CREATE TABLE Feeling_Genres (
+  feelingGenreIdx NUMBER NOT NULL,
+  feelingType     VARCHAR2(100 CHAR) NOT NULL,
+  genreIdx        NUMBER NOT NULL,
+  movieIdx        NUMBER NOT NULL,
+  CONSTRAINT PK_Feeling_Genres PRIMARY KEY (feelingGenreIdx)
+);
+
+COMMENT ON TABLE Feeling_Genres IS '감정 기반 장르-영화 매핑';
+
+COMMENT ON COLUMN Feeling_Genres.feelingGenreIdx IS '기본 인덱스';
+COMMENT ON COLUMN Feeling_Genres.feelingType IS '감정 종류 (ex: 기분전환, 편안함)';
+COMMENT ON COLUMN Feeling_Genres.genreIdx IS '장르 인덱스(FK)';
+COMMENT ON COLUMN Feeling_Genres.movieIdx IS '영화 인덱스(FK)';
+
+
 -- ===========================
 -- 2. FK 생성
 -- ===========================
@@ -550,6 +567,12 @@ ALTER TABLE Bookmark
     FOREIGN KEY (user_id)
     REFERENCES Users(user_id);
 
+ALTER TABLE Feeling_Genres
+  ADD CONSTRAINT FK_Genres_TO_Feeling_Genres
+    FOREIGN KEY (genreIdx)
+    REFERENCES Genres (genre_idx);
+
+
 -- ===========================
 -- 3. 시퀀스 생성
 -- ===========================
@@ -570,6 +593,7 @@ CREATE SEQUENCE SEQ_Ranking START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE SEQ_Videos START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE SEQ_Sound_Track START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE SEQ_CHAT_MESSAGES START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_Feeling_Genres START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
 -- ===========================
 -- 4. 트리거 생성 (PK 자동 증가)
@@ -751,6 +775,17 @@ BEGIN
 END;
 /
 
+-- Feeling_Genres
+CREATE OR REPLACE TRIGGER TRG_Feeling_Genres
+BEFORE INSERT ON Feeling_Genres
+FOR EACH ROW
+BEGIN
+  IF :NEW.feelingGenreIdx IS NULL THEN
+    :NEW.feelingGenreIdx := SEQ_Feeling_Genres.NEXTVAL;
+  END IF;
+END;
+/
+
 
 -- -- Movie_Info.popularity -> Ranking.ranking_count 연동 트리거
 -- CREATE OR REPLACE TRIGGER trg_update_ranking
@@ -765,8 +800,3 @@ END;
 --     -- 없으면 아무것도 하지 않음 (0행이면 그냥 넘어감)
 -- END;
 -- /
-
-  DELETE FROM MOVIE_GENRES;
-
--- 필요하면 삭제 확인
-COMMIT;

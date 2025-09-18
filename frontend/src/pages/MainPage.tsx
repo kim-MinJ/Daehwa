@@ -68,6 +68,8 @@ function MainPage() {
   const [oldPopular, setOldPopular] = useState<UiMovie[]>([]);
   const [featured, setFeatured] = useState<UiMovie | null>(null);
   const [err, setErr] = useState<string | null>(null);
+const [selectedFeeling, setSelectedFeeling] = useState<string | null>(null);
+const [feelingMovies, setFeelingMovies] = useState<UiMovie[]>([]);
 
   const onMovieClick = (m: UiMovie) => navigate(`/movies/${m.id}`);
 
@@ -124,6 +126,42 @@ function MainPage() {
     };
     fetchPopular();
   }, [token]);
+
+  const handleFeelingClick = async (feeling: string) => {
+  if (!token) return;
+
+  try {
+    setSelectedFeeling(feeling);
+    setLoading(true);
+    const res = await axios.get("/api/feeling", {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { feelingType: feeling },
+    });
+
+    const movies: UiMovie[] = res.data.map((m: any) => ({
+      id: m.movieIdx,
+      title: m.title ?? "제목 없음",
+      poster: m.posterPath ?? "",
+      backdropPath: m.backdropPath ?? "",
+      year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+      genres: m.genres?.length
+        ? m.genres.map((g: string) => genreEnToKr[g] ?? "기타")
+        : m.genreIds?.length
+          ? m.genreIds.map((id: number) => genreMap[id] ?? "기타")
+          : ["기타"],
+      rating: m.voteAverage ?? 0,
+      description: m.overview ?? "",
+      releaseDate: m.releaseDate ?? null,
+    }));
+
+    setFeelingMovies(movies);
+  } catch (error) {
+    console.error("감정 추천 로딩 실패:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // 추억의 영화
   useEffect(() => {
@@ -211,56 +249,61 @@ function MainPage() {
 
               {/* 맞춤 추천 TOP3 */}
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
-                    당신만을 위한 추천
-                    <span className="text-sm text-gray-700 font-normal ml-3">
-                      사소하지만 널 위해 준비해봤어...받아...줄래...?
-                    </span>
-                  </h2>
+  <div className="flex items-center justify-between mb-6">
+    <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
+      당신만을 위한 추천
+      <span className="text-sm text-gray-700 font-normal ml-3">
+        사소하지만 널 위해 준비해봤어...받아...줄래...?
+      </span>
+    </h2>
+  </div>
+  <div className="w-full h-px bg-gray-200 mb-6" />
+
+  {/* 버튼 선택 전 */}
+  {!selectedFeeling && (
+    <div className="flex gap-4 mb-4">
+      <Button onClick={() => handleFeelingClick("편안함")}>편안함</Button>
+      <Button onClick={() => handleFeelingClick("흥분")}>흥분</Button>
+      <Button onClick={() => handleFeelingClick("슬픔")}>슬픔</Button>
+    </div>
+  )}
+
+  {/* 감정 선택 후 / 기존 personalizedTop3 대체 */}
+  {selectedFeeling && feelingMovies.length > 0 && (
+    <HorizontalScrollList>
+      {feelingMovies.map((movie, index) => (
+        <div
+          key={movie.id}
+          className="group cursor-pointer flex-shrink-0 relative"
+          onClick={() => onMovieClick(movie)}
+        >
+          <div className="w-80 aspect-[16/9] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
+            <ImageWithFallback
+              src={getPosterUrl(movie.poster, "original")}
+              alt={movie.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
+              <div className="absolute bottom-4 left-4 right-4">
+                <h3 className="text-white font-bold text-lg mb-1 line-clamp-1">{movie.title}</h3>
+                <div className="flex items-center gap-2 text-white/80 text-sm">
+                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                  <span>{movie.rating.toFixed(1)}</span>
+                  <span>•</span>
+                  <span>{movie.year}년</span>
+                  <span>•</span>
+                  <span>{movie.genres?.join(", ") ?? "기타"}</span>
                 </div>
-                <div className="w-full h-px bg-gray-200 mb-6" />
-                <HorizontalScrollList>
-                  {personalizedTop3.map((movie, index) => (
-                    <div
-                      key={movie.id}
-                      className="group cursor-pointer flex-shrink-0 relative"
-                      onClick={() => onMovieClick(movie)}
-                    >
-                      <div className="w-80 aspect-[16/9] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                        <ImageWithFallback
-                          src={getPosterUrl(movie.poster, "original")}
-                          alt={movie.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
-                          <div className="absolute bottom-4 left-4 right-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                                  index === 0 ? "bg-red-600" : index === 1 ? "bg-orange-600" : "bg-yellow-600"
-                                }`}
-                              >
-                                {index + 1}
-                              </div>
-                              <Badge className="bg-white/20 text-white hover:bg-white/20 text-xs">맞춤 추천</Badge>
-                            </div>
-                            <h3 className="text-white font-bold text-lg mb-1 line-clamp-1">{movie.title}</h3>
-                            <div className="flex items-center gap-2 text-white/80 text-sm">
-                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                              <span>{movie.rating.toFixed(1)}</span>
-                              <span>•</span>
-                              <span>{movie.year}년</span>
-                              <span>•</span>
-                              <span>{movie.genres?.join(", ") ?? "기타"}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </HorizontalScrollList>
               </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </HorizontalScrollList>
+  )}
+
+  {/* 초기 personalizedTop3는 감정 선택 전에는 안 보여줌 */}
+</div>
 
               {/* 최신 영화 */}
               <div>
