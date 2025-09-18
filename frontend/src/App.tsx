@@ -1,3 +1,4 @@
+// src/App.tsx
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getDB } from "@/utils/indexedDB";
@@ -23,26 +24,31 @@ function AppContent() {
   const fetchFirstPage = useMovieStore((state) => state.fetchFirstPage);
   const fetchAllBackground = useMovieStore((state) => state.fetchAllBackground);
 
+  const movies = useMovieStore((state) => state.movies);
+
   const creditsStore = useCreditsStore();
   const trailersStore = useTrailersStore();
-  const allMovies = useMovieStore((state) => state.allMovies);
 
   const scrollStore = useScrollStore();
-
   const [loading, setLoading] = useState(true);
 
   // 🔹 앱 초기화
   useEffect(() => {
     const initApp = async () => {
       await getDB();
+
+      // 1️⃣ UI용 첫 페이지만 fetch → 메인페이지 바로 렌더링 가능
       await fetchFirstPage(50);
+      setLoading(false);
+
+      // 2️⃣ 백그라운드 전체 fetch (비동기)
       fetchAllBackground();
 
-      const movieIds = useMovieStore.getState().allMovies.map((m) => m.movieIdx);
+      const allMovies = useMovieStore.getState().allMovies;
+      const movieIds = allMovies.map((m) => m.movieIdx);
+
       creditsStore.fetchAllBackground(movieIds);
       trailersStore.fetchAllBackground(movieIds);
-
-      setLoading(false);
     };
     initApp();
   }, []);
@@ -50,12 +56,15 @@ function AppContent() {
   // 🔹 페이지 이동 시 백그라운드 fetch 유지
   useEffect(() => {
     fetchAllBackground();
-    const movieIds = useMovieStore.getState().allMovies.map((m) => m.movieIdx);
+
+    const allMovies = useMovieStore.getState().allMovies;
+    const movieIds = allMovies.map((m) => m.movieIdx);
+
     creditsStore.fetchAllBackground(movieIds);
     trailersStore.fetchAllBackground(movieIds);
   }, [location.pathname]);
 
-  // 🔹 페이지 이동 시 스크롤 복원
+  // 🔹 스크롤 복원
   useEffect(() => {
     const pos = scrollStore.getScroll(location.pathname);
     window.scrollTo(0, pos);
@@ -68,12 +77,17 @@ function AppContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
-  return loading && allMovies.length === 0 ? (
-    <div className="flex justify-center items-center py-12">
-      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      <span className="ml-2 text-gray-600">영화 데이터 로딩중...</span>
-    </div>
-  ) : (
+  // 🔹 렌더링 조건: 첫 페이지 데이터만 있으면 렌더링
+  if (loading || movies.length === 0) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <span className="ml-2 text-gray-600">영화 데이터 로딩중...</span>
+      </div>
+    );
+  }
+
+  return (
     <Routes>
       <Route path="*" element={<MainPage />} />
       <Route path="/search" element={<SearchPage />} />

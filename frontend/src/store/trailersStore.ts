@@ -24,11 +24,14 @@ export const useTrailersStore = create<TrailersState>((set, get) => ({
   setTrailers: (movieId, trailers) =>
     set((state) => ({ trailersMap: { ...state.trailersMap, [movieId]: trailers } })),
 
+  // 상세페이지용 개별 fetch
   fetchTrailers: async (movieId) => {
     if (movieId in get().trailersMap) return get().trailersMap[movieId];
+
     const cached = (await DB.trailers.get(movieId)) ?? null;
     get().setTrailers(movieId, cached);
 
+    // UI에 바로 표시되도록 비동기 fetch 수행
     (async () => {
       try {
         const res = await fetch(`/api/movie/${movieId}/videos`);
@@ -41,8 +44,7 @@ export const useTrailersStore = create<TrailersState>((set, get) => ({
         get().setTrailers(movieId, data);
         await DB.trailers.save(movieId, data);
       } catch (err: any) {
-        if (err.name === "AbortError")
-          console.log(`Trailers fetch 중단 (movieId=${movieId})`);
+        if (err.name === "AbortError") console.log(`Trailers fetch 중단 (movieId=${movieId})`);
         else console.warn("Trailers fetch 실패:", err);
       }
     })();
@@ -50,6 +52,7 @@ export const useTrailersStore = create<TrailersState>((set, get) => ({
     return cached;
   },
 
+  // 전체 백그라운드 fetch
   fetchAllBackground: (movieIds) => {
     if (get().isBackgroundFetched || get().isBackgroundFetching) return;
     set({ isBackgroundFetching: true });

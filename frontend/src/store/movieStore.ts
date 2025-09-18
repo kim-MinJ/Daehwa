@@ -13,8 +13,8 @@ interface GetMoviesOptions {
 }
 
 interface MovieState {
-  movies: Movie[];
-  allMovies: Movie[];
+  movies: Movie[];           // UI용 첫 페이지 데이터
+  allMovies: Movie[];        // 전체 영화 데이터 (백그라운드)
   loading: boolean;
   isBackgroundFetched: boolean;
   isBackgroundFetching: boolean;
@@ -37,7 +37,6 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   isBackgroundFetched: false,
   isBackgroundFetching: false,
 
-  // 배열 중복 제거
   setMovies: (movies) => {
     const uniqueMovies = Array.from(new Map(movies.map(m => [m.movieIdx, m])).values());
     set({ movies: uniqueMovies });
@@ -59,26 +58,11 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     const all: Movie[] = await DB.movies.getAll();
     let filtered = all;
 
-    if (query) {
-      const q = query.toLowerCase();
-      filtered = filtered.filter((m) => m.title.toLowerCase().includes(q));
-    }
-
-    if (years && years.length > 0) {
-      filtered = filtered.filter(
-        (m) => m.releaseDate && years.includes(m.releaseDate.split("-")[0])
-      );
-    }
-
-    if (genres && genres.length > 0) {
-      filtered = filtered.filter(
-        (m) => m.genres && m.genres.some((g) => genres.includes(g))
-      );
-    }
-
+    if (query) filtered = filtered.filter(m => m.title.toLowerCase().includes(query.toLowerCase()));
+    if (years && years.length > 0) filtered = filtered.filter(m => m.releaseDate && years.includes(m.releaseDate.split("-")[0]));
+    if (genres && genres.length > 0) filtered = filtered.filter(m => m.genres && m.genres.some(g => genres.includes(g)));
     if (countOnly) return filtered.length;
 
-    // slice 후 중복 제거
     return Array.from(new Map(filtered.slice(offset, offset + limit).map(m => [m.movieIdx, m])).values());
   },
 
@@ -164,4 +148,3 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     }
   },
 }));
-

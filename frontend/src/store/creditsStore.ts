@@ -40,18 +40,25 @@ export const useCreditsStore = create<CreditsState>((set, get) => {
     isBackgroundFetched: false,
     isBackgroundFetching: false,
 
+    // UI/IndexedDB 상태 업데이트
     setCredits: (movieId, credits) =>
       set((state) => ({ creditsMap: { ...state.creditsMap, [movieId]: credits } })),
 
+    // 상세페이지용 개별 fetch
     fetchCredits: async (movieId) => {
       if (movieId in get().creditsMap) return get().creditsMap[movieId];
+
       const cached = (await DB.credits.get(movieId)) ?? null;
       get().setCredits(movieId, cached);
+
+      // UI에 바로 표시되도록 비동기 fetch 수행
       void updateCredits(movieId);
+
       return cached;
     },
 
-    fetchAllBackground: async (movieIds) => {
+    // 전체 백그라운드 fetch
+    fetchAllBackground: (movieIds) => {
       if (get().isBackgroundFetched || get().isBackgroundFetching) return;
       set({ isBackgroundFetching: true });
       bgAbortController = new AbortController();
@@ -64,6 +71,7 @@ export const useCreditsStore = create<CreditsState>((set, get) => {
 
           const cached = (await DB.credits.get(id)) ?? null;
           get().setCredits(id, cached);
+
           await updateCredits(id, signal);
         }
         set({ isBackgroundFetched: true, isBackgroundFetching: false });
