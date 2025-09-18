@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class ReviewController {
 
   private final ReviewService reviewService;
-  private final UsersRepository usersRepository;  
+  private final UsersRepository usersRepository;
 
   @PostMapping
   public ResponseEntity<?> saveReview(@RequestBody ReviewDto reviewDto, Authentication authentication) {
@@ -94,6 +94,7 @@ public class ReviewController {
     return ResponseEntity.ok(review);
   }
 
+  // 리뷰 수정
   @PatchMapping("/{reviewIdx}")
   public ResponseEntity<ReviewDto> updateReview(
       @PathVariable Long reviewIdx,

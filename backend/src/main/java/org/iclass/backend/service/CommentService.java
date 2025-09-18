@@ -27,7 +27,7 @@ public class CommentService {
     return commentsRepository.findByReviewReviewIdx(reviewId);
   }
 
-  public CommentsEntity addComment(Long reviewId, String userId, CommentsDto dto) {
+  public CommentsDto addComment(Long reviewId, String userId, String username, CommentsDto dto) {
     ReviewEntity review = reviewRepository.findById(reviewId)
         .orElseThrow(() -> new RuntimeException("리뷰가 존재하지 않습니다."));
     UsersEntity user = usersRepository.findById(userId)
@@ -38,8 +38,8 @@ public class CommentService {
         .user(user)
         .content(dto.getContent())
         .build();
-
-    return commentsRepository.save(comment);
+    CommentsEntity saved = commentsRepository.save(comment);
+    return CommentsDto.of(saved);
   }
 
   @Transactional

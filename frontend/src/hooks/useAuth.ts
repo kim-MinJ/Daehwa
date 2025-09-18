@@ -64,8 +64,25 @@ const login = async (userId: string, password: string, rememberMe: boolean = fal
     // sessionStorage: 브라우저 세션 동안만 유지
     sessionStorage.setItem("token", data.token);
   }
-
   setToken(data.token);
+   try {
+    const meRes = await fetch(`${API_URL}/users/me`, {
+      headers: { Authorization: `Bearer ${data.token}` },
+    });
+
+    if (meRes.ok) {
+      const me = await meRes.json();
+
+      // 로컬에 저장 (DB 기준 userId/role 등)
+      localStorage.setItem("userId", me.userId);
+      localStorage.setItem("username", me.username);
+      localStorage.setItem("role", me.role);
+
+      setUserInfo(me); // 상태에도 반영
+    }
+  } catch (err) {
+    console.error("사용자 정보 불러오기 실패", err);
+  }
 };
 
   const register = async (userId: string, username: string, password: string) => {

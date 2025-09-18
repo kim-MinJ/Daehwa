@@ -5,6 +5,7 @@ import { Badge } from "./ui/badge";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Star, Calendar, Heart, Users } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface MovieDetailCardProps {
   title?: string;
@@ -35,6 +36,7 @@ export function MovieDetailCard({
 }: MovieDetailCardProps) {
   const [bookmarked, setBookmarked] = useState(false);
   const authHeader = { Authorization: `Bearer ${token}` };
+  const navigate = useNavigate();
 
   // 1️⃣ 초기 북마크 상태 확인
   useEffect(() => {
@@ -135,7 +137,9 @@ export function MovieDetailCard({
           </div>
           <div className="flex gap-3 pt-4">
             {/* 평가하기 버튼 */}
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2"
+            onClick={() => movieIdx && navigate(`/movies/${movieIdx}/review`)}
+            >
               <Users className="w-4 h-4" /> 평가하기
             </Button>
 
