@@ -8,6 +8,7 @@ import org.iclass.backend.dto.MovieVoteDto;
 import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.service.MovieVoteService;
+import org.iclass.backend.service.RankingService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,33 +21,13 @@ import java.util.*;
 public class RankingController {
 
     private final UsersRepository usersRepository;
-    private final MovieInfoRepository movieInfoRepository;
     private final MovieVoteService movieVoteService;
+    private final RankingService rankingService;
 
+    /** ✅ 트렌딩 영화 가져오기 */
     @GetMapping("/trending")
     public ResponseEntity<?> getTrendingMovies() {
-        var movies = movieInfoRepository.findAllWithGenres();
-
-        // 정렬: null voteCount 방지
-        movies.sort((a, b) -> Double.compare(
-                (b.getVoteAverage() * ((b.getVoteCount() == null ? 0 : b.getVoteCount()) + 1)),
-                (a.getVoteAverage() * ((a.getVoteCount() == null ? 0 : a.getVoteCount()) + 1))));
-
-        var response = movies.stream().map(m -> {
-            Map<String, Object> movie = new HashMap<>();
-            movie.put("movieIdx", m.getMovieIdx());
-            movie.put("tmdbMovieId", m.getTmdbMovieId());
-            movie.put("title", Optional.ofNullable(m.getTitle()).orElse("제목없음"));
-            movie.put("posterPath", Optional.ofNullable(m.getPosterPath()).orElse("/fallback.png"));
-            movie.put("year", m.getReleaseDate() == null ? "N/A" : m.getReleaseDate().toString());
-            movie.put("rating", Optional.ofNullable(m.getVoteAverage()).orElse(0.0));
-            movie.put("overview", Optional.ofNullable(m.getOverview()).orElse(""));
-            movie.put("genres", Optional.ofNullable(m.getGenres()).orElse(List.of()));
-            movie.put("voteCount", Optional.ofNullable(m.getVoteCount()).orElse(0));
-            return movie;
-        }).toList();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(rankingService.getTrendingMovies());
     }
 
     /** ✅ 버튼 클릭 시 vote_count +1 */
@@ -57,7 +38,7 @@ public class RankingController {
             UsersEntity user = usersRepository.findByUserId(userId)
                     .orElseThrow(() -> new IllegalArgumentException("회원 없음: " + userId));
 
-            MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId); // ✅ 회원만 투표 가능
+            MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId);
             return ResponseEntity.ok(saved);
 
         } catch (Exception e) {
