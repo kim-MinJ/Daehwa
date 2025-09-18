@@ -100,7 +100,7 @@ public class MovieVsService {
     }
 
     // -------------------- 스케줄러: DB startDate 기준으로 만료 --------------------
-    @Scheduled(fixedRate = 1000 * 30) // 30초마다 체크
+    @Scheduled(fixedRate = 72 * 60 * 60 * 1000) // 30초마다 체크
     @Transactional
     public void expireOldVs() {
         Date now = new Date();
@@ -110,7 +110,7 @@ public class MovieVsService {
             if (vs.getStartDate() == null || vs.getEndDate() != null)
                 continue;
 
-            long expireTime = vs.getStartDate().getTime() + 30 * 1000;
+            long expireTime = vs.getStartDate().getTime() + 72 * 60 * 60 * 1000;
             if (now.getTime() > expireTime) {
                 // ✅ endDate 먼저 저장
                 vs.setEndDate(now);

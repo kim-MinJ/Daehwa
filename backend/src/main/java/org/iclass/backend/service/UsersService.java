@@ -141,14 +141,4 @@ public class UsersService {
     // 사용자 삭제
     usersRepository.deleteById(userId);
   }
-
-  // 마이페이지 데이터
-  public Object getMyPageData(String userId) {
-    return List.of("최근 본 영화1", "최근 본 영화2", "최근 본 영화3");
-  }
-
-  // 메인페이지 데이터
-  public Object getMainPageData() {
-    return List.of("인기 영화1", "인기 영화2", "인기 영화3");
-  }
 }
