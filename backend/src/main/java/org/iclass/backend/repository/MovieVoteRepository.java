@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.MovieVoteEntity;
 import org.iclass.backend.entity.MovieVsEntity;
 import org.iclass.backend.entity.UsersEntity;
@@ -14,22 +15,35 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long> {
-    
-    // ✅ 특정 VS + 유저로 투표 여부 조회
+
+    // ✅ 특정 VS + 유저로 투표 여부 조회 (VS 기반)
     Optional<MovieVoteEntity> findByMovieVSAndUser(MovieVsEntity vs, UsersEntity user);
 
     // ✅ 특정 VS에 속한 모든 투표 조회
     List<MovieVoteEntity> findByMovieVS(MovieVsEntity vs);
 
+    // ✅ 단일 영화 + 유저 기준으로 투표 여부 조회 (VS 없이)
+    Optional<MovieVoteEntity> findByMovieAndUser(MovieInfoEntity movie, UsersEntity user);
+
     // ✅ TMDB ID 기준으로 전체 투표 수 집계
     long countByMovie_TmdbMovieId(Long tmdbMovieId);
 
+    // ✅ 이번 주 투표 수 집계
     @Query("SELECT v.movie.tmdbMovieId, COUNT(v) " +
-       "FROM MovieVoteEntity v " +
-       "WHERE v.vsDate BETWEEN :startOfWeek AND :endOfWeek " +
-       "GROUP BY v.movie.tmdbMovieId")
+           "FROM MovieVoteEntity v " +
+           "WHERE v.vsDate BETWEEN :startOfWeek AND :endOfWeek " +
+           "GROUP BY v.movie.tmdbMovieId")
     List<Object[]> countVotesThisWeek(@Param("startOfWeek") LocalDateTime startOfWeek,
-                                  @Param("endOfWeek") LocalDateTime endOfWeek);
+                                      @Param("endOfWeek") LocalDateTime endOfWeek);
 
-                                  
+   @Query("SELECT v FROM MovieVoteEntity v " +
+         "WHERE v.movie = :movie " +
+         "AND v.user = :user " +
+         "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
+   Optional<MovieVoteEntity> findTodayVote(
+         @Param("movie") MovieInfoEntity movie,
+         @Param("user") UsersEntity user,
+         @Param("startOfDay") LocalDateTime startOfDay,
+         @Param("endOfDay") LocalDateTime endOfDay
+);
 }

@@ -207,13 +207,39 @@ useEffect(() => {
     totalVotes > 0 ? Math.round((topMovieVotes / totalVotes) * 100) : 0;
   const secondMoviePercentage = totalVotes > 0 ? 100 - topMoviePercentage : 0;
 
-  const handleVote = (choice: "first" | "second") => {
-  setSelectedVote(choice);
-  setHasVoted(true);
-  // TODO: /vote API 호출
-  };
-  
+const handleVote = async (choice: "first" | "second") => {
+  try {
+    const movieId =
+      choice === "first" ? topMovie?.id : secondMovie?.id;
 
+    if (!movieId) {
+      console.error("영화 ID 없음");
+      return;
+    }
+
+    await axios.post("http://localhost:8080/api/movies/vote", null, {
+      params: {
+        movieId: Number(movieId),   // ✅ 여기서는 movie.id 대신 movieId
+        userId: "testUser",         // 임시 유저 아이디
+      },
+    });
+
+    setSelectedVote(choice);
+    setHasVoted(true);
+
+    // UI 갱신용 (투표 수 증가 반영)
+    if (choice === "first" && topMovie) {
+      setTopMovie({ ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 });
+    } else if (choice === "second" && secondMovie) {
+      setSecondMovie({
+        ...secondMovie,
+        voteCount: (secondMovie.voteCount || 0) + 1,
+      });
+    }
+  } catch (err: any) {
+    console.error("투표 실패:", err.response?.data || err.message);
+  }
+};
 
   // 박스오피스
   const boxOfficeMovies = movies.slice(0, 10);
