@@ -16,16 +16,16 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long> {
 
-    // ✅ 특정 VS + 유저로 투표 여부 조회 (VS 기반)
+    // ✅ [VS 기반] 특정 VS + 유저로 투표 여부 조회
     Optional<MovieVoteEntity> findByMovieVSAndUser(MovieVsEntity vs, UsersEntity user);
 
-    // ✅ 특정 VS에 속한 모든 투표 조회
+    // ✅ [VS 기반] 특정 VS에 속한 모든 투표 조회
     List<MovieVoteEntity> findByMovieVS(MovieVsEntity vs);
 
-    // ✅ 단일 영화 + 유저 기준으로 투표 여부 조회 (VS 없이)
+    // ✅ [단일 영화] 단일 영화 + 유저 기준으로 투표 여부 조회
     Optional<MovieVoteEntity> findByMovieAndUser(MovieInfoEntity movie, UsersEntity user);
 
-    // ✅ 단일 영화 + 유저 + 오늘 날짜 기준으로 투표 여부 조회 (중복 방지)
+    // ✅ [단일 영화] 단일 영화 + 유저 + 오늘 날짜 기준으로 투표 여부 조회 (중복 방지)
     @Query("SELECT v FROM MovieVoteEntity v " +
            "WHERE v.movie = :movie " +
            "AND v.user = :user " +
@@ -37,10 +37,13 @@ public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long
             @Param("endOfDay") LocalDateTime endOfDay
     );
 
-    // ✅ TMDB ID 기준으로 전체 투표 수 집계
+    // ✅ TMDB ID 기준 전체 투표 수
     long countByMovie_TmdbMovieId(Long tmdbMovieId);
 
-    // ✅ 이번 주 투표 수 집계
+    // ✅ 특정 영화 기준 전체 투표 수
+    long countByMovie(MovieInfoEntity movie);
+
+    // ✅ 이번 주 투표 수 집계 (월요일 ~ 일요일)
     @Query("SELECT v.movie.tmdbMovieId, COUNT(v) " +
            "FROM MovieVoteEntity v " +
            "WHERE v.vsDate BETWEEN :startOfWeek AND :endOfWeek " +

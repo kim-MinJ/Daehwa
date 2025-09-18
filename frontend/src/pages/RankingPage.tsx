@@ -13,6 +13,8 @@ import {
   Medal,
   Filter,
 } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+
 
 export interface Movie {
   id: number;
@@ -96,6 +98,8 @@ export default function RankingPage({
   onNavigation,
 }: RankingPageProps) {
   const navigate = useNavigate();
+
+  const { userInfo, token, isLoggedIn } = useAuth();
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [topMovie, setTopMovie] = useState<Movie | null>(null);
@@ -191,45 +195,48 @@ const [selectedVsIdx, setSelectedVsIdx] = useState<number | null>(null); // 선�
     totalVotes > 0 ? Math.round((topMovieVotes / totalVotes) * 100) : 0;
   const secondMoviePercentage = totalVotes > 0 ? 100 - topMoviePercentage : 0;
 
-  const getCurrentUser = () => {
-    const userStr = localStorage.getItem("user");
-    return userStr ? JSON.parse(userStr) : null;
-  };
+// 로그인된 유저 정보 가져오기
+const getCurrentUser = () => {
+  return userInfo; // userInfo는 useAuth에서 관리됨
+};
 
   const handleVote = async (choice: "first" | "second") => {
-    const currentUser = getCurrentUser();
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    alert("로그인 후 투표할 수 있습니다.");
+    return;
+  }
 
-    if (!currentUser) {
-      alert("로그인 후 투표할 수 있습니다.");
-      return;
-    }
+  const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
+  if (!movieId) return;
 
-    try {
-      const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
-      if (!movieId) return;
+  try {
+    await axios.post("http://localhost:8080/api/movies/vote", null, {
+      params: {
+        movieId: Number(movieId),
+        userId: currentUser.userId,
+      },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
 
-      await axios.post("http://localhost:8080/api/movies/vote", null, {
-        params: {
-          movieId: Number(movieId),
-          userId: currentUser.userId,
-        },
+    setSelectedVote(choice);
+    setHasVoted(true);
+
+    if (choice === "first" && topMovie) {
+      setTopMovie({ ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 });
+    } else if (choice === "second" && secondMovie) {
+      setSecondMovie({
+        ...secondMovie,
+        voteCount: (secondMovie.voteCount || 0) + 1,
       });
-
-      setSelectedVote(choice);
-      setHasVoted(true);
-
-      if (choice === "first" && topMovie) {
-        const updatedTop = { ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 };
-        setTopMovie(updatedTop);
-      } else if (choice === "second" && secondMovie) {
-        const updatedSecond = { ...secondMovie, voteCount: (secondMovie.voteCount || 0) + 1 };
-        setSecondMovie(updatedSecond);
-      }
-    } catch (err: any) {
-      console.error("투표 실패:", err.response?.data || err.message);
-      alert(err.response?.data?.error || "투표에 실패했습니다.");
     }
-  };
+  } catch (err: any) {
+    console.error("투표 실패:", err.response?.data || err.message);
+    alert(err.response?.data?.error || "투표에 실패했습니다.");
+  }
+};
 
   // 박스오피스/슬라이드 로직
   const boxOfficeMovies = movies.slice(0, 10);

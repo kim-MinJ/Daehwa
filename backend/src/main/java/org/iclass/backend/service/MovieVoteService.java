@@ -75,7 +75,7 @@ public class MovieVoteService {
         }
 
         /**
-         * ✅ 특정 영화의 총 투표 수
+         * ✅ 특정 영화의 총 투표 수 (DB 집계 기준)
          */
         public long getVoteCount(Long movieId) {
                 MovieInfoEntity movie = movieInfoRepository.findById(movieId)
@@ -84,7 +84,7 @@ public class MovieVoteService {
         }
 
         /**
-         * ✅ 이번 주 영화별 투표 집계
+         * ✅ 이번 주 영화별 투표 집계 (tmdbMovieId 기준)
          */
         public Map<Long, Long> getWeeklyVoteCounts() {
                 LocalDate today = LocalDate.now();
@@ -103,14 +103,17 @@ public class MovieVoteService {
                                 ));
         }
 
+        /**
+         * ✅ VS 모드 결과 조회 (특정 VS에 대해 영화별 집계)
+         */
         public Map<Long, Long> getVoteResult(Long vsId) {
-                var vs = movieVsRepository.findById(vsId)
+                MovieVsEntity vs = movieVsRepository.findById(vsId)
                                 .orElseThrow(() -> new RuntimeException("VS not found"));
 
                 var votes = movieVoteRepository.findByMovieVS(vs);
 
                 Map<Long, Long> result = new HashMap<>();
-                for (var vote : votes) {
+                for (MovieVoteEntity vote : votes) {
                         Long movieId = vote.getMovie().getMovieIdx();
                         result.put(movieId, result.getOrDefault(movieId, 0L) + 1);
                 }
