@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.iclass.backend.dto.MovieInfoDto;
 import org.iclass.backend.entity.MovieCrewEntity;
-import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.repository.MovieCrewRepository;
 import org.iclass.backend.repository.MovieGenresRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
@@ -20,7 +19,7 @@ public class MovieInfoService {
   private final MovieGenresRepository movieGenresRepository;
   private final MovieCrewRepository movieCrewRepository;
 
- public MovieInfoDto getRandomMovie() {
+  public MovieInfoDto getRandomMovie() {
     return MovieInfoDto.of(movieInfoRepository.findRandomMovie());
 }
 

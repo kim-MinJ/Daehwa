@@ -1,10 +1,12 @@
 package org.iclass.backend.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.repository.MovieVoteRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.dto.MovieVoteDto;
 import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.iclass.backend.service.MovieVoteService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.util.*;
 @CrossOrigin(origins = "http://localhost:5173")
 public class RankingController {
 
+    private final UsersRepository usersRepository;
     private final MovieInfoRepository movieInfoRepository;
     private final MovieVoteService movieVoteService;
 
@@ -48,19 +51,21 @@ public ResponseEntity<?> getTrendingMovies() {
 }
 
     /** ✅ 버튼 클릭 시 vote_count +1 */
-    @PostMapping("/vote")
+   @PostMapping("/vote")
     public ResponseEntity<?> vote(@RequestParam Long movieId,
-                                @RequestParam String userId) {
-        try {
-            // VS 없이 단일 영화 투표
-            MovieVoteDto saved = movieVoteService.vote(movieId, userId);
-            return ResponseEntity.ok(saved);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
+                              @RequestParam String userId) {
+    try {
+        UsersEntity user = usersRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("회원 없음: " + userId));
 
+        MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId);  // ✅ 회원만 투표 가능
+        return ResponseEntity.ok(saved);
+
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+    }
+}
 
     private String mapGenreIdToName(int genreId) {
     switch (genreId) {

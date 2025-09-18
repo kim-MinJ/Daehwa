@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.iclass.backend.dto.MovieVsDto;
 import org.iclass.backend.entity.MovieVsEntity;
-import org.iclass.backend.repository.MovieVSRepository;
+import org.iclass.backend.repository.MovieVsRepository;
 import org.iclass.backend.service.MovieVsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class MovieVsController {
 
     private final MovieVsService movieVsService;
-    private final MovieVSRepository movieVSRepository;
+    private final MovieVsRepository movieVSRepository;
 
     // 새로운 VS 생성 (pair 자동 증가, round는 프론트에서 전달)
     @PostMapping("/ranking")
