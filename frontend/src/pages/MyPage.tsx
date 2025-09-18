@@ -75,17 +75,24 @@ export default function MyPage({}: MyPageProps) {
   };
 
   const fetchRecommendMovies = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get("/api/movies/popular", {
-        headers: authHeader,
-        params: { count: 12 },
-      });
-      setRecommendMovies(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (!token) return;
+  try {
+    const res = await axios.get("/api/movies/popular", {
+      headers: authHeader,
+      params: { count: 40 }, // 40개 가져오기
+    });
+
+    const movies40: Movie[] = res.data;
+
+    // 40개 중 랜덤으로 12개 선택
+    const shuffled = [...movies40].sort(() => 0.5 - Math.random());
+    const selected12 = shuffled.slice(0, 12);
+
+    setRecommendMovies(selected12);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const fetchReviews = async () => {
     if (!token) return;

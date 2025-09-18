@@ -1,5 +1,6 @@
 // src/hooks/useMoviePage.ts
 import { useEffect, useState } from "react";
+import { useError } from "./ErrorContext";
 
 export const genreMap: Record<string, string> = {
   Action: '액션',
@@ -107,10 +108,16 @@ async function safeGet(urls: string[]) {
   throw new Error("fetch failed");
 }
 
-export function useMoviePage(id: number): State {
+export function useMoviePage(id: number) {
+  const { throwError } = useError(); // ErrorContext 사용
   const [state, setState] = useState<State>({
-    loading: true, error: null, movie: null, credits: null, similar: [], trailers: [],
-  });
+  loading: true,
+  error: null,
+  movie: null,
+  credits: null,
+  similar: [] as MovieDetail[],
+  trailers: [] as any[],
+});
 
   useEffect(() => {
     if (!Number.isFinite(id)) return;
@@ -124,9 +131,12 @@ export function useMoviePage(id: number): State {
           `/api/movies/${id}`,
           `/api/movies/info/${id}`,
         ]);
+
+        if (!detailRaw) throw new Error("영화 정보를 찾을 수 없습니다.");
+
         const movie = mapMovie(detailRaw);
 
-        let credits: Credits = { cast: [], crew: [] };
+        let credits = { cast: [], crew: [] };
         try {
           const cr = await safeGet([`/api/movies/${id}/credits`]);
           credits = {
@@ -152,12 +162,13 @@ export function useMoviePage(id: number): State {
         setState({ loading: false, error: null, movie, credits, similar, trailers });
       } catch (e: any) {
         if (!alive) return;
-        setState({ loading: false, error: e?.message ?? "load error", movie: null, credits: null, similar: [], trailers: [] });
+        // 🔥 에러 발생 시 ErrorPage로 이동
+        throwError(e?.message ?? "영화 정보를 가져올 수 없습니다.", 500);
       }
     })();
 
     return () => { alive = false; };
-  }, [id]);
+  }, [id, throwError]);
 
   return state;
 }

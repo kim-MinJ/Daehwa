@@ -41,18 +41,18 @@
     }, [credits]);
 
     const castTop = useMemo(
-      () =>
-        (credits?.cast ?? [])
-          .slice(0, 8)
-          .map((c: CastPerson) => ({
-            id: c.id ?? Number(`${c.name?.replace(/\s+/g, "_")}-${c.character ?? ""}`),
-            name: c.name,
-            character: c.character ?? "",
-            photo: img185(c.profile_path),
-          }))
-          .filter((c) => c.name),
-      [credits]
-    );
+  () =>
+    (credits?.cast ?? [])
+      .slice(0, 8)
+      .map((c: CastPerson) => ({
+        id: c.id || `${c.name?.replace(/\s+/g, "_")}-${c.character ?? ""}`,
+        name: c.name,
+        character: c.character ?? "",
+        photo: img185(c.profile_path),
+      }))
+      .filter((c) => !!c.name),
+  [credits]
+);
 
     const cardProps = useMemo(() => {
       const vote10 = Number(movie?.vote_average ?? 0);
