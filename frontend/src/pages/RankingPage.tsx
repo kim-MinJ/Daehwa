@@ -16,7 +16,7 @@ import {
 
 export interface Movie {
   id: number;
-  movieIdx: string; // 추가
+  movieIdx: string; 
   tmdbMovieId: string;
   title: string;
   poster: string;
@@ -108,7 +108,10 @@ export default function RankingPage({
   const [currentSlide, setCurrentSlide] = useState(0);
   const moviesPerSlide = 4;
   const [votePercentages, setVotePercentages] = useState({ top: 0, second: 0 });
+  const [activeVsList, setActiveVsList] = useState<any[]>([]); // 활성화된 VS 목록
+const [selectedVsIdx, setSelectedVsIdx] = useState<number | null>(null); // 선택된 VS
 
+  // DB에서 가져오는 TMDB API 키/URL은 기존 유지 (포스터 가져오기용)
   const TMDB_API_KEY = "302b783e860b19b6822ef0a445e7ae53";
   const TMDB_BASE_URL = "https://api.themoviedb.org/3";
   const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
@@ -149,67 +152,37 @@ export default function RankingPage({
   };
 
   const handleMovieClick = (movie: Movie) => {
-    if (!movie) return;
-    navigate(`/movies/${movie.id}`, { state: { movie } });
+  if (!movie) return;
+  navigate(`/movies/${movie.movieIdx}`, { state: { movie } });
+};
+
+  // 투표 퍼센티지 계산
+  useEffect(() => {
+  const fetchActiveVs = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/vs/versus");
+      const vsList = res.data;
+
+      if (vsList.length > 0) {
+        const firstVs = vsList[0];
+
+        // 포스터 가져오기
+        const topPoster = await fetchPosterFromTMDB(firstVs.topMovie.title, firstVs.topMovie.year);
+        const secondPoster = await fetchPosterFromTMDB(firstVs.secondMovie.title, firstVs.secondMovie.year);
+
+        setTopMovie({ ...firstVs.topMovie, poster: topPoster });
+        setSecondMovie({ ...firstVs.secondMovie, poster: secondPoster });
+        setSelectedVsIdx(firstVs.vsIdx);
+      }
+
+      setActiveVsList(vsList);
+    } catch (err) {
+      console.error("VS 영화 로드 실패:", err);
+    }
   };
 
-  
-useEffect(() => {
-  const topVotes = topMovie?.voteCount || 0;
-  const secondVotes = secondMovie?.voteCount || 0;
-  const total = topVotes + secondVotes;
-  setVotePercentages({
-    top: total > 0 ? Math.round((topVotes / total) * 100) : 0,
-    second: total > 0 ? 100 - Math.round((topVotes / total) * 100) : 0,
-  });
-}, [topMovie, secondMovie]);
-  
-
-  // 백엔드 데이터 로드
-  useEffect(() => {
-    const fetchMovies = async () => {
-      try {
-        const res = await axios.get("http://localhost:8080/api/movies/trending");
-        console.log("API 응답:", res.data);
-
-        if (!res.data || res.data.length < 2) {
-          setTopMovie(null);
-          setSecondMovie(null);
-          setMovies([]);
-          return;
-        }
-
-        const movieRes: Movie[] = res.data.map((m: any, idx: number) => ({
-  id: Number(m.movieIdx || m.tmdbMovieId), // number로 변환
-  movieIdx: m.movieIdx?.toString() || "",
-  tmdbMovieId: m.tmdbMovieId,
-  title: m.title,
-  poster: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : "/fallback.png",
-  year: m.year?.slice(0, 4) || "N/A",
-  genres: m.genres || [],
-  genre: m.genres?.[0] || "",
-  rating: m.rating || 0,
-  runtime: m.runtime || 0,
-  description: m.overview || "",
-  director: m.director || "알 수 없음",
-  voteCount: m.voteCount || 0,
-  rank: idx + 1,
-}));
-
-        console.log("정리된 영화 배열:", movieRes);
-        setMovies(movieRes);
-setTopMovie(movieRes[0] || null);
-setSecondMovie(movieRes[1] || null);
-      } catch (err) {
-        console.error("데이터 로드 실패:", err);
-        setTopMovie(null);  
-        setSecondMovie(null);
-        setMovies([]);
-      }
-    };
-
-    fetchMovies();
-  }, []);
+  fetchActiveVs();
+}, []);
 
   const topMovieVotes = topMovie?.voteCount || 0;
   const secondMovieVotes = secondMovie?.voteCount || 0;
@@ -218,48 +191,47 @@ setSecondMovie(movieRes[1] || null);
     totalVotes > 0 ? Math.round((topMovieVotes / totalVotes) * 100) : 0;
   const secondMoviePercentage = totalVotes > 0 ? 100 - topMoviePercentage : 0;
 
-// 로그인된 유저 정보 가져오기
-const getCurrentUser = () => {
-  const userStr = localStorage.getItem("user");
-  return userStr ? JSON.parse(userStr) : null;
-};
+  const getCurrentUser = () => {
+    const userStr = localStorage.getItem("user");
+    return userStr ? JSON.parse(userStr) : null;
+  };
 
-const handleVote = async (choice: "first" | "second") => {
-  const currentUser = getCurrentUser();
+  const handleVote = async (choice: "first" | "second") => {
+    const currentUser = getCurrentUser();
 
-  if (!currentUser) {
-    alert("로그인 후 투표할 수 있습니다.");
-    return;
-  }
-
-  try {
-    const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
-    if (!movieId) return;
-
-    await axios.post("http://localhost:8080/api/movies/vote", null, {
-      params: {
-        movieId: Number(movieId),
-        userId: currentUser.userId,   // ✅ 로그인된 유저 ID 사용
-      },
-    });
-
-    setSelectedVote(choice);
-    setHasVoted(true);
-
-    if (choice === "first" && topMovie) {
-      const updatedTop = { ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 };
-      setTopMovie(updatedTop);
-    } else if (choice === "second" && secondMovie) {
-      const updatedSecond = { ...secondMovie, voteCount: (secondMovie.voteCount || 0) + 1 };
-      setSecondMovie(updatedSecond);
+    if (!currentUser) {
+      alert("로그인 후 투표할 수 있습니다.");
+      return;
     }
-  } catch (err: any) {
-    console.error("투표 실패:", err.response?.data || err.message);
-    alert(err.response?.data?.error || "투표에 실패했습니다.");
-  }
-};
 
+    try {
+      const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
+      if (!movieId) return;
 
+      await axios.post("http://localhost:8080/api/movies/vote", null, {
+        params: {
+          movieId: Number(movieId),
+          userId: currentUser.userId,
+        },
+      });
+
+      setSelectedVote(choice);
+      setHasVoted(true);
+
+      if (choice === "first" && topMovie) {
+        const updatedTop = { ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 };
+        setTopMovie(updatedTop);
+      } else if (choice === "second" && secondMovie) {
+        const updatedSecond = { ...secondMovie, voteCount: (secondMovie.voteCount || 0) + 1 };
+        setSecondMovie(updatedSecond);
+      }
+    } catch (err: any) {
+      console.error("투표 실패:", err.response?.data || err.message);
+      alert(err.response?.data?.error || "투표에 실패했습니다.");
+    }
+  };
+
+  // 박스오피스/슬라이드 로직
   const boxOfficeMovies = movies.slice(0, 10);
   const totalSlides = Math.ceil(Math.max(boxOfficeMovies.length, 1) / moviesPerSlide);
 
@@ -271,6 +243,7 @@ const handleVote = async (choice: "first" | "second") => {
     return boxOfficeMovies.slice(start, start + moviesPerSlide);
   };
 
+  // 장르별 로직
   const getMoviesByGenre = (genre: string) => {
     const englishGenre = genreTranslation[genre] || genre;
     return movies
@@ -300,6 +273,7 @@ const handleVote = async (choice: "first" | "second") => {
   const genreCount = genreMovies.length;
   const genreBest = genreMovies.length > 0 ? genreMovies[0].rating : 0;
 
+  // === JSX 렌더링 (기존 전체 구조 유지, 생략 없음) ===
   return (
     <div className="min-h-screen bg-white">
       <div style={{ backgroundColor: "#E4E4E4" }}>
@@ -444,7 +418,26 @@ const handleVote = async (choice: "first" | "second") => {
                   </div>
                 </div>
               </>
-            )}
+            )}{/* 2위 영화 오른쪽에 VS 선택 버튼 */}
+<div className="flex flex-wrap gap-2 mt-4 justify-center">
+  {activeVsList.map((vs) => (
+    <button
+      key={vs.vsIdx}
+      onClick={() => {
+        setSelectedVsIdx(vs.vsIdx);
+        setTopMovie(vs.topMovie);
+        setSecondMovie(vs.secondMovie);
+      }}
+      className={`px-3 py-1 rounded font-medium border transition-all ${
+        selectedVsIdx === vs.vsIdx
+          ? "bg-blue-500 text-white border-blue-600"
+          : "bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300"
+      }`}
+    >
+      {vs.pair}번 투표
+    </button>
+  ))}
+</div>
           </div>
         </div>
 

@@ -1,11 +1,15 @@
 package org.iclass.backend.service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.iclass.backend.dto.MovieVsDto;
 import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.MovieVsEntity;
+import org.iclass.backend.repository.MovieCrewRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.repository.MovieVSRepository;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +25,7 @@ public class MovieVsService {
 
     private final MovieVSRepository movieVSRepository;
     private final MovieInfoRepository movieInfoRepository;
+    private final MovieCrewRepository movieCrewRepository;
 
     // 새로운 VS 생성 (pair 자동 증가, round는 프론트에서 전달)
     public MovieVsDto createVs(Long movie1Id, Long movie2Id, Integer round) {
@@ -123,6 +128,28 @@ public class MovieVsService {
                 System.out.println("⏰ 만료 처리됨 VS: " + vs.getVsIdx());
             }
         }
+    }
+
+    public Map<String, Object> toMovieMap(MovieInfoEntity m) {
+        Map<String, Object> movie = new HashMap<>();
+        movie.put("movieIdx", m.getMovieIdx());
+        movie.put("tmdbMovieId", m.getTmdbMovieId());
+        movie.put("title", Optional.ofNullable(m.getTitle()).orElse("제목없음"));
+        movie.put("posterPath", Optional.ofNullable(m.getPosterPath()).orElse("/fallback.png"));
+        movie.put("year", m.getReleaseDate() != null ? m.getReleaseDate().toString() : "N/A");
+        movie.put("rating", Optional.ofNullable(m.getVoteAverage()).orElse(0.0));
+        movie.put("genres", Optional.ofNullable(m.getGenres()).orElse(List.of()));
+        movie.put("voteCount", Optional.ofNullable(m.getVoteCount()).orElse(0));
+
+        String director = movieCrewRepository
+                .findByTmdbMovieIdAndJob(m.getTmdbMovieId(), "Director")
+                .stream()
+                .findFirst()
+                .map(c -> c.getCrewName())
+                .orElse("알 수 없음");
+        movie.put("director", director);
+
+        return movie;
     }
 
     // DTO 변환

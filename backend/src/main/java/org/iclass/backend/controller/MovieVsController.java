@@ -90,4 +90,27 @@ public class MovieVsController {
         response.put("active", active);
         return ResponseEntity.ok(response);
     }
+
+    // 활성화된 VS 가져오기 (영화 1,2 포함)
+    @GetMapping("/versus")
+    public ResponseEntity<?> getActiveVersus() {
+        List<MovieVsEntity> activeVsList = movieVSRepository.findAllByActive(1);
+
+        if (activeVsList.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<Map<String, Object>> resultList = activeVsList.stream().map(vs -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("vsIdx", vs.getVsIdx());
+            map.put("vsRound", vs.getVsRound());
+            map.put("pair", vs.getPair());
+            map.put("active", vs.getActive());
+            map.put("topMovie", movieVsService.toMovieMap(vs.getMovieVs1()));
+            map.put("secondMovie", movieVsService.toMovieMap(vs.getMovieVs2()));
+            return map;
+        }).toList();
+
+        return ResponseEntity.ok(resultList);
+    }
 }
