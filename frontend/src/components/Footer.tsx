@@ -17,32 +17,32 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">고객서비스</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><a href="#" className="hover:text-white">질문은 받지 않습니다</a></li>
-              <li><a href="#" className="hover:text-white">대신</a></li>
-              <li><a href="#" className="hover:text-white">Q&A 환영</a></li>
-              <li><a href="#" className="hover:text-white">서비스 이용도 환영</a></li>
+              <li><a  className="hover:text-white">질문은 받지 않습니다</a></li>
+              <li><a  className="hover:text-white">대신</a></li>
+              <li><a  className="hover:text-white">Q&A 환영</a></li>
+              <li><a  className="hover:text-white">서비스 이용도 환영</a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-4">팀원정보</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><a href="#" className="hover:text-white">김민재</a></li>
-              <li><a href="#" className="hover:text-white">박진우</a></li>
-              <li><a href="#" className="hover:text-white">곽수영</a></li>
-              <li><a href="#" className="hover:text-white">임은상</a></li>
-              <li><a href="#" className="hover:text-white">임정수</a></li>
-              <li><a href="#" className="hover:text-white">오승현 </a></li>
+              <li><a href="/login" className="hover:text-white">김민재</a></li>
+              <li><a href="/" className="hover:text-white">박진우</a></li>
+              <li><a href="/search" className="hover:text-white">곽수영</a></li>
+              <li><a href="/reviews" className="hover:text-white">임은상</a></li>
+              <li><a href="/ranking" className="hover:text-white">임정수</a></li>
+              <li><a href="/movies/1" className="hover:text-white">오승현 </a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-4">연결하기</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><a href="#" className="hover:text-white">로그인</a></li>
-              <li><a href="#" className="hover:text-white">메인</a></li>
-              <li><a href="#" className="hover:text-white">검색</a></li>
-              <li><a href="#" className="hover:text-white">리뷰</a></li>
-              <li><a href="#" className="hover:text-white">랭킹</a></li>
-              <li><a href="#" className="hover:text-white">상세</a></li>
+              <li><a href="/login" className="hover:text-white">로그인</a></li>
+              <li><a href="/" className="hover:text-white">메인</a></li>
+              <li><a href="/search" className="hover:text-white">검색</a></li>
+              <li><a href="/reviews" className="hover:text-white">리뷰</a></li>
+              <li><a href="/ranking" className="hover:text-white">랭킹</a></li>
+              <li><a href="/movies/1" className="hover:text-white">상세</a></li>
             </ul>
           </div>
         </div>
