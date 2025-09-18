@@ -52,7 +52,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     years,
     genres,
     offset = 0,
-    limit = 50,
+    limit = 20,
     countOnly = false,
   }: GetMoviesOptions = {}) => {
     const all: Movie[] = await DB.movies.getAll();
@@ -66,7 +66,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     return Array.from(new Map(filtered.slice(offset, offset + limit).map(m => [m.movieIdx, m])).values());
   },
 
-  fetchFirstPage: async (limit = 50) => {
+  fetchFirstPage: async (limit = 20) => {
     set({ loading: true });
     if (uiAbortController) uiAbortController.abort();
     uiAbortController = new AbortController();

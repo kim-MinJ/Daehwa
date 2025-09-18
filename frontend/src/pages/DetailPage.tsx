@@ -36,49 +36,44 @@ export default function DetailPage() {
     (async () => {
       try {
         // ----------------------------
-        // 1️⃣ 메모리 우선 조회
+        // 1️⃣ Movie: 메모리 → DB → UI 즉시 반영
         // ----------------------------
         let movieData = movieStore.movies.find(m => m.movieIdx === movieId) ?? null;
-
-        // ----------------------------
-        // 2️⃣ DB 캐시 조회
-        // ----------------------------
         if (!movieData) movieData = await movieStore.getMovieFromDB(movieId);
 
-        // ----------------------------
-        // 3️⃣ UI 표시
-        // ----------------------------
-        if (isMounted) setMovie(movieData);
-        setLoading(false);
+        if (isMounted) {
+          setMovie(movieData);
+          setLoading(false);
+        }
 
         // ----------------------------
-        // 4️⃣ 백그라운드 API fetch
+        // 2️⃣ Movie: 백그라운드 API fetch
         // ----------------------------
-        const fetchAndUpdateMovie = async () => {
+        void (async () => {
           try {
             const res = await fetch(`/api/movie/${movieId}`);
-            if (!res.ok) throw new Error("영화 정보를 가져올 수 없습니다.");
+            if (!res.ok) return;
             const data: Movie = await res.json();
-            if (isMounted) setMovie(data); // ✅ store 덮어쓰기 금지
+            if (isMounted) setMovie(data); // store는 덮어쓰기 금지
           } catch (err) {
             console.warn("Movie API fetch 실패:", err);
           }
-        };
-        void fetchAndUpdateMovie();
+        })();
 
         // ----------------------------
-        // Credits 조회 (fallback: { cast: [], crew: [] })
+        // 3️⃣ Credits & Trailers: store에서 즉시 반영
         // ----------------------------
-        const creditsCached =
-          (await creditsStore.fetchCredits(movieId)) ?? { cast: [], crew: [] };
-        if (isMounted) setCredits(creditsCached);
+        const cachedCredits =
+          creditsStore.creditsMap[movieId] ??
+          (await creditsStore.fetchCredits(movieId)) ??
+          { cast: [], crew: [] };
+        if (isMounted) setCredits(cachedCredits);
 
-        // ----------------------------
-        // Trailers 조회 (fallback: [])
-        // ----------------------------
-        const trailersCached =
-          (await trailersStore.fetchTrailers(movieId)) ?? [];
-        if (isMounted) setTrailers(trailersCached);
+        const cachedTrailers =
+          trailersStore.trailersMap[movieId] ??
+          (await trailersStore.fetchTrailers(movieId)) ??
+          [];
+        if (isMounted) setTrailers(cachedTrailers);
 
       } catch (err) {
         console.error(err);

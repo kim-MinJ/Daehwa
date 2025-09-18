@@ -16,86 +16,73 @@ interface TrailersState {
 
 let bgAbortController: AbortController | null = null;
 
-export const useTrailersStore = create<TrailersState>((set, get) => ({
-  trailersMap: {},
-  isBackgroundFetched: false,
-  isBackgroundFetching: false,
-
-  setTrailers: (movieId, trailers) =>
-    set((state) => ({ trailersMap: { ...state.trailersMap, [movieId]: trailers } })),
-
-  // 상세페이지용 개별 fetch
-  fetchTrailers: async (movieId) => {
-    if (movieId in get().trailersMap) return get().trailersMap[movieId];
-
-    const cached = (await DB.trailers.get(movieId)) ?? null;
-    get().setTrailers(movieId, cached);
-
-    // UI에 바로 표시되도록 비동기 fetch 수행
-    (async () => {
-      try {
-        const res = await fetch(`/api/movie/${movieId}/videos`);
-        if (res.status === 404) {
-          get().setTrailers(movieId, null);
-          return;
-        }
-        if (!res.ok) return;
-        const data: Trailer[] = await res.json();
-        get().setTrailers(movieId, data);
-        await DB.trailers.save(movieId, data);
-      } catch (err: any) {
-        if (err.name === "AbortError") console.log(`Trailers fetch 중단 (movieId=${movieId})`);
-        else console.warn("Trailers fetch 실패:", err);
+export const useTrailersStore = create<TrailersState>((set, get) => {
+  const fetchFromAPI = async (movieId: number, signal?: AbortSignal) => {
+    try {
+      const res = await fetch(`/api/movie/${movieId}/videos`, { signal });
+      if (res.status === 404) {
+        get().setTrailers(movieId, null);
+        return;
       }
-    })();
+      if (!res.ok) return;
 
-    return cached;
-  },
-
-  // 전체 백그라운드 fetch
-  fetchAllBackground: (movieIds) => {
-    if (get().isBackgroundFetched || get().isBackgroundFetching) return;
-    set({ isBackgroundFetching: true });
-    bgAbortController = new AbortController();
-    const signal = bgAbortController.signal;
-
-    (async () => {
-      for (const id of movieIds) {
-        if (signal.aborted) break;
-        if (id in get().trailersMap) continue;
-
-        const cached = (await DB.trailers.get(id)) ?? null;
-        get().setTrailers(id, cached);
-
-        try {
-          const res = await fetch(`/api/movie/${id}/videos`, { signal });
-          if (res.status === 404) {
-            get().setTrailers(id, null);
-            continue;
-          }
-          if (!res.ok) continue;
-
-          const data: Trailer[] = await res.json();
-          get().setTrailers(id, data);
-          await DB.trailers.save(id, data);
-        } catch (err: any) {
-          if (err.name === "AbortError")
-            console.log(`Trailers 백그라운드 fetch 중단 (movieId=${id})`);
-          else console.warn("Trailers 백그라운드 fetch 실패:", err);
-        }
-      }
-      set({ isBackgroundFetched: true, isBackgroundFetching: false });
-      bgAbortController = null;
-      console.log("Trailers 백그라운드 fetch 완료!");
-    })();
-  },
-
-  stopBackgroundFetch: () => {
-    if (bgAbortController) {
-      bgAbortController.abort();
-      bgAbortController = null;
-      set({ isBackgroundFetching: false });
-      console.log("Trailers 백그라운드 fetch 중단됨");
+      const data: Trailer[] = await res.json();
+      get().setTrailers(movieId, data); // ✅ UI 즉시 반영
+      await DB.trailers.save(movieId, data); // DB 업데이트
+    } catch (err: any) {
+      if (err.name === "AbortError") console.log(`Trailers fetch 중단 (movieId=${movieId})`);
+      else console.warn("Trailers fetch 실패:", err);
     }
-  },
-}));
+  };
+
+  return {
+    trailersMap: {},
+    isBackgroundFetched: false,
+    isBackgroundFetching: false,
+
+    setTrailers: (movieId, trailers) =>
+      set((state) => ({ trailersMap: { ...state.trailersMap, [movieId]: trailers } })),
+
+    fetchTrailers: async (movieId) => {
+      if (movieId in get().trailersMap) return get().trailersMap[movieId];
+
+      const cached = (await DB.trailers.get(movieId)) ?? null;
+      get().setTrailers(movieId, cached);
+
+      void fetchFromAPI(movieId);
+
+      return cached;
+    },
+
+    fetchAllBackground: (movieIds) => {
+      if (get().isBackgroundFetched || get().isBackgroundFetching) return;
+      set({ isBackgroundFetching: true });
+      bgAbortController = new AbortController();
+      const signal = bgAbortController.signal;
+
+      (async () => {
+        for (const id of movieIds) {
+          if (signal.aborted) break;
+          if (id in get().trailersMap) continue;
+
+          const cached = (await DB.trailers.get(id)) ?? null;
+          get().setTrailers(id, cached);
+
+          await fetchFromAPI(id, signal);
+        }
+        set({ isBackgroundFetched: true, isBackgroundFetching: false });
+        bgAbortController = null;
+        console.log("Trailers 백그라운드 fetch 완료!");
+      })();
+    },
+
+    stopBackgroundFetch: () => {
+      if (bgAbortController) {
+        bgAbortController.abort();
+        bgAbortController = null;
+        set({ isBackgroundFetching: false });
+        console.log("Trailers 백그라운드 fetch 중단됨");
+      }
+    },
+  };
+});

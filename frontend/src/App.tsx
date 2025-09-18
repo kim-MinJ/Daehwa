@@ -32,36 +32,31 @@ function AppContent() {
   const scrollStore = useScrollStore();
   const [loading, setLoading] = useState(true);
 
-  // 🔹 앱 초기화
+  // 🔹 앱 초기화: UI용 첫 페이지만 fetch
   useEffect(() => {
     const initApp = async () => {
       await getDB();
 
-      // 1️⃣ UI용 첫 페이지만 fetch → 메인페이지 바로 렌더링 가능
-      await fetchFirstPage(50);
-      setLoading(false);
+      // 1️⃣ 첫 페이지 UI용 데이터 fetch
+      const firstPageMovies = await fetchFirstPage(20); // 넷플릭스처럼 최소 데이터만
+      setLoading(false); // 화면 바로 렌더링
 
-      // 2️⃣ 백그라운드 전체 fetch (비동기)
-      fetchAllBackground();
-
-      const allMovies = useMovieStore.getState().allMovies;
-      const movieIds = allMovies.map((m) => m.movieIdx);
-
-      creditsStore.fetchAllBackground(movieIds);
-      trailersStore.fetchAllBackground(movieIds);
+      // 2️⃣ 백그라운드 점진적 fetch
+      void fetchAllBackground(); // MovieStore
+      const movieIds = firstPageMovies.map((m) => m.movieIdx);
+      void creditsStore.fetchAllBackground(movieIds);
+      void trailersStore.fetchAllBackground(movieIds);
     };
     initApp();
   }, []);
 
   // 🔹 페이지 이동 시 백그라운드 fetch 유지
   useEffect(() => {
-    fetchAllBackground();
-
+    void fetchAllBackground();
     const allMovies = useMovieStore.getState().allMovies;
     const movieIds = allMovies.map((m) => m.movieIdx);
-
-    creditsStore.fetchAllBackground(movieIds);
-    trailersStore.fetchAllBackground(movieIds);
+    void creditsStore.fetchAllBackground(movieIds);
+    void trailersStore.fetchAllBackground(movieIds);
   }, [location.pathname]);
 
   // 🔹 스크롤 복원
@@ -77,7 +72,7 @@ function AppContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
-  // 🔹 렌더링 조건: 첫 페이지 데이터만 있으면 렌더링
+  // 🔹 렌더링 조건: UI용 첫 페이지만 있으면 렌더링
   if (loading || movies.length === 0) {
     return (
       <div className="flex justify-center items-center py-12">
