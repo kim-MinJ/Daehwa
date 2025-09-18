@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.iclass.backend.dto.MovieVsDto;
 import org.iclass.backend.entity.MovieVsEntity;
+import org.iclass.backend.repository.MovieVSRepository;
 import org.iclass.backend.service.MovieVsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,26 +19,27 @@ import lombok.RequiredArgsConstructor;
 public class MovieVsController {
 
     private final MovieVsService movieVsService;
+    private final MovieVSRepository movieVSRepository;
 
-    // 새로운 VS 생성
+    // 새로운 VS 생성 (pair 자동 증가, round는 프론트에서 전달)
     @PostMapping("/ranking")
-    public ResponseEntity<?> createVs(@RequestBody Map<String, List<Long>> payload) {
-        List<Long> movieIds = payload.get("movieIds");
-        if (movieIds == null || movieIds.size() != 2) {
+    public ResponseEntity<?> createVs(@RequestBody Map<String, Object> payload) {
+        // 프론트에서 movieIds와 round를 보낸다고 가정
+        List<?> movieIdsObj = (List<?>) payload.get("movieIds");
+        Integer round = (payload.get("round") != null) ? ((Number) payload.get("round")).intValue() : 1;
+
+        if (movieIdsObj == null || movieIdsObj.size() != 2) {
             return ResponseEntity.badRequest().body("영화 2개를 선택해주세요");
         }
 
-        MovieVsDto dto = MovieVsDto.builder()
-                .movieVs1Idx(movieIds.get(0))
-                .movieVs2Idx(movieIds.get(1))
-                .active(1)
-                .build();
+        Long movie1Id = ((Number) movieIdsObj.get(0)).longValue();
+        Long movie2Id = ((Number) movieIdsObj.get(1)).longValue();
 
-        MovieVsDto saved = movieVsService.saveVs(dto);
+        MovieVsDto saved = movieVsService.createVs(movie1Id, movie2Id, round);
         return ResponseEntity.ok(saved);
     }
 
-    // 모든 VS 조회 (엔티티 그대로)
+    // 모든 VS 조회
     @GetMapping
     public ResponseEntity<List<MovieVsEntity>> getAllVs() {
         return ResponseEntity.ok(movieVsService.getAllVs());
@@ -56,55 +58,36 @@ public class MovieVsController {
         return ResponseEntity.noContent().build();
     }
 
-    // 활성화된 VS 조회 (랭킹 페이지용)
-    @GetMapping("/ranking")
-    public ResponseEntity<MovieVsEntity> getRankingVotes() {
-        MovieVsEntity ranking = movieVsService.getActiveRanking();
-        return ResponseEntity.ok(ranking);
-    }
-
-    // 관리자용 movievote 리스트
-    @GetMapping("/movievote")
-    public ResponseEntity<List<Map<String, Object>>> getMovieVoteList() {
-        List<MovieVsEntity> vsList = movieVsService.getAllVs();
-
-        List<Map<String, Object>> result = vsList.stream().map(vs -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("vsIdx", vs.getVsIdx());
-
-            if (vs.getMovieVs1() != null) {
-                map.put("movie1Idx", vs.getMovieVs1().getMovieIdx());
-                map.put("movie1Title", vs.getMovieVs1().getTitle());
-                map.put("movie1Poster", vs.getMovieVs1().getPosterPath());
-                map.put("movie1Rating", vs.getMovieVs1().getVoteAverage());
-                map.put("movie1Year",
-                        vs.getMovieVs1().getReleaseDate() != null ? vs.getMovieVs1().getReleaseDate().getYear() : 0);
-            }
-
-            if (vs.getMovieVs2() != null) {
-                map.put("movie2Idx", vs.getMovieVs2().getMovieIdx());
-                map.put("movie2Title", vs.getMovieVs2().getTitle());
-                map.put("movie2Poster", vs.getMovieVs2().getPosterPath());
-                map.put("movie2Rating", vs.getMovieVs2().getVoteAverage());
-                map.put("movie2Year",
-                        vs.getMovieVs2().getReleaseDate() != null ? vs.getMovieVs2().getReleaseDate().getYear() : 0);
-            }
-
-            map.put("active", vs.getActive() == 1);
-            map.put("totalVotes", 0); // 필요시 서비스에서 계산
-
-            return map;
-        }).toList();
-
-        return ResponseEntity.ok(result);
-    }
-
-    // active=1인 VS 가져오기
+    // 활성화된 VS 조회
     @GetMapping("/active")
     public ResponseEntity<MovieVsEntity> getActiveVs() {
         MovieVsEntity vs = movieVsService.getActiveVs();
         if (vs == null)
             return ResponseEntity.noContent().build();
         return ResponseEntity.ok(vs);
+    }
+
+    @GetMapping("/movievote")
+    public ResponseEntity<List<MovieVsEntity>> getMovieVoteList() {
+        List<MovieVsEntity> vsList = movieVSRepository.findAll();
+        // active=3 제외
+        vsList.removeIf(vs -> vs.getActive() != null && vs.getActive() == 3);
+        return ResponseEntity.ok(vsList);
+    }
+
+    // VS의 active 상태 변경
+    @PatchMapping("/movievote/{id}/active")
+    public ResponseEntity<?> updateActive(
+            @PathVariable Long id,
+            @RequestBody Map<String, Integer> body) {
+        Integer active = body.get("active");
+        if (active == null) {
+            return ResponseEntity.badRequest().body("active 값이 필요합니다.");
+        }
+        movieVsService.updateActive(id, active);
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", id);
+        response.put("active", active);
+        return ResponseEntity.ok(response);
     }
 }

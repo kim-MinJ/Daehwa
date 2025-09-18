@@ -34,7 +34,7 @@ public class MovieInfoSave {
     private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4"; // 실제
                                                                                                                                                                                                                                                                                                   // 키로
                                                                                                                                                                                                                                                                                                   // 교체
-    private final int TOTAL_PAGE = 1; // 223
+    private final int TOTAL_PAGE = 10; // 223
 
     public MovieInfoSave(MovieInfoRepository movieInfoRepository,
             MovieGenresRepository movieGenresRepository,

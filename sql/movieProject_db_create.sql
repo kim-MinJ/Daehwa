@@ -419,6 +419,28 @@ COMMENT ON COLUMN Sound_Track.artist IS '작곡가';
 
 COMMENT ON COLUMN Sound_Track.playback_url IS 'ost 링크';
 
+-- 1-17. chat_message
+CREATE TABLE CHAT_MESSAGES (
+    id        NUMBER          NOT NULL,
+    user_id   VARCHAR2(100)   NOT NULL,
+    role      VARCHAR2(100),
+    content   VARCHAR2(4000),
+    created_at TIMESTAMP,
+    CONSTRAINT PK_CHAT_MESSAGES PRIMARY KEY (id),
+    CONSTRAINT FK_CHAT_MESSAGES_USER FOREIGN KEY (user_id)
+        REFERENCES USERS(user_id)
+);
+
+COMMENT ON TABLE CHAT_MESSAGES IS '채팅 메시지';
+
+COMMENT ON COLUMN CHAT_MESSAGES.id IS '인덱스';
+
+COMMENT ON COLUMN CHAT_MESSAGES.user_id IS '이메일주소';
+
+COMMENT ON COLUMN CHAT_MESSAGES.role IS '역할';
+
+COMMENT ON COLUMN CHAT_MESSAGES.content IS '대화 내용';
+
 -- ===========================
 -- 2. FK 생성
 -- ===========================
@@ -523,6 +545,11 @@ ALTER TABLE Bookmark
     FOREIGN KEY (movie_idx)
     REFERENCES Movie_Info (movie_idx);
 
+    ALTER TABLE CHAT_MESSAGES
+  ADD CONSTRAINT FK_User_TO_ChatMessage
+    FOREIGN KEY (user_id)
+    REFERENCES Users(user_id);
+
 -- ===========================
 -- 3. 시퀀스 생성
 -- ===========================
@@ -542,6 +569,7 @@ CREATE SEQUENCE SEQ_Movie_Vote START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE SEQ_Ranking START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE SEQ_Videos START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE SEQ_Sound_Track START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SEQ_CHAT_MESSAGES START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
 -- ===========================
 -- 4. 트리거 생성 (PK 자동 증가)
@@ -712,6 +740,23 @@ BEGIN
 END;
 /
 
+-- chat_message
+CREATE OR REPLACE TRIGGER TRG_CHAT_MESSAGES
+BEFORE INSERT ON CHAT_MESSAGES
+FOR EACH ROW
+BEGIN
+  IF :NEW.id IS NULL THEN
+    :NEW.id := SEQ_CHAT_MESSAGES.NEXTVAL;
+  END IF;
+END;
+/
+
+GRANT CREATE TRIGGER TO C##IDEV;
+
+SELECT * 
+FROM USER_SYS_PRIVS
+WHERE PRIVILEGE LIKE '%TRIGGER%';
+
 -- -- Movie_Info.popularity -> Ranking.ranking_count 연동 트리거
 -- CREATE OR REPLACE TRIGGER trg_update_ranking
 -- AFTER UPDATE OF popularity ON Movie_Info
@@ -725,3 +770,8 @@ END;
 --     -- 없으면 아무것도 하지 않음 (0행이면 그냥 넘어감)
 -- END;
 -- /
+
+  DELETE FROM MOVIE_GENRES;
+
+-- 필요하면 삭제 확인
+COMMIT;
