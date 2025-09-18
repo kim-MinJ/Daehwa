@@ -160,6 +160,40 @@ const [selectedVsIdx, setSelectedVsIdx] = useState<number | null>(null); // 선�
   navigate(`/movies/${movie.movieIdx}`, { state: { movie } });
 };
 
+
+// ✅ 백엔드에서 영화 데이터 로드 (박스오피스/장르별 베스트용)
+useEffect(() => {
+  const fetchMovies = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/api/movies/trending"); // 트렌딩 영화 API
+      const movieRes: Movie[] = res.data.map((m: any, idx: number) => ({
+  id: m.movieIdx ? m.movieIdx.toString() : m.tmdbMovieId.toString(),
+  movieIdx: m.movieIdx ? m.movieIdx.toString() : m.tmdbMovieId.toString(), // ✅ movieIdx 세팅
+  tmdbMovieId: m.tmdbMovieId.toString(),
+  title: m.title,
+  poster: m.posterPath
+    ? `https://image.tmdb.org/t/p/w500${m.posterPath}`
+    : "/fallback.png",
+  year: m.year ? m.year.slice(0, 4) : "N/A",
+  genres: m.genres || [],
+  genre: m.genres?.[0] || "",
+  rating: m.rating || 0,
+  runtime: m.runtime || 0,
+  description: m.overview,
+  director: m.director || "알 수 없음",
+  voteCount: m.voteCount || 0,
+  rank: idx + 1,
+}));
+      setMovies(movieRes); // 🎯 박스오피스/장르별 베스트만 세팅
+      // setTopMovie / setSecondMovie는 여기서 건드리지 않음
+    } catch (err) {
+      console.error("데이터 로드 실패:", err);
+    }
+  };
+
+  fetchMovies();
+}, []);
+
   // 투표 퍼센티지 계산
   useEffect(() => {
   const fetchActiveVs = async () => {
@@ -194,6 +228,7 @@ const [selectedVsIdx, setSelectedVsIdx] = useState<number | null>(null); // 선�
   const topMoviePercentage =
     totalVotes > 0 ? Math.round((topMovieVotes / totalVotes) * 100) : 0;
   const secondMoviePercentage = totalVotes > 0 ? 100 - topMoviePercentage : 0;
+
 
 // 로그인된 유저 정보 가져오기
 const getCurrentUser = () => {
@@ -238,8 +273,9 @@ const getCurrentUser = () => {
   }
 };
 
+
   // 박스오피스/슬라이드 로직
-  const boxOfficeMovies = movies.slice(0, 10);
+  const boxOfficeMovies = movies.slice(0, 12);
   const totalSlides = Math.ceil(Math.max(boxOfficeMovies.length, 1) / moviesPerSlide);
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % totalSlides);
@@ -428,21 +464,26 @@ const getCurrentUser = () => {
             )}{/* 2위 영화 오른쪽에 VS 선택 버튼 */}
 <div className="flex flex-wrap gap-2 mt-4 justify-center">
   {activeVsList.map((vs) => (
-    <button
-      key={vs.vsIdx}
-      onClick={() => {
-        setSelectedVsIdx(vs.vsIdx);
-        setTopMovie(vs.topMovie);
-        setSecondMovie(vs.secondMovie);
-      }}
-      className={`px-3 py-1 rounded font-medium border transition-all ${
-        selectedVsIdx === vs.vsIdx
-          ? "bg-blue-500 text-white border-blue-600"
-          : "bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300"
-      }`}
-    >
-      {vs.pair}번 투표
-    </button>
+    <Button
+  key={vs.vsIdx}
+  variant="ghost"   // ✅ 기본 배경 hover 스타일 제거
+  onClick={async () => {
+    setSelectedVsIdx(vs.vsIdx);
+
+    const topPoster = await fetchPosterFromTMDB(vs.topMovie.title, vs.topMovie.year);
+    const secondPoster = await fetchPosterFromTMDB(vs.secondMovie.title, vs.secondMovie.year);
+
+    setTopMovie({ ...vs.topMovie, poster: topPoster });
+    setSecondMovie({ ...vs.secondMovie, poster: secondPoster });
+  }}
+  className={`px-4 py-2 rounded-lg border-2 transition-colors bg-white ${
+    selectedVsIdx === vs.vsIdx
+      ? "border-red-600 text-red-600"
+      : "border-gray-300 text-gray-800 hover:border-black hover:text-gray-900"
+  }`}
+>
+   #{vs.pairIdx} ({vs.topMovie.title} vs {vs.secondMovie.title})
+</Button>
   ))}
 </div>
           </div>
@@ -465,6 +506,7 @@ const getCurrentUser = () => {
                 </div>
               )}
             </div>
+            <br />
 
 
         {/* === 박스오피스 TOP 10 === */}
