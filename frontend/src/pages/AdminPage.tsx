@@ -3,18 +3,18 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, MessageSquare, MessageCircle } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { User, Review, Comment, Vote, Movie } from "../components/admin/types";
-import AdminUsersTab from "../components/admin/AdminUsersTab";
-import AdminReviewsTab from "../components/admin/AdminReviewsTab";
-import AdminCommentsTab from "../components/admin/AdminCommentsTab";
-import AdminEditUserModal from "../components/admin/AdminEditUserModal";
-import AdminEditReviewModal from "../components/admin/AdminEditReviewModal";
-import AdminEditCommentModal from "../components/admin/AdminEditCommentsModal";
-import AdminSearchBar from "../components/admin/AdminSearchBar";
+import { User, Review, Comment, Vote, Movie } from "../components/adminPage/types";
+import AdminUsersTab from "../components/adminPage/AdminUsersTab";
+import AdminReviewsTab from "../components/adminPage/AdminReviewsTab";
+import AdminCommentsTab from "../components/adminPage/AdminCommentsTab";
+import AdminEditUserModal from "../components/adminPage/AdminEditUserModal";
+import AdminEditReviewModal from "../components/adminPage/AdminEditReviewModal";
+import AdminEditCommentModal from "../components/adminPage/AdminEditCommentsModal";
+import AdminSearchBar from "../components/adminPage/AdminSearchBar";
 import { api } from "../lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card } from "../components/ui/card";
-import AdminVotesTab from "../components/admin/AdminVotesTab";
+import AdminVotesTab from "../components/adminPage/AdminVotesTab";
 
 export default function AdminPage() {
   const { userInfo, loading, token } = useAuth();

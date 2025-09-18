@@ -1,79 +1,104 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Header from "./pages/Header";
-import Footer from "./components/Footer";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getDB } from "@/utils/indexedDB";
+import { useMovieStore } from "@/store/movieStore";
+import { useCreditsStore } from "@/store/creditsStore";
+import { useTrailersStore } from "@/store/trailersStore";
+import { useScrollStore } from "@/store/scrollStore";
+import { useBackspaceNavigate } from "@/hooks/useBackspaceNavigate";
+
+import Header from "./components/public/Header";
+import Footer from "./components/public/Footer";
 import MainPage from "./pages/MainPage";
 import SearchPage from "./pages/SearchPage";
-import MovieDetailPage from "./pages/MovieDetailPage";
+import MovieDetailPage from "./pages/DetailPage";
 import RankingPage from "./pages/RankingPage";
 import ReviewPage from "./pages/ReviewPage";
 import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
-import  MyPage from "./pages/MyPage";
+import MyPage from "./pages/MyPage";
+
+function AppContent() {
+  const location = useLocation();
+  const fetchFirstPage = useMovieStore((state) => state.fetchFirstPage);
+  const fetchAllBackground = useMovieStore((state) => state.fetchAllBackground);
+
+  const creditsStore = useCreditsStore();
+  const trailersStore = useTrailersStore();
+  const allMovies = useMovieStore((state) => state.allMovies);
+
+  const scrollStore = useScrollStore();
+
+  const [loading, setLoading] = useState(true);
+
+  // 🔹 앱 초기화
+  useEffect(() => {
+    const initApp = async () => {
+      await getDB();
+      await fetchFirstPage(50);
+      fetchAllBackground();
+
+      const movieIds = useMovieStore.getState().allMovies.map((m) => m.movieIdx);
+      creditsStore.fetchAllBackground(movieIds);
+      trailersStore.fetchAllBackground(movieIds);
+
+      setLoading(false);
+    };
+    initApp();
+  }, []);
+
+  // 🔹 페이지 이동 시 백그라운드 fetch 유지
+  useEffect(() => {
+    fetchAllBackground();
+    const movieIds = useMovieStore.getState().allMovies.map((m) => m.movieIdx);
+    creditsStore.fetchAllBackground(movieIds);
+    trailersStore.fetchAllBackground(movieIds);
+  }, [location.pathname]);
+
+  // 🔹 페이지 이동 시 스크롤 복원
+  useEffect(() => {
+    const pos = scrollStore.getScroll(location.pathname);
+    window.scrollTo(0, pos);
+  }, [location.pathname]);
+
+  // 🔹 스크롤 위치 저장
+  useEffect(() => {
+    const handleScroll = () => scrollStore.setScroll(location.pathname, window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [location.pathname]);
+
+  return loading && allMovies.length === 0 ? (
+    <div className="flex justify-center items-center py-12">
+      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <span className="ml-2 text-gray-600">영화 데이터 로딩중...</span>
+    </div>
+  ) : (
+    <Routes>
+      <Route path="*" element={<MainPage />} />
+      <Route path="/search" element={<SearchPage />} />
+      <Route path="/movie/:id" element={<MovieDetailPage />} />
+      <Route path="/ranking" element={<RankingPage />} />
+      <Route path="/reviews" element={<ReviewPage />} />
+      <Route path="/admin" element={<AdminPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/mypage" element={<MyPage />} />
+    </Routes>
+  );
+}
 
 export default function App() {
+  useBackspaceNavigate();
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-white">
         <Header />
         <main className="relative">
-          <Routes>
-            <Route path="*" element={<MainPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/movies/:id" element={<MovieDetailPage />} />
-            <Route path="/ranking" element={<RankingPage />} />
-            <Route path="/reviews" element={<ReviewPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/mypage" element={<MyPage />} />
-          </Routes>
+          <AppContent />
         </main>
         <Footer />
       </div>
     </BrowserRouter>
   );
 }
-
-
-// import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from "react-router-dom";
-// import { LoginPage } from "./pages/LoginPage";
-// import { MyPage } from "./pages/MyPage";
-// import { AdminPage } from "./pages/AdminPage";
-// import MainPage from "./pages/MainPage"; // MainPage import
-// import ReviewPage from "./pages/ReviewPage";
-
-// function AppWrapper() {
-//   return (
-//     <Router>
-//       <App />
-//     </Router>
-//   );
-// }
-
-// function App() {
-//   const navigate = useNavigate();
-
-//   const handleNavigate = (page: string) => {
-//     if (page === "main") navigate("/main");
-//     else if (page === "login") navigate("/login");
-//     else if (page === "mypage") navigate("/mypage");
-//     else if (page === "admin") navigate("/admin");
-//     else if (page === "reviews") navigate("/reviews");
-
-//   };
-
-//   return (
-//     <Routes>
-//       <Route path="/" element={<Navigate to="/main" replace />} />
-//       <Route path="/login" element={<LoginPage />} />
-//       <Route path="/main" element={<MainPage />} /> {/* MainPage 라우트 추가 */}
-//       <Route path="/mypage" element={<MyPage onNavigate={handleNavigate} />} />
-//       <Route path="/admin" element={<AdminPage onNavigation={handleNavigate} onBack={() => navigate("/mypage")} />} />
-//         <Route path="/reviews" element={<ReviewPage  movies={[]} // 실제 영화 데이터 넣거나 빈 배열로 시작
-//       onMovieClick={(movie) => console.log("Clicked:", movie)}
-//       onBack={() => navigate(-1)}
-//       onNavigation={handleNavigate} />} />
-//     </Routes>
-//   );
-// }
-
-// export default AppWrapper;

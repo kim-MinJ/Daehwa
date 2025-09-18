@@ -1,31 +1,43 @@
+// src/types/movie.ts
+
 export interface Movie {
-  id: string;
+  movieIdx: number;
+  tmdbMovieId?: number;
   title: string;
-  titleEn?: string;
-  year: number;
-  genre: string[];
-  rating: number;
-  poster: string;
-  director: string;
-  cast: string[];
-  plot: string;
-  duration: number;
-  country: string;
-  releaseDate: string;
-  reviews?: Review[];
-  boxOfficeRank?: number;
+  overview?: string;
+  posterPath?: string;
+  backdropPath?: string;
+  releaseDate?: string;
+  genres?: string[];
+  popularity?: number;
+  voteAverage?: number;
+  voteCount?: number;
+  adult?: boolean;
+  rank?: number;
 }
 
-export interface Review {
-  id: string;
-  author: string;
-  rating: number;
-  content: string;
-  date: string;
-  likes: number;
+export interface Credits {
+  cast: CastMember[];
+  crew: CrewMember[];
 }
 
-export interface TrendingMovie extends Movie {
-  trendRank: number;
-  trendChange: 'up' | 'down' | 'new' | 'same';
+export interface CastMember {
+  id: number;
+  name: string;
+  character?: string;
+  profile_path?: string;
+}
+
+export interface CrewMember {
+  id: number;
+  name: string;
+  job?: string;
+}
+
+export interface Trailer {
+  id: string;          // videoIdx를 string으로 변환해서 사용
+  title: string;       // video의 title
+  type: string;        // videoType
+  url: string;         // videoUrl
+  thumbnail: string;   // thumbnailUrl
 }

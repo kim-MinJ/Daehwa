@@ -1,0 +1,167 @@
+// src/store/movieStore.ts
+import { create } from "zustand";
+import { Movie } from "@/types/movie";
+import { DB } from "@/utils/indexedDB";
+
+interface GetMoviesOptions {
+  query?: string;
+  years?: string[];
+  genres?: string[];
+  offset?: number;
+  limit?: number;
+  countOnly?: boolean;
+}
+
+interface MovieState {
+  movies: Movie[];
+  allMovies: Movie[];
+  loading: boolean;
+  isBackgroundFetched: boolean;
+  isBackgroundFetching: boolean;
+
+  setMovies: (movies: Movie[]) => void;
+  getMovieFromDB: (movieId: number) => Promise<Movie | null>;
+  getMoviesFromDB: (options?: GetMoviesOptions) => Promise<Movie[] | number>;
+  fetchFirstPage: (limit?: number) => Promise<Movie[]>;
+  fetchAllBackground: () => void;
+  stopBackgroundFetch: () => void;
+}
+
+let uiAbortController: AbortController | null = null;
+let bgAbortController: AbortController | null = null;
+
+export const useMovieStore = create<MovieState>((set, get) => ({
+  movies: [],
+  allMovies: [],
+  loading: false,
+  isBackgroundFetched: false,
+  isBackgroundFetching: false,
+
+  // 배열 중복 제거
+  setMovies: (movies) => {
+    const uniqueMovies = Array.from(new Map(movies.map(m => [m.movieIdx, m])).values());
+    set({ movies: uniqueMovies });
+  },
+
+  getMovieFromDB: async (movieId: number) => {
+    const all = await DB.movies.getAll();
+    return all.find((m) => m.movieIdx === movieId) ?? null;
+  },
+
+  getMoviesFromDB: async ({
+    query = "",
+    years,
+    genres,
+    offset = 0,
+    limit = 50,
+    countOnly = false,
+  }: GetMoviesOptions = {}) => {
+    const all: Movie[] = await DB.movies.getAll();
+    let filtered = all;
+
+    if (query) {
+      const q = query.toLowerCase();
+      filtered = filtered.filter((m) => m.title.toLowerCase().includes(q));
+    }
+
+    if (years && years.length > 0) {
+      filtered = filtered.filter(
+        (m) => m.releaseDate && years.includes(m.releaseDate.split("-")[0])
+      );
+    }
+
+    if (genres && genres.length > 0) {
+      filtered = filtered.filter(
+        (m) => m.genres && m.genres.some((g) => genres.includes(g))
+      );
+    }
+
+    if (countOnly) return filtered.length;
+
+    // slice 후 중복 제거
+    return Array.from(new Map(filtered.slice(offset, offset + limit).map(m => [m.movieIdx, m])).values());
+  },
+
+  fetchFirstPage: async (limit = 50) => {
+    set({ loading: true });
+    if (uiAbortController) uiAbortController.abort();
+    uiAbortController = new AbortController();
+
+    try {
+      const res = await fetch(`/api/searchMovie?page=0&limit=${limit}`, {
+        signal: uiAbortController.signal,
+      });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const raw = await res.json();
+      const data: Movie[] = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw.content)
+        ? raw.content
+        : [];
+
+      const uniqueData = Array.from(new Map(data.map(m => [m.movieIdx, m])).values());
+      set({ movies: uniqueData });
+      if (uniqueData.length > 0) await DB.movies.save(uniqueData);
+      return uniqueData;
+    } catch (err: any) {
+      if (err.name === "AbortError") console.log("fetchFirstPage 취소됨");
+      else console.error("fetchFirstPage error:", err);
+      return [];
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchAllBackground: async () => {
+    if (get().isBackgroundFetched || get().isBackgroundFetching) return;
+    set({ isBackgroundFetching: true });
+    bgAbortController = new AbortController();
+    const signal = bgAbortController.signal;
+
+    const limit = 500;
+    let page = 0;
+
+    (async () => {
+      try {
+        while (!signal.aborted) {
+          const res = await fetch(`/api/searchMovie?page=${page}&limit=${limit}`, { signal });
+          if (!res.ok) break;
+
+          const raw = await res.json();
+          const batch: Movie[] = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw.content)
+            ? raw.content
+            : [];
+          if (!batch || batch.length === 0) break;
+
+          const combined = [...get().allMovies, ...batch];
+          const uniqueMovies = Array.from(new Map(combined.map(m => [m.movieIdx, m])).values());
+
+          set({ allMovies: uniqueMovies });
+          await DB.movies.save(uniqueMovies);
+
+          page++;
+        }
+        console.log("백그라운드 전체 fetch 완료! 총 영화 수:", get().allMovies.length);
+        set({ isBackgroundFetched: true });
+      } catch (err: any) {
+        if (err.name === "AbortError") console.log("백그라운드 fetch 중단됨");
+        else console.error(err);
+      } finally {
+        set({ isBackgroundFetching: false });
+        bgAbortController = null;
+      }
+    })();
+  },
+
+  stopBackgroundFetch: () => {
+    if (bgAbortController) {
+      bgAbortController.abort();
+      bgAbortController = null;
+      set({ isBackgroundFetching: false });
+      console.log("백그라운드 fetch 중단됨");
+    }
+  },
+}));
+

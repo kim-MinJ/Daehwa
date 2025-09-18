@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { api } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
-import { User, Review, Comment, Vote, Movie } from "../components/admin/types";
+import { User, Review, Comment, Vote, Movie } from "../components/adminPage/types";
 
 interface ApiContextValue {
   users: User[];
@@ -49,7 +49,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
 
   const fetchMovies = async () => {
     if (!token) return;
-    const res = await api.get("/movies/all", { headers: authHeader });
+    const res = await api.get("/movie/all", { headers: authHeader });
     setMovies(res.data);
   };
 

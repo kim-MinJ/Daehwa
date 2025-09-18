@@ -1,7 +1,5 @@
 package org.iclass.backend.service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,14 +91,6 @@ public class MoviesService {
     result.put("cast", cast);
     result.put("crew", crew);
 
-    return result;
-  }
-
-  /** 영화 비디오 정보 (현재 빈 리스트 반환) */
-  public Map<String, Object> getVideos(Long movieIdx) {
-    Map<String, Object> result = new HashMap<>();
-    result.put("id", movieIdx);
-    result.put("results", List.of());
     return result;
   }
 

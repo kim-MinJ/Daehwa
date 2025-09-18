@@ -130,12 +130,6 @@ public class MoviesController {
     return ResponseEntity.ok(credits);
   }
 
-  /** 영화 비디오 / 예고편 (현재 빈 리스트) */
-  @GetMapping("/{id}/videos")
-  public ResponseEntity<Map<String, Object>> getVideos(@PathVariable Long id) {
-    return ResponseEntity.ok(moviesService.getVideos(id));
-  }
-
   /** 영화 감독 목록 */
   @GetMapping("/{tmdbMovieId}/directors")
   public ResponseEntity<List<String>> getDirectors(@PathVariable Long tmdbMovieId) {
