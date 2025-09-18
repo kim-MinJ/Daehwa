@@ -751,11 +751,6 @@ BEGIN
 END;
 /
 
-GRANT CREATE TRIGGER TO C##IDEV;
-
-SELECT * 
-FROM USER_SYS_PRIVS
-WHERE PRIVILEGE LIKE '%TRIGGER%';
 
 -- -- Movie_Info.popularity -> Ranking.ranking_count 연동 트리거
 -- CREATE OR REPLACE TRIGGER trg_update_ranking
