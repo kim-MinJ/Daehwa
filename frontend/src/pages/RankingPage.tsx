@@ -482,7 +482,7 @@ const getCurrentUser = () => {
       : "border-gray-300 text-gray-800 hover:border-black hover:text-gray-900"
   }`}
 >
-   #{vs.pairIdx} ({vs.topMovie.title} vs {vs.secondMovie.title})
+   {vs.topMovie.title} vs {vs.secondMovie.title}
 </Button>
   ))}
 </div>
