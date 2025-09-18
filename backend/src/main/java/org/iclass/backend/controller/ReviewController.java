@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -47,8 +48,14 @@ public class ReviewController {
   }
 
   @GetMapping
-  public ResponseEntity<List<ReviewDto>> getReviews() {
-    List<ReviewDto> list = reviewService.getAllReviews();
+  public ResponseEntity<List<ReviewDto>> getReviews(
+      @RequestParam(required = false) Long movieIdx) {
+    List<ReviewDto> list;
+    if (movieIdx != null) {
+      list = reviewService.getReviewsByMovieIdx(movieIdx); // 🎬 특정 영화 리뷰 조회
+    } else {
+      list = reviewService.getAllReviews(); // 📃 전체 리뷰 조회
+    }
     return ResponseEntity.ok(list);
   }
 
@@ -90,7 +97,7 @@ public class ReviewController {
 
   @GetMapping("/{reviewIdx}")
   public ResponseEntity<ReviewDto> getReviewByIdx(@PathVariable Long reviewIdx) {
-    ReviewDto review = reviewService.getReviewByIdx(reviewIdx);
+    ReviewDto review = reviewService.getReviewByIdx(reviewIdx); // ✅ 단일 리뷰 조회 메서드 호출
     return ResponseEntity.ok(review);
   }
 
