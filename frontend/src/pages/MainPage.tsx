@@ -1,5 +1,5 @@
 // src/pages/MainPage.tsx
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Star, Info } from "lucide-react";
@@ -15,59 +15,27 @@ import { ImageWithFallback } from "@/components/imageFallback/ImageWithFallback"
 
 export default function MainPage() {
   const navigate = useNavigate();
-  const { movies } = useMovieStore();
+  const movieStore = useMovieStore();
+  const trailersStore = useTrailersStore();
+  const creditsStore = useCreditsStore();
 
-  const onMovieClick = (m: UiMovie) => navigate(`/movie/${m.id}`);
-
-  // -----------------------------
-  // 1️⃣ movies -> UiMovie 변환 + 중복 제거
-  // -----------------------------
-  const uiMovies: UiMovie[] = useMemo(() => {
-    const uniqueMovies = Array.from(new Map(movies.map(m => [m.movieIdx, m])).values());
-    return uniqueMovies.map((m) => {
-      const uiMovie = mapToUiMovie(m);
-      const genreString = m.genres?.map((g) => genreMap[g] ?? g).join(", ") ?? "기타";
-      return { ...uiMovie, genre: genreString };
-    });
-  }, [movies]);
+  const [uiMovies, setUiMovies] = useState<UiMovie[]>([]);
 
   // -----------------------------
-  // 2️⃣ 섹션별 필터링 / 무작위 추출
+  // 1️⃣ UI용 데이터 즉시 반영
   // -----------------------------
-  const weeklyTop10 = useMemo(() => uiMovies.slice(0, 10), [uiMovies]);
-  const personalizedTop3 = useMemo(() => [...uiMovies].sort(() => Math.random() - 0.5).slice(0, 3), [uiMovies]);
-  const reviewEvent3 = useMemo(() => [...uiMovies].sort(() => Math.random() - 0.5).slice(3, 6), [uiMovies]);
-  const latest6 = useMemo(() => {
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    const filtered = uiMovies.filter((m) => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo);
-    return [...filtered].sort(() => Math.random() - 0.5).slice(0, 6);
-  }, [uiMovies]);
-  const oldPopular = useMemo(() => {
-    const filtered = uiMovies.filter((m) => m.year > 1900 && m.year < 2000);
-    return [...filtered].sort(() => Math.random() - 0.5).slice(0, 10);
-  }, [uiMovies]);
+  useEffect(() => {
+    const movies = movieStore.movies.map(mapToUiMovie);
+    setUiMovies(movies);
+  }, [movieStore.movies]);
 
   // -----------------------------
-  // 3️⃣ Featured Movie
+  // 2️⃣ 백그라운드 fetch + 중단 지원
   // -----------------------------
-  const featured = useMemo(() => {
-    if (weeklyTop10.length > 0) {
-      const randomIndex = Math.floor(Math.random() * weeklyTop10.length);
-      return weeklyTop10[randomIndex];
-    }
-    return personalizedTop3[0] ?? latest6[0];
-  }, [weeklyTop10, personalizedTop3, latest6]);
-
-  // -----------------------------
-  // 4️⃣ 백그라운드 fetch
-  // -----------------------------
-  useMemo(() => {
+  useEffect(() => {
     if (!uiMovies.length) return;
 
     const movieIds = uiMovies.map((m) => m.id);
-    const trailersStore = useTrailersStore.getState();
-    const creditsStore = useCreditsStore.getState();
 
     trailersStore.fetchAllBackground(movieIds);
     creditsStore.fetchAllBackground(movieIds);
@@ -76,7 +44,18 @@ export default function MainPage() {
       trailersStore.stopBackgroundFetch();
       creditsStore.stopBackgroundFetch();
     };
-  }, [uiMovies]);
+  }, [uiMovies, trailersStore, creditsStore]);
+
+  const onMovieClick = (m: UiMovie) => navigate(`/movie/${m.id}`);
+
+  const weeklyTop10 = useMemo(() => uiMovies.slice(0, 10), [uiMovies]);
+  const personalizedTop3 = useMemo(() => [...uiMovies].sort(() => Math.random() - 0.5).slice(0, 3), [uiMovies]);
+  const latest6 = useMemo(() => [...uiMovies].sort(() => Math.random() - 0.5).slice(0, 6), [uiMovies]);
+
+  const featured = useMemo(() => {
+    if (weeklyTop10.length > 0) return weeklyTop10[Math.floor(Math.random() * weeklyTop10.length)];
+    return personalizedTop3[0] ?? latest6[0];
+  }, [weeklyTop10, personalizedTop3, latest6]);
 
   if (!uiMovies.length) return <LoadingSpinner />;
 
@@ -86,10 +65,7 @@ export default function MainPage() {
         {featured && (
           <>
             {/* Featured Movie */}
-            <div
-              className="relative h-[85vh] mb-8 cursor-pointer"
-              onClick={() => onMovieClick(featured)}
-            >
+            <div className="relative h-[85vh] mb-8 cursor-pointer" onClick={() => onMovieClick(featured)}>
               <ImageWithFallback
                 src={getPosterUrl(featured.poster, "w500")}
                 alt={featured.title}
@@ -129,29 +105,9 @@ export default function MainPage() {
 
             {/* Sections */}
             <section className="max-w-7xl mx-auto px-8 lg:px-16 pt-[100px] space-y-[100px] pb-16">
-              <SectionCarousel
-                title="당신만을 위한 추천"
-                movies={personalizedTop3}
-                onClick={onMovieClick}
-                badge="맞춤 추천"
-              />
-              <SectionCarousel
-                title="최신 영화"
-                movies={latest6}
-                onClick={onMovieClick}
-                badge="NEW"
-              />
-              <SectionCarousel
-                title="이번주 인기 순위"
-                movies={weeklyTop10}
-                onClick={onMovieClick}
-                rank
-              />
-              <SectionCarousel
-                title="추억의 영화"
-                movies={oldPopular}
-                onClick={onMovieClick}
-              />
+              <SectionCarousel title="당신만을 위한 추천" movies={personalizedTop3} onClick={onMovieClick} badge="맞춤 추천" />
+              <SectionCarousel title="최신 영화" movies={latest6} onClick={onMovieClick} badge="NEW" />
+              <SectionCarousel title="이번주 인기 순위" movies={weeklyTop10} onClick={onMovieClick} rank />
             </section>
           </>
         )}

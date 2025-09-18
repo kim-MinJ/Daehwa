@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDebounce } from "../hooks/useDebounce";
 import { SearchFilters } from "../components/searchPage/SearchFilters";
-import { MovieList } from "../components/searchPage/MovieList";
 import { SortAndViewToggle } from "../components/searchPage/SortAndViewToggle";
 import { useMovieStore } from "../store/movieStore";
 import { useScrollStore } from "../store/scrollStore";
 import { genreMap, YEAR_GROUPS } from "@/constants/genres";
+import { getPosterUrl } from "@/utils/getPosterUrl";
 import { Movie } from "@/types/movie";
 
 const BATCH_SIZE = 50;
@@ -88,30 +88,41 @@ const SearchPage = () => {
       return;
     }
 
-    const loadInitial = async () => {
-      const batch = await getMoviesFromDB({
-        query: debouncedQuery,
-        years: selectedYears,
-        genres: selectedGenres,
-        offset: 0,
-        limit: BATCH_SIZE,
-      });
-      if (Array.isArray(batch)) {
-        setMovies(batch);
-        setLoadedCount(batch.length);
-      }
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-      const count = await getMoviesFromDB({
-        query: debouncedQuery,
-        years: selectedYears,
-        genres: selectedGenres,
-        countOnly: true,
-      });
-      if (typeof count === "number") setTotalCount(count);
+    const loadInitial = async () => {
+      try {
+        const batch = await getMoviesFromDB({
+          query: debouncedQuery,
+          years: selectedYears,
+          genres: selectedGenres,
+          offset: 0,
+          limit: BATCH_SIZE,
+          signal,
+        });
+        if (!signal.aborted && Array.isArray(batch)) {
+          setMovies(batch);
+          setLoadedCount(batch.length);
+        }
+
+        const count = await getMoviesFromDB({
+          query: debouncedQuery,
+          years: selectedYears,
+          genres: selectedGenres,
+          countOnly: true,
+          signal,
+        });
+        if (!signal.aborted && typeof count === "number") setTotalCount(count);
+      } catch (err) {
+        if ((err as any).name !== "AbortError") console.error(err);
+      }
     };
 
     loadInitial();
     fetchAllBackground();
+
+    return () => controller.abort();
   }, [debouncedQuery, selectedYears, selectedGenres, getMoviesFromDB, fetchAllBackground]);
 
   // -------------------------
@@ -186,8 +197,25 @@ const SearchPage = () => {
   const handleSearchSubmit = (e: React.FormEvent) => e.preventDefault();
   const handleSortChange = (val: string) => setSortBy(val as "latest"|"rating"|"title");
 
+  // -------------------------
+  // Featured + Section Carousel UI
+  // -------------------------
+  const featured = visibleMovies.slice(0, 5); // 상단 Featured
+  const sections = useMemo(() => {
+    // 장르별 섹션 생성
+    const map: Record<string, Movie[]> = {};
+    visibleMovies.forEach((movie) => {
+      movie.genres?.forEach((g) => {
+        const genreName = genreMap[g];
+        if (!map[genreName]) map[genreName] = [];
+        map[genreName].push(movie);
+      });
+    });
+    return map;
+  }, [visibleMovies]);
+
   return (
-    <div className="min-h-screen bg-white flex max-w-7xl mx-auto px-8 lg:px-16 py-8 gap-8">
+    <div className="min-h-screen bg-white max-w-7xl mx-auto px-8 lg:px-16 py-8 space-y-12">
       <SearchFilters
         query={query}
         setQuery={setQuery}
@@ -202,38 +230,77 @@ const SearchPage = () => {
         genreMap={genreMap}
       />
 
-      <div className="flex-1 space-y-6">
-        {!query.trim() && selectedYears.length===0 && selectedGenres.length===0 && (
-          <p className="text-center text-gray-600 py-12">검색어나 필터를 선택해주세요.</p>
-        )}
-
-        {(query.trim() || selectedYears.length>0 || selectedGenres.length>0) && sortedMovies.length===0 && (
-          <p className="text-center text-gray-600 py-12">조건에 맞는 영화가 없습니다.</p>
-        )}
-
-        {sortedMovies.length>0 && (
-          <>
-            <SortAndViewToggle
-              sortBy={sortBy}
-              handleSortChange={handleSortChange}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-            />
-            <MovieList
-              movies={visibleMovies}
-              genreMap={genreMap}
-              displayCount={visibleMovies.length}
-              setDisplayCount={setDisplayCount}
-              viewMode={viewMode}
-            />
-            {displayCount<sortedMovies.length && (
-              <div className="flex justify-center mt-6">
-                <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleLoadMore}>더보기</button>
+      {/* Featured Section */}
+      {featured.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Featured</h2>
+          <div className="flex overflow-x-auto gap-4 py-2">
+            {featured.map((movie, idx) => (
+              <div key={movie.movieIdx ?? `featured-${idx}`} className="flex-none w-48">
+                <img
+                  src={getPosterUrl(movie.posterPath)}
+                  alt={movie.title}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+                <h4 className="mt-2 text-sm font-medium">{movie.title}</h4>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Section Carousels */}
+      {Object.keys(sections).map((section) => (
+        <div key={section} className="space-y-4">
+          <h2 className="text-xl font-semibold">{section}</h2>
+          <div className="flex overflow-x-auto gap-4 py-2">
+            {sections[section].map((movie, idx) => (
+              <div key={movie.movieIdx ?? `${section}-${idx}`} className="flex-none w-40">
+                <img
+                  src={getPosterUrl(movie.posterPath)}
+                  alt={movie.title}
+                  className="w-full h-56 object-cover rounded"
+                />
+                <h4 className="mt-1 text-sm font-medium">{movie.title}</h4>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Sort & Load More */}
+      {sortedMovies.length > 0 && (
+        <div className="space-y-6">
+          <SortAndViewToggle
+            sortBy={sortBy}
+            handleSortChange={handleSortChange}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+          />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {visibleMovies.map((movie, idx) => (
+              <div key={movie.movieIdx ?? `grid-${idx}`}>
+                <img
+                  src={getPosterUrl(movie.posterPath)}
+                  alt={movie.title}
+                  className="w-full h-56 object-cover rounded"
+                />
+                <h4 className="mt-2 text-sm font-medium">{movie.title}</h4>
+              </div>
+            ))}
+          </div>
+          {displayCount < sortedMovies.length && (
+            <div className="flex justify-center mt-6">
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded"
+                onClick={handleLoadMore}
+              >
+                더보기
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

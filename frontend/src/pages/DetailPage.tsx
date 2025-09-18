@@ -33,66 +33,65 @@ export default function DetailPage() {
 
     let isMounted = true;
 
-    (async () => {
+    // 백그라운드 fetch 중단용 AbortController
+    const movieAbort = new AbortController();
+    const creditsAbort = new AbortController();
+    const trailersAbort = new AbortController();
+
+    const fetchData = async () => {
       try {
         // ----------------------------
         // 1️⃣ Movie: 메모리 → DB → UI 즉시 반영
         // ----------------------------
-        let movieData =
-          movieStore.movies.find((m) => m.movieIdx === movieId) ??
-          (await movieStore.getMovieFromDB(movieId));
-        if (isMounted) {
-          setMovie(movieData);
-          setLoading(false);
-        }
+        let movieData = movieStore.movies.find((m) => m.movieIdx === movieId) ?? null;
+        if (!movieData) movieData = await movieStore.getMovieFromDB(movieId);
+        if (isMounted && movieData) setMovie(movieData);
+
+        setLoading(false);
 
         // ----------------------------
-        // 2️⃣ Credits: 메모리 → DB → UI 즉시 반영
-        // ----------------------------
-        const creditsData =
-          creditsStore.creditsMap[movieId] ??
-          (await creditsStore.fetchCredits(movieId)) ??
-          { cast: [], crew: [] };
-        if (isMounted) setCredits(creditsData);
-
-        // ----------------------------
-        // 3️⃣ Trailers: 메모리 → DB → UI 즉시 반영
-        // ----------------------------
-        const trailersData =
-          trailersStore.trailersMap[movieId] ??
-          (await trailersStore.fetchTrailers(movieId)) ??
-          [];
-        if (isMounted) setTrailers(trailersData);
-
-        // ----------------------------
-        // 4️⃣ 백그라운드 fetch: 최신 데이터 자동 업데이트
+        // 2️⃣ Movie: 백그라운드 fetch
         // ----------------------------
         void (async () => {
           try {
-            // Movie
-            const resMovie = await fetch(`/api/movie/${movieId}`);
-            if (resMovie.ok) {
-              const data: Movie = await resMovie.json();
-              if (isMounted) setMovie(data);
-            }
+            const res = await fetch(`/api/movie/${movieId}`, { signal: movieAbort.signal });
+            if (!res.ok) return;
+            const data: Movie = await res.json();
+            if (isMounted) setMovie(data);
+          } catch (err: any) {
+            if (err.name !== "AbortError") console.warn("Movie fetch 실패:", err);
+          }
+        })();
 
-            // Credits
-            const resCredits = await fetch(`/api/movies/${movieId}/credits`);
-            if (resCredits.ok) {
-              const data: Credits = await resCredits.json();
-              if (isMounted) setCredits(data);
-              creditsStore.setCredits(movieId, data);
-            }
+        // ----------------------------
+        // 3️⃣ Credits: 메모리 → DB → UI 즉시 반영 + 백그라운드 fetch
+        // ----------------------------
+        const cachedCredits =
+          creditsStore.creditsMap[movieId] ?? (await creditsStore.fetchCredits(movieId)) ?? { cast: [], crew: [] };
+        if (isMounted) setCredits(cachedCredits);
 
-            // Trailers
-            const resTrailers = await fetch(`/api/movie/${movieId}/videos`);
-            if (resTrailers.ok) {
-              const data: Trailer[] = await resTrailers.json();
-              if (isMounted) setTrailers(data);
-              trailersStore.setTrailers(movieId, data);
-            }
+        void (async () => {
+          try {
+            const creditsData = await creditsStore.fetchCredits(movieId);
+            if (isMounted && creditsData) setCredits(creditsData);
           } catch (err) {
-            console.warn("백그라운드 fetch 실패:", err);
+            console.warn("Credits fetch 실패:", err);
+          }
+        })();
+
+        // ----------------------------
+        // 4️⃣ Trailers: 메모리 → DB → UI 즉시 반영 + 백그라운드 fetch
+        // ----------------------------
+        const cachedTrailers =
+          trailersStore.trailersMap[movieId] ?? (await trailersStore.fetchTrailers(movieId)) ?? [];
+        if (isMounted) setTrailers(cachedTrailers);
+
+        void (async () => {
+          try {
+            const trailersData = await trailersStore.fetchTrailers(movieId);
+            if (isMounted && trailersData) setTrailers(trailersData);
+          } catch (err) {
+            console.warn("Trailers fetch 실패:", err);
           }
         })();
       } catch (err) {
@@ -102,17 +101,20 @@ export default function DetailPage() {
           setLoading(false);
         }
       }
-    })();
+    };
+
+    fetchData();
 
     return () => {
       isMounted = false;
+      // 언마운트 시 백그라운드 fetch 중단
+      movieAbort.abort();
+      creditsAbort.abort();
+      trailersAbort.abort();
     };
   }, [movieId]);
 
-  if (error)
-    return (
-      <div className="text-red-600 py-24 text-center">에러: {error}</div>
-    );
+  if (error) return <div className="text-red-600 py-24 text-center">에러: {error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">

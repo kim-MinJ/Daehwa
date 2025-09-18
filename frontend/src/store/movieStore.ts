@@ -2,30 +2,7 @@
 import { create } from "zustand";
 import { Movie } from "@/types/movie";
 import { DB } from "@/utils/indexedDB";
-
-interface GetMoviesOptions {
-  query?: string;
-  years?: string[];
-  genres?: string[];
-  offset?: number;
-  limit?: number;
-  countOnly?: boolean;
-}
-
-interface MovieState {
-  movies: Movie[];           // UI용 첫 페이지 데이터
-  allMovies: Movie[];        // 전체 영화 데이터 (백그라운드)
-  loading: boolean;
-  isBackgroundFetched: boolean;
-  isBackgroundFetching: boolean;
-
-  setMovies: (movies: Movie[]) => void;
-  getMovieFromDB: (movieId: number) => Promise<Movie | null>;
-  getMoviesFromDB: (options?: GetMoviesOptions) => Promise<Movie[] | number>;
-  fetchFirstPage: (limit?: number) => Promise<Movie[]>;
-  fetchAllBackground: () => void;
-  stopBackgroundFetch: () => void;
-}
+import { MovieState, GetMoviesOptions } from "@/types/movieStore"; // 분리된 타입 import
 
 let uiAbortController: AbortController | null = null;
 let bgAbortController: AbortController | null = null;
@@ -59,8 +36,11 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     let filtered = all;
 
     if (query) filtered = filtered.filter(m => m.title.toLowerCase().includes(query.toLowerCase()));
-    if (years && years.length > 0) filtered = filtered.filter(m => m.releaseDate && years.includes(m.releaseDate.split("-")[0]));
-    if (genres && genres.length > 0) filtered = filtered.filter(m => m.genres && m.genres.some(g => genres.includes(g)));
+    if (years && years.length > 0)
+      filtered = filtered.filter(m => m.releaseDate && years.includes(m.releaseDate.split("-")[0]));
+    if (genres && genres.length > 0)
+      filtered = filtered.filter(m => m.genres && m.genres.some(g => genres.includes(g)));
+
     if (countOnly) return filtered.length;
 
     return Array.from(new Map(filtered.slice(offset, offset + limit).map(m => [m.movieIdx, m])).values());
