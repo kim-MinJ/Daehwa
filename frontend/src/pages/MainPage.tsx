@@ -1,5 +1,5 @@
 // src/pages/MainPage.tsx
-import { useEffect, useMemo, useCallback, useState } from "react";
+import { useEffect, useMemo, useCallback, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Star, Info } from "lucide-react";
@@ -10,14 +10,13 @@ import { getPosterUrl } from "@/utils/getPosterUrl";
 import { SectionCarousel } from "@/components/mainPage/SectionCarousel";
 import { UiMovie, mapToUiMovie } from "@/types/uiMovie";
 import { ImageWithFallback } from "@/components/imageFallback/ImageWithFallback";
-import { FixedSizeList } from "react-window";
+
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 // 🔹 Skeleton 컴포넌트
 function MovieSkeleton({ width, height }: { width: string; height: string }) {
   return (
-    <div
-      className={`${width} ${height} bg-gray-200 animate-pulse rounded-md`}
-    />
+    <div className={`${width} ${height} bg-gray-200 animate-pulse rounded-md`} />
   );
 }
 
@@ -30,7 +29,10 @@ export default function MainPage() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   // 1️⃣ UI용 데이터 즉시 계산
-  const uiMovies: UiMovie[] = useMemo(() => movieStore.movies.map(mapToUiMovie), [movieStore.movies]);
+  const uiMovies: UiMovie[] = useMemo(
+    () => movieStore.movies.map(mapToUiMovie),
+    [movieStore.movies]
+  );
 
   // 2️⃣ 백그라운드 fetch + 중단 지원
   useEffect(() => {
@@ -49,25 +51,44 @@ export default function MainPage() {
   const onMovieClick = (m: UiMovie) => navigate(`/movie/${m.id}`);
 
   const weeklyTop10 = useMemo(() => uiMovies.slice(0, 10), [uiMovies]);
-  const personalizedTop3 = useMemo(() => [...uiMovies].sort(() => Math.random() - 0.5).slice(0, 3), [uiMovies]);
-  const latest6 = useMemo(() => [...uiMovies].sort(() => Math.random() - 0.5).slice(0, 6), [uiMovies]);
+  const personalizedTop3 = useMemo(
+    () => [...uiMovies].sort(() => Math.random() - 0.5).slice(0, 3),
+    [uiMovies]
+  );
+  const latest6 = useMemo(
+    () => [...uiMovies].sort(() => Math.random() - 0.5).slice(0, 6),
+    [uiMovies]
+  );
 
   // 3️⃣ Featured 영화: 첫 렌더 시 랜덤 선택
   const featured = useMemo(() => {
-    if (weeklyTop10.length > 0) return weeklyTop10[Math.floor(Math.random() * weeklyTop10.length)];
+    if (weeklyTop10.length > 0)
+      return weeklyTop10[Math.floor(Math.random() * weeklyTop10.length)];
     return personalizedTop3[0] ?? latest6[0];
   }, []);
 
   // 4️⃣ SectionCarousel renderMovie 콜백
-  const renderMovie = useCallback((movie: UiMovie, size: "w154" | "w92") => (
-    <ImageWithFallback
-      src={getPosterUrl(movie.poster, size)}
-      alt={movie.title}
-      className={`${size === "w154" ? "w-36 h-52 object-cover" : "w-24 h-36 object-cover"} transition-opacity duration-700`}
-      onLoad={() => setImagesLoaded(true)}
-      placeholder={<MovieSkeleton width={size === "w154" ? "w-36" : "w-24"} height={size === "w154" ? "h-52" : "h-36"} />}
-    />
-  ), []);
+  const renderMovie = useCallback(
+    (movie: UiMovie, size: "w154" | "w92") => (
+      <ImageWithFallback
+        src={getPosterUrl(movie.poster, size)}
+        alt={movie.title}
+        className={`${
+          size === "w154"
+            ? "w-36 h-52 object-cover"
+            : "w-24 h-36 object-cover"
+        } transition-opacity duration-700`}
+        onLoad={() => setImagesLoaded(true)}
+        placeholder={
+          <MovieSkeleton
+            width={size === "w154" ? "w-36" : "w-24"}
+            height={size === "w154" ? "h-52" : "h-36"}
+          />
+        }
+      />
+    ),
+    []
+  );
 
   if (!uiMovies.length) {
     // 초기 Skeleton UI
@@ -87,13 +108,24 @@ export default function MainPage() {
     );
   }
 
+  // 🔹 Virtualized List
+  const parentRef = useRef<HTMLDivElement | null>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: uiMovies.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 180, // 각 row 높이
+  });
+
   return (
     <div className="min-h-screen bg-white">
       <main className="relative">
         {featured && (
           <>
             {/* Featured Movie */}
-            <div className="relative h-[85vh] mb-8 cursor-pointer" onClick={() => onMovieClick(featured)}>
+            <div
+              className="relative h-[85vh] mb-8 cursor-pointer"
+              onClick={() => onMovieClick(featured)}
+            >
               <ImageWithFallback
                 src={getPosterUrl(featured.poster, "w500")}
                 alt={featured.title}
@@ -106,7 +138,9 @@ export default function MainPage() {
               <div className="absolute bottom-0 left-0 w-full">
                 <div className="max-w-7xl mx-auto px-8 lg:px-16 pb-8 lg:pb-16">
                   <div className="max-w-lg text-white">
-                    <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">{featured.title}</h1>
+                    <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
+                      {featured.title}
+                    </h1>
                     {featured.description && (
                       <p className="text-white/90 text-lg lg:text-xl leading-relaxed mb-6">
                         {featured.description.slice(0, 200)}...
@@ -115,7 +149,9 @@ export default function MainPage() {
                     <div className="flex items-center gap-4 mb-8 text-white/80">
                       <div className="flex items-center gap-2">
                         <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                        <span className="text-lg font-semibold">{featured.rating.toFixed(1)}</span>
+                        <span className="text-lg font-semibold">
+                          {featured.rating.toFixed(1)}
+                        </span>
                       </div>
                       <span>•</span>
                       <span>{featured.year}년</span>
@@ -161,29 +197,44 @@ export default function MainPage() {
             {/* 전체 영화 목록 (Virtualized List) */}
             <section className="max-w-7xl mx-auto px-8 lg:px-16 pb-16">
               <h2 className="text-2xl font-semibold mb-4">전체 영화 목록</h2>
-              <FixedSizeList
-                height={500}
-                itemCount={uiMovies.length}
-                itemSize={180}
-                width="100%"
+              <div
+                ref={parentRef}
+                className="h-[500px] overflow-auto border rounded-md"
               >
-                {({ index, style }: { index: number; style: React.CSSProperties }) => {
-                  const movie = uiMovies[index];
-                  return (
-                    <div
-                      style={style}
-                      className="flex items-center gap-4 py-2 cursor-pointer"
-                      onClick={() => onMovieClick(movie)}
-                    >
-                      {renderMovie(movie, "w92")}
-                      <div className="flex flex-col">
-                        <h3 className="text-lg font-semibold text-black">{movie.title}</h3>
-                        <span>{movie.year}년 | {movie.genre}</span>
+                <div
+                  style={{
+                    height: `${rowVirtualizer.getTotalSize()}px`,
+                    width: "100%",
+                    position: "relative",
+                  }}
+                >
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const movie = uiMovies[virtualRow.index];
+                    return (
+                      <div
+                        key={virtualRow.key}
+                        ref={rowVirtualizer.measureElement}
+                        data-index={virtualRow.index}
+                        className="absolute top-0 left-0 w-full flex items-center gap-4 py-2 cursor-pointer"
+                        style={{
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                        onClick={() => onMovieClick(movie)}
+                      >
+                        {renderMovie(movie, "w92")}
+                        <div className="flex flex-col">
+                          <h3 className="text-lg font-semibold text-black">
+                            {movie.title}
+                          </h3>
+                          <span>
+                            {movie.year}년 | {movie.genre}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                }}
-              </FixedSizeList>
+                    );
+                  })}
+                </div>
+              </div>
             </section>
           </>
         )}
