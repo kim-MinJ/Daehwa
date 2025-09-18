@@ -2,82 +2,88 @@ package org.iclass.backend.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.iclass.backend.repository.MovieVoteRepository;
+import org.iclass.backend.repository.MovieInfoRepository;
+import org.iclass.backend.dto.MovieVoteDto;
 import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.service.MovieVoteService;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
-@CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/api/movie")
+@RequestMapping("/api/movies")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 public class RankingController {
 
-    private final MovieVoteRepository movieVoteRepository;
+    private final MovieInfoRepository movieInfoRepository;
     private final MovieVoteService movieVoteService;
 
-    private String tmdbApiKey = "302b783e860b19b6822ef0a445e7ae53";
-    private final RestTemplate restTemplate = new RestTemplate();
+    @GetMapping("/trending")
+public ResponseEntity<?> getTrendingMovies() {
+    var movies = movieInfoRepository.findAllWithGenres();
 
-    /** ✅ TMDB 인기 영화 + 감독 + DB 투표 수 반영 */
-    @GetMapping("/ranking")
-    public ResponseEntity<?> getPopularMovies() {
+    // 정렬: null voteCount 방지
+    movies.sort((a, b) -> Double.compare(
+            (b.getVoteAverage() * ((b.getVoteCount() == null ? 0 : b.getVoteCount()) + 1)),
+            (a.getVoteAverage() * ((a.getVoteCount() == null ? 0 : a.getVoteCount()) + 1))
+    ));
+
+    var response = movies.stream().map(m -> {
+        Map<String, Object> movie = new HashMap<>();
+        movie.put("movieIdx",   m.getMovieIdx());
+        movie.put("tmdbMovieId",m.getTmdbMovieId());
+        movie.put("title",      Optional.ofNullable(m.getTitle()).orElse("제목없음"));
+        movie.put("posterPath", Optional.ofNullable(m.getPosterPath()).orElse("/fallback.png"));
+        movie.put("year",       m.getReleaseDate() == null ? "N/A" : m.getReleaseDate().toString());
+        movie.put("rating",     Optional.ofNullable(m.getVoteAverage()).orElse(0.0));
+        movie.put("overview",   Optional.ofNullable(m.getOverview()).orElse(""));
+        movie.put("genres",     Optional.ofNullable(m.getGenres()).orElse(List.of()));
+        movie.put("voteCount",  Optional.ofNullable(m.getVoteCount()).orElse(0));
+        return movie;
+    }).toList();
+
+    return ResponseEntity.ok(response);
+}
+
+    /** ✅ 버튼 클릭 시 vote_count +1 */
+    @PostMapping("/vote")
+    public ResponseEntity<?> vote(@RequestParam Long movieId,
+                                @RequestParam String userId) {
         try {
-            String url = "https://api.themoviedb.org/3/movie/popular?api_key=" + tmdbApiKey + "&language=ko-KR&page=1";
-            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-
-            JSONObject json = new JSONObject(response.getBody());
-            JSONArray results = json.getJSONArray("results");
-
-            List<Map<String, Object>> movies = new ArrayList<>();
-            for (int i = 0; i < results.length(); i++) {
-                JSONObject m = results.getJSONObject(i);
-
-                Long tmdbMovieId = m.getLong("id");
-
-                // ✅ DB에서 실제 투표 수 가져오기
-                long voteCount = movieVoteRepository.countByMovie_TmdbMovieId(tmdbMovieId);
-
-                // ✅ TMDB에서 감독 가져오기
-                String creditsUrl = String.format(
-                        "https://api.themoviedb.org/3/movie/%d/credits?api_key=%s&language=ko-KR",
-                        tmdbMovieId, tmdbApiKey);
-                ResponseEntity<String> creditsRes = restTemplate.getForEntity(creditsUrl, String.class);
-                JSONObject creditsJson = new JSONObject(creditsRes.getBody());
-                JSONArray crew = creditsJson.getJSONArray("crew");
-
-                String director = "알 수 없음";
-                for (int j = 0; j < crew.length(); j++) {
-                    JSONObject person = crew.getJSONObject(j);
-                    if ("Director".equals(person.optString("job"))) {
-                        director = person.optString("name", "알 수 없음");
-                        break;
-                    }
-                }
-
-                Map<String, Object> movie = new HashMap<>();
-                movie.put("movieIdx", tmdbMovieId);
-                movie.put("tmdbMovieId", tmdbMovieId);
-                movie.put("title", m.getString("title"));
-                movie.put("posterPath", m.optString("poster_path", null));
-                movie.put("year", m.optString("release_date", "0000-00-00"));
-                movie.put("rating", m.getDouble("vote_average"));
-                movie.put("overview", m.optString("overview", ""));
-                movie.put("director", director); // ✅ 감독 추가
-                movie.put("voteCount", m.getInt("vote_count")); // ✅ 실제 투표 수 반영
-
-                movies.add(movie);
-            }
-
-            return ResponseEntity.ok(movies);
+            // VS 없이 단일 영화 투표
+            MovieVoteDto saved = movieVoteService.vote(movieId, userId);
+            return ResponseEntity.ok(saved);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "TMDB API 호출 실패", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
+    }
+
+
+    private String mapGenreIdToName(int genreId) {
+    switch (genreId) {
+        case 28: return "Action";
+        case 12: return "Adventure";
+        case 16: return "Animation";
+        case 35: return "Comedy";
+        case 80: return "Crime";
+        case 99: return "Documentary";
+        case 18: return "Drama";
+        case 10751: return "Family";
+        case 14: return "Fantasy";
+        case 36: return "History";
+        case 27: return "Horror";
+        case 10402: return "Music";
+        case 9648: return "Mystery";
+        case 10749: return "Romance";
+        case 878: return "Science Fiction";
+        case 10770: return "TV Movie";
+        case 53: return "Thriller";
+        case 10752: return "War";
+        case 37: return "Western";
+        default: return "Unknown";
+    }
     }
 }
