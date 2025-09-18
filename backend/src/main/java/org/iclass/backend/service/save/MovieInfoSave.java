@@ -1,13 +1,18 @@
 package org.iclass.backend.service.save;
 
+import static java.util.Map.entry;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.iclass.backend.entity.FeelingGenreEntity;
 import org.iclass.backend.entity.MovieGenresEntity;
 import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.repository.FeelingGenreRepository;
 import org.iclass.backend.repository.GenresRepository;
 import org.iclass.backend.repository.MovieGenresRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
@@ -27,6 +32,7 @@ public class MovieInfoSave {
     private final MovieInfoRepository movieInfoRepository;
     private final MovieGenresRepository movieGenresRepository;
     private final GenresRepository genresRepository;
+    private final FeelingGenreRepository feelingGenreRepository;
 
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -34,14 +40,36 @@ public class MovieInfoSave {
     private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4"; // 실제
                                                                                                                                                                                                                                                                                                   // 키로
                                                                                                                                                                                                                                                                                                   // 교체
-    private final int TOTAL_PAGE = 10; // 223
+    private final int TOTAL_PAGE = 1; // 224
+
+    private static final Map<String, String[]> genreToFeelingMap = Map.ofEntries(
+            entry("액션", new String[] { "화남", "긴장됨", "놀람", "짜릿함", "흥분됨" }),
+            entry("어드벤처", new String[] { "심심함", "설렘", "긴장됨", "흥분됨", "즐거움" }),
+            entry("애니메이션", new String[] { "기쁨", "편안함", "즐거움", "설렘", "심심함" }),
+            entry("코미디", new String[] { "기쁨", "편안함", "심심함", "즐거움", "설렘" }),
+            entry("범죄", new String[] { "화남", "긴장됨", "심심함", "놀람", "짜릿함" }),
+            entry("다큐멘터리", new String[] { "슬픔", "피곤함", "감동적임", "편안함", "생각남" }),
+            entry("드라마", new String[] { "슬픔", "기쁨", "편안함", "감동적임", "설렘" }),
+            entry("가족", new String[] { "기쁨", "편안함", "감동적임", "즐거움", "설렘" }),
+            entry("판타지", new String[] { "슬픔", "편안함", "흥분됨", "설렘", "놀람" }),
+            entry("역사", new String[] { "피곤함", "감동적임", "슬픔", "생각남", "설렘" }),
+            entry("공포", new String[] { "긴장됨", "놀람", "짜릿함", "화남", "심심함" }),
+            entry("음악", new String[] { "기쁨", "설렘", "편안함", "즐거움", "감동적임" }),
+            entry("미스터리", new String[] { "긴장됨", "놀람", "심심함", "짜릿함", "화남" }),
+            entry("로맨스", new String[] { "기쁨", "설렘", "슬픔", "편안함", "감동적임" }),
+            entry("SF", new String[] { "심심함", "흥분됨", "놀람", "설렘", "짜릿함" }),
+            entry("TV 영화", new String[] { "편안함", "심심함", "즐거움", "설렘", "감동임" }),
+            entry("스릴러", new String[] { "긴장됨", "놀람", "화남", "짜릿함", "심심함" }),
+            entry("전쟁", new String[] { "화남", "긴장됨", "짜릿함", "슬픔", "감동적임" }),
+            entry("서부극", new String[] { "흥분됨", "짜릿함", "화남", "놀람", "심심함" }));
 
     public MovieInfoSave(MovieInfoRepository movieInfoRepository,
             MovieGenresRepository movieGenresRepository,
-            GenresRepository genresRepository) {
+            GenresRepository genresRepository, FeelingGenreRepository feelingGenreRepository) {
         this.movieInfoRepository = movieInfoRepository;
         this.movieGenresRepository = movieGenresRepository;
         this.genresRepository = genresRepository;
+        this.feelingGenreRepository = feelingGenreRepository;
     }
 
     @Transactional
@@ -137,6 +165,27 @@ public class MovieInfoSave {
                                     .genre(genreEntity)
                                     .build();
                             movieGenresRepository.save(mg);
+                        }
+                        String genreName = genreEntity.getName();
+                        String[] feelings = genreToFeelingMap.get(genreName);
+
+                        if (feelings != null) {
+                            for (String feeling : feelings) {
+                                boolean fgExists = feelingGenreRepository
+                                        .existsByFeelingTypeAndGenreAndMovie(feeling, genreEntity, movie);
+
+                                if (!fgExists) {
+                                    FeelingGenreEntity fg = FeelingGenreEntity.builder()
+                                            .feelingType(feeling)
+                                            .genre(genreEntity)
+                                            .movie(movie)
+                                            .build();
+                                    feelingGenreRepository.save(fg);
+                                    System.out.println("저장됨: 영화=" + movie.getTitle()
+                                            + " / 장르=" + genreName
+                                            + " / 감정=" + feeling);
+                                }
+                            }
                         }
                     });
                 }
