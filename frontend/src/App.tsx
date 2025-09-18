@@ -23,13 +23,12 @@ function AppContent() {
   const location = useLocation();
   const fetchFirstPage = useMovieStore((state) => state.fetchFirstPage);
   const fetchAllBackground = useMovieStore((state) => state.fetchAllBackground);
-
   const movies = useMovieStore((state) => state.movies);
 
   const creditsStore = useCreditsStore();
   const trailersStore = useTrailersStore();
-
   const scrollStore = useScrollStore();
+
   const [loading, setLoading] = useState(true);
 
   // 🔹 앱 초기화: UI용 첫 페이지만 fetch
@@ -38,28 +37,37 @@ function AppContent() {
       await getDB();
 
       // 1️⃣ 첫 페이지 UI용 데이터 fetch
-      const firstPageMovies = await fetchFirstPage(20); // 넷플릭스처럼 최소 데이터만
+      const firstPageMovies = await fetchFirstPage(20);
       setLoading(false); // 화면 바로 렌더링
 
-      // 2️⃣ 백그라운드 점진적 fetch
-      void fetchAllBackground(); // MovieStore
-      const movieIds = firstPageMovies.map((m) => m.movieIdx);
-      void creditsStore.fetchAllBackground(movieIds);
-      void trailersStore.fetchAllBackground(movieIds);
+      // 2️⃣ 백그라운드 chunked fetch
+      const allMovies = useMovieStore.getState().allMovies;
+      const allMovieIds = allMovies.map((m) => m.movieIdx);
+
+      const chunkedFetch = async (ids: number[], chunkSize = 50) => {
+        for (let i = 0; i < ids.length; i += chunkSize) {
+          const chunk = ids.slice(i, i + chunkSize);
+          await creditsStore.fetchAllBackground(chunk);
+          await trailersStore.fetchAllBackground(chunk);
+        }
+      };
+
+      const fetchBackground = () => {
+        void fetchAllBackground(); // MovieStore 전체 fetch
+        void chunkedFetch(allMovieIds); // credits/trailers chunked fetch
+      };
+
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(fetchBackground);
+      } else {
+        setTimeout(fetchBackground, 2000);
+      }
     };
+
     initApp();
   }, []);
 
-  // 🔹 페이지 이동 시 백그라운드 fetch 유지
-  useEffect(() => {
-    void fetchAllBackground();
-    const allMovies = useMovieStore.getState().allMovies;
-    const movieIds = allMovies.map((m) => m.movieIdx);
-    void creditsStore.fetchAllBackground(movieIds);
-    void trailersStore.fetchAllBackground(movieIds);
-  }, [location.pathname]);
-
-  // 🔹 스크롤 복원
+  // 🔹 페이지 이동 시 스크롤 복원
   useEffect(() => {
     const pos = scrollStore.getScroll(location.pathname);
     window.scrollTo(0, pos);
