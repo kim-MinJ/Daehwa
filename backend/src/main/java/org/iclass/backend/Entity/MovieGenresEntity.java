@@ -1,4 +1,6 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,19 +24,20 @@ import lombok.ToString;
 @ToString
 @Builder
 @Entity
-@Table(name = "MOVIE_GENRES")
+@Table(name = "Movie_Genres")
 public class MovieGenresEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "MG_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long mgIdx;
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
+  @JsonBackReference
   private MovieInfoEntity movie;
 
   @ManyToOne
-  @JoinColumn(name = "genre_id", nullable = false)
+  @JoinColumn(name = "genre_id", referencedColumnName = "genre_idx", nullable = false)
   private GenresEntity genre;
 }

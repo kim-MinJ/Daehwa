@@ -3,7 +3,7 @@ package org.iclass.backend.dto;
 
 import java.time.LocalDateTime;
 
-import org.iclass.backend.Entity.UsersEntity;
+import org.iclass.backend.entity.UsersEntity;
 
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -19,23 +19,39 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @Builder
-@Table(name = "users")
+@Table(name = "Users")
 public class UsersDto {
-  private String userId;
-  private String username;
-  private String password;
-  private String role;
-  private LocalDateTime regDate;
-  private Integer status;
 
-  public static UsersDto of(UsersEntity entity) {
-    return UsersDto.builder()
-        .userId(entity.getUserId())
-        .username(entity.getUsername())
-        .password(entity.getPassword())
-        .role(entity.getRole())
-        .regDate(entity.getRegDate())
-        .status(entity.getStatus())
-        .build();
-  }
+    private String userId;
+    private String username;
+    private String password;
+    private String role;
+    private LocalDateTime regDate;
+    private Integer status;
+    private String token;
+
+    // ✅ Entity → DTO 변환
+    public static UsersDto of(UsersEntity entity, String token) {
+        return UsersDto.builder()
+                .userId(entity.getUserId())
+                .username(entity.getUsername())
+                .password(entity.getPassword())
+                .role(entity.getRole())
+                .regDate(entity.getRegDate())
+                .status(entity.getStatus())
+                .token(token)
+                .build();
+    }
+
+    // ✅ DTO → Entity 변환
+    public UsersEntity toEntity() {
+        return UsersEntity.builder()
+                .userId(this.userId)
+                .username(this.username)
+                .password(this.password)
+                .role(this.role)
+                .regDate(this.regDate)
+                .status(this.status)
+                .build();
+    }
 }

@@ -8,12 +8,24 @@ spring:
     password: 1234
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
-        format_sql: true
-        show_sql: true
+        '[format_sql]': true
+        '[show_sql]': true
   h2:
     console:
       enabled: true
       path: /h2-console
+
+tmdb:
+  api:
+    key: 302b783e860b19b6822ef0a445e7ae53
+  
+jwt:
+  secret: nR8vP6uQx2sLz9F1tYhJkVm3bCeGdHwR
+  expiration: 3600000 # 1 hour in milliseconds
+  #깃 저장용
+openai:
+  api:
+    key: ${OPENAI_API_KEY}

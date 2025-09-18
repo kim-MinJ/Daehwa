@@ -1,4 +1,6 @@
-package org.iclass.backend.Entity;
+package org.iclass.backend.entity;
+
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,12 +24,12 @@ import lombok.ToString;
 @ToString
 @Builder
 @Entity
-@Table(name = "MOVIE_VOTE")
+@Table(name = "Movie_Vote")
 public class MovieVoteEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "vote_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long voteIdx;
 
   @ManyToOne
@@ -35,10 +37,14 @@ public class MovieVoteEntity {
   private MovieInfoEntity movie;
 
   @ManyToOne
-  @JoinColumn(name = "userid", nullable = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 
   @ManyToOne
-  @JoinColumn(name = "VS_idx", nullable = false)
+  @JoinColumn(name = "VS_idx", nullable = true) // 🔥 임시로 투표 증가 확인을 위해 true로 변경
   private MovieVsEntity movieVS;
+  
+  @Column(name = "vs_date", nullable = false)
+  @Builder.Default
+  private LocalDateTime vsDate = LocalDateTime.now();
 }
