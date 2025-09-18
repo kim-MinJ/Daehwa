@@ -19,6 +19,9 @@ public interface MovieInfoRepository extends JpaRepository<MovieInfoEntity, Long
     // 장르 이름으로 영화 조회 (JOIN 필요)
     @Query("SELECT mg.movie FROM MovieGenresEntity mg WHERE mg.genre.name = :genreName")
     List<MovieInfoEntity> findMoviesByGenreName(@Param("genreName") String genreName);
+    
+    @Query("SELECT mg.movie FROM MovieGenresEntity mg WHERE mg.genre.genreId = :genreId")
+    List<MovieInfoEntity> findMoviesByGenreId(@Param("genreId") Long genreId);
 
     // 모든 영화 조회 + 장르 페치
     @Query("SELECT DISTINCT m FROM MovieInfoEntity m LEFT JOIN FETCH m.movieGenres mg LEFT JOIN FETCH mg.genre")

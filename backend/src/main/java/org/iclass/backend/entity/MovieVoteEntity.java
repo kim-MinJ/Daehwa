@@ -1,28 +1,36 @@
 package org.iclass.backend.entity;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @Builder
 @Entity
-@Table(name = "MOVIE_VOTE")
+@Table(name = "Movie_Vote")
 public class MovieVoteEntity {
 
   @Id
   @Column(name = "vote_idx")
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long voteIdx;
-
-  @ManyToOne
-  @JoinColumn(name = "VS_idx", nullable = false)
-  private MovieVsEntity movieVS;
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)
@@ -32,8 +40,11 @@ public class MovieVoteEntity {
   @JoinColumn(name = "user_id", nullable = false)
   private UsersEntity user;
 
-  @Column(name = "VS_date", nullable = false)
-  @Temporal(TemporalType.TIMESTAMP)
+  @ManyToOne
+  @JoinColumn(name = "VS_idx", nullable = true) // 🔥 임시로 투표 증가 확인을 위해 true로 변경
+  private MovieVsEntity movieVS;
+  
+  @Column(name = "vs_date", nullable = false)
   @Builder.Default
-  private Date vsDate = new Date();
+  private LocalDateTime vsDate = LocalDateTime.now();
 }
