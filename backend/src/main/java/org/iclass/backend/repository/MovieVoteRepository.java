@@ -25,6 +25,18 @@ public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long
     // ✅ 단일 영화 + 유저 기준으로 투표 여부 조회 (VS 없이)
     Optional<MovieVoteEntity> findByMovieAndUser(MovieInfoEntity movie, UsersEntity user);
 
+    // ✅ 단일 영화 + 유저 + 오늘 날짜 기준으로 투표 여부 조회 (중복 방지)
+    @Query("SELECT v FROM MovieVoteEntity v " +
+           "WHERE v.movie = :movie " +
+           "AND v.user = :user " +
+           "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
+    Optional<MovieVoteEntity> findTodayVote(
+            @Param("movie") MovieInfoEntity movie,
+            @Param("user") UsersEntity user,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
+
     // ✅ TMDB ID 기준으로 전체 투표 수 집계
     long countByMovie_TmdbMovieId(Long tmdbMovieId);
 
@@ -33,17 +45,8 @@ public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long
            "FROM MovieVoteEntity v " +
            "WHERE v.vsDate BETWEEN :startOfWeek AND :endOfWeek " +
            "GROUP BY v.movie.tmdbMovieId")
-    List<Object[]> countVotesThisWeek(@Param("startOfWeek") LocalDateTime startOfWeek,
-                                      @Param("endOfWeek") LocalDateTime endOfWeek);
-
-   @Query("SELECT v FROM MovieVoteEntity v " +
-         "WHERE v.movie = :movie " +
-         "AND v.user = :user " +
-         "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
-   Optional<MovieVoteEntity> findTodayVote(
-         @Param("movie") MovieInfoEntity movie,
-         @Param("user") UsersEntity user,
-         @Param("startOfDay") LocalDateTime startOfDay,
-         @Param("endOfDay") LocalDateTime endOfDay
-);
+    List<Object[]> countVotesThisWeek(
+            @Param("startOfWeek") LocalDateTime startOfWeek,
+            @Param("endOfWeek") LocalDateTime endOfWeek
+    );
 }
