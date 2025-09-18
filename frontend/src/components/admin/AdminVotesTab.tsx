@@ -45,21 +45,23 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
         const data: any[] = await res.json();
 
         const mapped: Movie[] = data
-          .filter((m) => m.posterPath)
-          .map((m) => ({
-            movieIdx: String(m.movieIdx),
-            tmdbMovieId: m.tmdbMovieId ?? "",
-            title: m.title,
-            poster: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : "",
-            year: m.releaseDate?.split("-")[0] ?? "",
-            genre: m.genre ?? "",
-            rating: m.voteAverage ?? 0,
-            runtime: m.runtime ?? 0,
-            description: m.overview ?? "",
-            director: m.director ?? "",
-            rank: 0,
-            voteCount: 0,
-          }));
+  .filter((m) => m.posterPath)
+  .map((m) => ({
+    id: m.movieIdx, // id 필드 추가
+    movieIdx: String(m.movieIdx),
+    tmdbMovieId: m.tmdbMovieId ?? "",
+    title: m.title,
+    poster: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : "",
+    year: m.releaseDate?.split("-")[0] ?? "",
+    genres: m.genre ? m.genre.split(",") : [], // genres 배열
+    genre: m.genre ?? "",
+    rating: m.voteAverage ?? 0,
+    runtime: m.runtime ?? 0,
+    description: m.overview ?? "",
+    director: m.director ?? "",
+    rank: 0,
+    voteCount: 0,
+  }));
 
         setAllMovies(mapped);
       } catch (err) {
@@ -373,7 +375,7 @@ const filteredMovieVotes = useMemo(() => {
                 {filteredMovieVotes.map((mv: any) => {
                   const expired =
                     mv.endDate &&
-                    new Date(mv.endDate).getTime() + 1 * 60 * 1000 < Date.now();
+                    new Date(mv.endDate).getTime() + 72 * 60 * 60 * 1000 < Date.now();
                   const effectiveActive = expired ? 0 : mv.active ?? 0;
 
                   return (

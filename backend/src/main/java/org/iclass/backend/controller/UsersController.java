@@ -66,20 +66,11 @@ public class UsersController {
     return ResponseEntity.ok(user);
   }
 
-  // --- 마이페이지 데이터 ---
-  @GetMapping("/mypage")
-  public ResponseEntity<?> myPage(HttpServletRequest request) {
-    UsersDto user = usersService.getUserFromToken(request);
-    if (user == null)
-      return ResponseEntity.status(401).body("로그인 필요");
-    return ResponseEntity.ok(usersService.getMyPageData(user.getUserId()));
-  }
-
-  // --- 메인페이지 데이터 ---
-  @GetMapping("/main")
-  public ResponseEntity<?> mainPage() {
-    return ResponseEntity.ok(usersService.getMainPageData());
-  }
+  // // --- 메인페이지 데이터 ---
+  // @GetMapping("/main")
+  // public ResponseEntity<?> mainPage() {
+  //   return ResponseEntity.ok(usersService.getMainPageData());
+  // }
 
   // --- 비밀번호 변경 ---
   @PutMapping("/password")

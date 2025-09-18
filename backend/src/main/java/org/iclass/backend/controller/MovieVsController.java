@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.iclass.backend.dto.MovieVsDto;
 import org.iclass.backend.entity.MovieVsEntity;
-import org.iclass.backend.repository.MovieVsRepository;
+import org.iclass.backend.repository.MovieVSRepository;
 import org.iclass.backend.service.MovieVsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class MovieVsController {
 
     private final MovieVsService movieVsService;
-    private final MovieVsRepository movieVSRepository;
+    private final MovieVSRepository movieVSRepository;
 
     // 새로운 VS 생성 (pair 자동 증가, round는 프론트에서 전달)
     @PostMapping("/ranking")
@@ -89,5 +89,28 @@ public class MovieVsController {
         response.put("id", id);
         response.put("active", active);
         return ResponseEntity.ok(response);
+    }
+
+    // 활성화된 VS 가져오기 (영화 1,2 포함)
+    @GetMapping("/versus")
+    public ResponseEntity<?> getActiveVersus() {
+        List<MovieVsEntity> activeVsList = movieVSRepository.findAllByActive(1);
+
+        if (activeVsList.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<Map<String, Object>> resultList = activeVsList.stream().map(vs -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("vsIdx", vs.getVsIdx());
+            map.put("vsRound", vs.getVsRound());
+            map.put("pair", vs.getPair());
+            map.put("active", vs.getActive());
+            map.put("topMovie", movieVsService.toMovieMap(vs.getMovieVs1()));
+            map.put("secondMovie", movieVsService.toMovieMap(vs.getMovieVs2()));
+            return map;
+        }).toList();
+
+        return ResponseEntity.ok(resultList);
     }
 }
