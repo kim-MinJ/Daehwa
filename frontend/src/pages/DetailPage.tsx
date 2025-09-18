@@ -38,43 +38,63 @@ export default function DetailPage() {
         // ----------------------------
         // 1️⃣ Movie: 메모리 → DB → UI 즉시 반영
         // ----------------------------
-        let movieData = movieStore.movies.find(m => m.movieIdx === movieId) ?? null;
-        if (!movieData) movieData = await movieStore.getMovieFromDB(movieId);
-
+        let movieData =
+          movieStore.movies.find((m) => m.movieIdx === movieId) ??
+          (await movieStore.getMovieFromDB(movieId));
         if (isMounted) {
           setMovie(movieData);
           setLoading(false);
         }
 
         // ----------------------------
-        // 2️⃣ Movie: 백그라운드 API fetch
+        // 2️⃣ Credits: 메모리 → DB → UI 즉시 반영
         // ----------------------------
-        void (async () => {
-          try {
-            const res = await fetch(`/api/movie/${movieId}`);
-            if (!res.ok) return;
-            const data: Movie = await res.json();
-            if (isMounted) setMovie(data); // store는 덮어쓰기 금지
-          } catch (err) {
-            console.warn("Movie API fetch 실패:", err);
-          }
-        })();
-
-        // ----------------------------
-        // 3️⃣ Credits & Trailers: store에서 즉시 반영
-        // ----------------------------
-        const cachedCredits =
+        const creditsData =
           creditsStore.creditsMap[movieId] ??
           (await creditsStore.fetchCredits(movieId)) ??
           { cast: [], crew: [] };
-        if (isMounted) setCredits(cachedCredits);
+        if (isMounted) setCredits(creditsData);
 
-        const cachedTrailers =
+        // ----------------------------
+        // 3️⃣ Trailers: 메모리 → DB → UI 즉시 반영
+        // ----------------------------
+        const trailersData =
           trailersStore.trailersMap[movieId] ??
           (await trailersStore.fetchTrailers(movieId)) ??
           [];
-        if (isMounted) setTrailers(cachedTrailers);
+        if (isMounted) setTrailers(trailersData);
 
+        // ----------------------------
+        // 4️⃣ 백그라운드 fetch: 최신 데이터 자동 업데이트
+        // ----------------------------
+        void (async () => {
+          try {
+            // Movie
+            const resMovie = await fetch(`/api/movie/${movieId}`);
+            if (resMovie.ok) {
+              const data: Movie = await resMovie.json();
+              if (isMounted) setMovie(data);
+            }
+
+            // Credits
+            const resCredits = await fetch(`/api/movies/${movieId}/credits`);
+            if (resCredits.ok) {
+              const data: Credits = await resCredits.json();
+              if (isMounted) setCredits(data);
+              creditsStore.setCredits(movieId, data);
+            }
+
+            // Trailers
+            const resTrailers = await fetch(`/api/movie/${movieId}/videos`);
+            if (resTrailers.ok) {
+              const data: Trailer[] = await resTrailers.json();
+              if (isMounted) setTrailers(data);
+              trailersStore.setTrailers(movieId, data);
+            }
+          } catch (err) {
+            console.warn("백그라운드 fetch 실패:", err);
+          }
+        })();
       } catch (err) {
         console.error(err);
         if (isMounted) {
@@ -90,7 +110,9 @@ export default function DetailPage() {
   }, [movieId]);
 
   if (error)
-    return <div className="text-red-600 py-24 text-center">에러: {error}</div>;
+    return (
+      <div className="text-red-600 py-24 text-center">에러: {error}</div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50">
