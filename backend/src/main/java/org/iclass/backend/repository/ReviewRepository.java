@@ -26,4 +26,6 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
   List<ReviewEntity> findAllByUserOrderByCreatedAtDesc(UsersEntity user);
 
   Optional<ReviewEntity> findByReviewIdx(Long reviewIdx);
+
+  List<ReviewEntity> findByMovie_MovieIdx(Long movieIdx);
 }
