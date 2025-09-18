@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MovieVSRepository extends JpaRepository<MovieVsEntity, Long> {
+public interface MovieVsRepository extends JpaRepository<MovieVsEntity, Long> {
   Optional<MovieVsEntity> findByActive(int active);
 
   // 특정 round에서 최대 pair 조회
