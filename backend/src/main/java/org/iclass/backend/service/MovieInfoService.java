@@ -20,9 +20,9 @@ public class MovieInfoService {
   private final MovieGenresRepository movieGenresRepository;
   private final MovieCrewRepository movieCrewRepository;
 
-  public MovieInfoEntity getRandomMovie() {
-    return movieInfoRepository.findRandomMovie();
-  }
+ public MovieInfoDto getRandomMovie() {
+    return MovieInfoDto.of(movieInfoRepository.findRandomMovie());
+}
 
   public MovieInfoDto getMovieById(Long movieIdx) {
     return movieInfoRepository.findById(movieIdx)
