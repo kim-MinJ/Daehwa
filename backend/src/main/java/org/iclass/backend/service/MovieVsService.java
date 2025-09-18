@@ -7,7 +7,7 @@ import org.iclass.backend.dto.MovieVsDto;
 import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.MovieVsEntity;
 import org.iclass.backend.repository.MovieInfoRepository;
-import org.iclass.backend.repository.MovieVsRepository;
+import org.iclass.backend.repository.MovieVSRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class MovieVsService {
 
-    private final MovieVsRepository movieVSRepository;
+    private final MovieVSRepository movieVSRepository;
     private final MovieInfoRepository movieInfoRepository;
 
     // 새로운 VS 생성 (pair 자동 증가, round는 프론트에서 전달)

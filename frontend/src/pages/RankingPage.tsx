@@ -15,19 +15,20 @@ import {
 } from "lucide-react";
 
 export interface Movie {
-  id: string;
+  id: number;
+  movieIdx: string; // 추가
+  tmdbMovieId: string;
   title: string;
-  director: string;
   poster: string;
   year: string;
   genres: string[];
+  genre: string;
   rating: number;
   runtime: number;
-  description?: string;
-  rank?: number;
-  voteCount?: number;
-  popularity?: number;
-  totalScore?: number;
+  description: string;
+  director: string;
+  rank: number;
+  voteCount: number;
 }
 
 type Page = "home" | "movies" | "ranking" | "reviews" | "movie-detail";
@@ -106,6 +107,7 @@ export default function RankingPage({
   const [genreCurrentSlide, setGenreCurrentSlide] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
   const moviesPerSlide = 4;
+  const [votePercentages, setVotePercentages] = useState({ top: 0, second: 0 });
 
   const TMDB_API_KEY = "302b783e860b19b6822ef0a445e7ae53";
   const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -151,6 +153,18 @@ export default function RankingPage({
     navigate(`/movies/${movie.id}`, { state: { movie } });
   };
 
+  
+useEffect(() => {
+  const topVotes = topMovie?.voteCount || 0;
+  const secondVotes = secondMovie?.voteCount || 0;
+  const total = topVotes + secondVotes;
+  setVotePercentages({
+    top: total > 0 ? Math.round((topVotes / total) * 100) : 0,
+    second: total > 0 ? 100 - Math.round((topVotes / total) * 100) : 0,
+  });
+}, [topMovie, secondMovie]);
+  
+
   // 백엔드 데이터 로드
   useEffect(() => {
     const fetchMovies = async () => {
@@ -166,28 +180,29 @@ export default function RankingPage({
         }
 
         const movieRes: Movie[] = res.data.map((m: any, idx: number) => ({
-          id: m.movieIdx?.toString() || m.tmdbMovieId?.toString() || "",
-          title: m.title,
-          poster: m.posterPath
-            ? `https://image.tmdb.org/t/p/w500${m.posterPath}`
-            : "/fallback.png",
-          year: m.year?.slice(0, 4) || "N/A",
-          genres: m.genres || [],
-          rating: m.rating || 0,
-          runtime: m.runtime || 0,
-          description: m.overview || "",
-          director: m.director || "알 수 없음",
-          voteCount: m.voteCount || 0,
-          rank: idx + 1,
-        }));
+  id: Number(m.movieIdx || m.tmdbMovieId), // number로 변환
+  movieIdx: m.movieIdx?.toString() || "",
+  tmdbMovieId: m.tmdbMovieId,
+  title: m.title,
+  poster: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : "/fallback.png",
+  year: m.year?.slice(0, 4) || "N/A",
+  genres: m.genres || [],
+  genre: m.genres?.[0] || "",
+  rating: m.rating || 0,
+  runtime: m.runtime || 0,
+  description: m.overview || "",
+  director: m.director || "알 수 없음",
+  voteCount: m.voteCount || 0,
+  rank: idx + 1,
+}));
 
         console.log("정리된 영화 배열:", movieRes);
         setMovies(movieRes);
-        setTopMovie(movieRes[0]);
-        setSecondMovie(movieRes[1]);
+setTopMovie(movieRes[0] || null);
+setSecondMovie(movieRes[1] || null);
       } catch (err) {
         console.error("데이터 로드 실패:", err);
-        setTopMovie(null);
+        setTopMovie(null);  
         setSecondMovie(null);
         setMovies([]);
       }
@@ -204,29 +219,30 @@ export default function RankingPage({
   const secondMoviePercentage = totalVotes > 0 ? 100 - topMoviePercentage : 0;
 
   const handleVote = async (choice: "first" | "second") => {
-    const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
-    if (!movieId) return;
+  const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
+  if (!movieId) return;
 
-    try {
-      await axios.post("http://localhost:8080/api/movies/vote", null, {
-        params: { movieId: Number(movieId), userId: "testUser" },
-      });
+  try {
+    await axios.post("http://localhost:8080/api/movies/vote", null, {
+      params: { movieId: Number(movieId), userId: "testUser" },
+    });
 
-      setSelectedVote(choice);
-      setHasVoted(true);
+    setSelectedVote(choice);
+    setHasVoted(true);
 
-      if (choice === "first" && topMovie) {
-        setTopMovie({ ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 });
-      } else if (choice === "second" && secondMovie) {
-        setSecondMovie({
-          ...secondMovie,
-          voteCount: (secondMovie.voteCount || 0) + 1,
-        });
-      }
-    } catch (err: any) {
-      console.error("투표 실패:", err.response?.data || err.message);
+    // 투표 카운트 즉시 증가 + 상태 업데이트
+    if (choice === "first" && topMovie) {
+      const updatedTop = { ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 };
+      setTopMovie(updatedTop);
+    } else if (choice === "second" && secondMovie) {
+      const updatedSecond = { ...secondMovie, voteCount: (secondMovie.voteCount || 0) + 1 };
+      setSecondMovie(updatedSecond);
     }
-  };
+  } catch (err: any) {
+    console.error("투표 실패:", err.response?.data || err.message);
+  }
+};
+
 
   const boxOfficeMovies = movies.slice(0, 10);
   const totalSlides = Math.ceil(Math.max(boxOfficeMovies.length, 1) / moviesPerSlide);
@@ -294,10 +310,13 @@ export default function RankingPage({
                   <h2 className="text-3xl font-bold text-gray-800 mb-3">최고 평점 대결</h2>
                   <p className="text-gray-600 text-lg">이번 주 최고 평점 영화들의 투표 현황</p>
                   {hasVoted && (
-                    <div className="mt-4">
-                      <p className="text-gray-500">총 {totalVotes.toLocaleString()}명이 참여</p>
-                    </div>
-                  )}
+  <div className="w-40 bg-gray-700 rounded-full h-4 mb-2">
+    <div
+      className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-4 rounded-full transition-all duration-300"
+      style={{ width: `${votePercentages.top}%` }}
+    />
+  </div>
+)}
                 </div>
 
                 <div className="flex items-center justify-center gap-12">
@@ -339,69 +358,6 @@ export default function RankingPage({
                           </div>
                           <div className="text-sm" style={{ color: "#000000" }}>
                             {topMovieVotes.toLocaleString()}표
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* VS */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center shadow-2xl mb-3">
-                      <span className="text-white font-bold text-2xl">VS</span>
-                    </div>
-                    <p className="text-gray-600 mb-3">대결</p>
-                    {hasVoted && (
-                      <>
-                        <div className="w-40 bg-gray-700 rounded-full h-4 mb-2">
-                          <div
-                            className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-4 rounded-full transition-all duration-300"
-                            style={{ width: `${topMoviePercentage}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500">실시간 투표</p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* 2위 영화 */}
-                  <div className="text-center flex flex-col items-center">
-                    <div className="group cursor-pointer" onClick={() => handleMovieClick(secondMovie)}>
-                      <div className="relative mb-4">
-                        <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                          <ImageWithFallback src={secondMovie.poster} alt={secondMovie.title} className="w-full h-full object-cover"/>
-                        </div>
-                        <div className="absolute -top-3 -left-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center shadow-lg">
-                            <Medal className="h-6 w-6 text-white" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="w-48 h-28 flex flex-col justify-between">
-                        <div>
-                          <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-blue-500 transition-colors line-clamp-2 break-words">
-                            {secondMovie.title}
-                          </h3>
-                          <p className="text-gray-600 mb-2 text-sm truncate">{secondMovie.director}</p>
-                        </div>
-                        <div className="flex items-center justify-center gap-1">
-                          <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                          <span className="font-semibold text-xl text-gray-800">{secondMovie.rating.toFixed(1)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-48 mt-4">
-                      {!hasVoted ? (
-                        <Button onClick={() => handleVote("second")} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold w-full">
-                          이 영화에 투표
-                        </Button>
-                      ) : (
-                        <div className="bg-blue-600/20 rounded-lg p-4 border border-blue-500/30">
-                          <div className="font-bold text-xl mb-1" style={{ color: "#000000" }}>
-                            {secondMoviePercentage}%
-                          </div>
-                          <div className="text-sm" style={{ color: "#000000" }}>
-                            {secondMovieVotes.toLocaleString()}표
                           </div>
                         </div>
                       )}
