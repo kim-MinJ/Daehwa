@@ -27,8 +27,8 @@ export default function Footer() {
             <h4 className="font-semibold mb-4">팀원정보</h4>
             <ul className="space-y-2 text-gray-400 text-sm">
               <li><a href="#" className="hover:text-white">김민재</a></li>
-              <li><a href="#" className="hover:text-white">곽수영</a></li>
               <li><a href="#" className="hover:text-white">박진우</a></li>
+              <li><a href="#" className="hover:text-white">곽수영</a></li>
               <li><a href="#" className="hover:text-white">임은상</a></li>
               <li><a href="#" className="hover:text-white">임정수</a></li>
               <li><a href="#" className="hover:text-white">오승현 </a></li>
@@ -40,8 +40,8 @@ export default function Footer() {
               <li><a href="#" className="hover:text-white">로그인</a></li>
               <li><a href="#" className="hover:text-white">메인</a></li>
               <li><a href="#" className="hover:text-white">검색</a></li>
-              <li><a href="#" className="hover:text-white">랭킹</a></li>
               <li><a href="#" className="hover:text-white">리뷰</a></li>
+              <li><a href="#" className="hover:text-white">랭킹</a></li>
               <li><a href="#" className="hover:text-white">상세</a></li>
             </ul>
           </div>
