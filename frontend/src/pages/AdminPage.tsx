@@ -1,7 +1,7 @@
 // src/pages/AdminPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, MessageSquare, MessageCircle } from "lucide-react";
+import { Users, MessageSquare, MessageCircle, CheckSquare } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { User, Review, Comment, Vote, Movie } from "../components/admin/types";
 import AdminUsersTab from "../components/admin/AdminUsersTab";
@@ -253,7 +253,7 @@ useEffect(() => {
   const deleteComment = async (commentIdx: number) => {
     if (!token) return;
     try {
-      await api.delete(`/comments/${commentIdx}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/review/comments/${commentIdx}`, { headers: { Authorization: `Bearer ${token}` } });
       setComments(prev => prev.filter(c => c.commentIdx !== commentIdx));
     } catch (err) {
       console.error(err);
@@ -327,14 +327,16 @@ useEffect(() => {
           </Card>
           {/* 총 투표 수 */}
   <Card onClick={() => setActiveTab("votes")} className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition">
-    <MessageCircle className="h-8 w-8 text-yellow-600 mb-2" />
+    <CheckSquare className="h-8 w-8 text-yellow-600 mb-2" />
     <h2 className="text-lg font-medium text-gray-700">총 투표 수</h2>
     <p className="text-3xl font-bold text-gray-900">{votes.length}</p>
   </Card>
         </div>
 
-        {/* 검색바 */}
-        <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        {/* 검색바 (votes 탭일 땐 숨김) */}
+{activeTab !== "votes" && (
+  <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+)}
 
         {/* 탭 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -375,7 +377,10 @@ useEffect(() => {
   />
 </TabsContent>
 <TabsContent value="votes">
-  <AdminVotesTab token={token!} />
+  <AdminVotesTab
+    token={token!}
+    onVotesChange={(updatedVotes) => setVotes(updatedVotes)} // ✅ 상위 상태 즉시 반영
+  />
 </TabsContent>
 
         </Tabs>
