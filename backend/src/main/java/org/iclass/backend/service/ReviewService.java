@@ -53,6 +53,12 @@ public class ReviewService {
     return ReviewDto.of(saved);
   }
 
+  public ReviewDto getReviewByIdx(Long reviewIdx) {
+    return reviewRepository.findById(reviewIdx)
+        .map(ReviewDto::of)
+        .orElseThrow(() -> new RuntimeException("Review not found"));
+  }
+
   // 리뷰 전체 조회
   public List<ReviewDto> getAllReviews() {
     List<ReviewEntity> entities = reviewRepository.findAllByOrderByCreatedAtDesc();
@@ -100,10 +106,10 @@ public class ReviewService {
   }
 
   // 🔹 리뷰 단건 조회
-  public ReviewDto getReviewByIdx(Long reviewIdx) {
-    ReviewEntity entity = reviewRepository.findByReviewIdx(reviewIdx)
-        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
-    return ReviewDto.of(entity);
+  public List<ReviewDto> getReviewsByMovieIdx(Long movieIdx) {
+    return reviewRepository.findByMovie_MovieIdx(movieIdx).stream()
+        .map(ReviewDto::of)
+        .toList();
   }
 
   // 리뷰 수정
