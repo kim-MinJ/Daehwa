@@ -217,7 +217,7 @@ const [feelingMovies, setFeelingMovies] = useState<UiMovie[]>([]);
                 <div className="absolute bottom-0 left-0 w-full">
                   <div className="max-w-7xl mx-auto px-8 lg:px-16 pb-8 lg:pb-16">
                     <div className="max-w-lg text-white">
-                      <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">{featured.title}</h1>
+                      <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">{featured.title}</h1>
                       {featured.description && (
                         <p className="text-white/90 text-lg lg:text-xl leading-relaxed mb-6">
                           {featured.description.slice(0, 200)}...
