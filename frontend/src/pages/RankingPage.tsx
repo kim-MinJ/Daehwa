@@ -207,27 +207,34 @@ useEffect(() => {
     totalVotes > 0 ? Math.round((topMovieVotes / totalVotes) * 100) : 0;
   const secondMoviePercentage = totalVotes > 0 ? 100 - topMoviePercentage : 0;
 
-const handleVote = async (choice: "first" | "second") => {
-  try {
-    const movieId =
-      choice === "first" ? topMovie?.id : secondMovie?.id;
+// 로그인된 유저 정보 가져오기
+const getCurrentUser = () => {
+  const userStr = localStorage.getItem("user");
+  return userStr ? JSON.parse(userStr) : null;
+};
 
-    if (!movieId) {
-      console.error("영화 ID 없음");
-      return;
-    }
+const handleVote = async (choice: "first" | "second") => {
+  const currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    alert("로그인 후 투표할 수 있습니다.");
+    return;
+  }
+
+  try {
+    const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
+    if (!movieId) return;
 
     await axios.post("http://localhost:8080/api/movies/vote", null, {
       params: {
-        movieId: Number(movieId),   // ✅ 여기서는 movie.id 대신 movieId
-        userId: "testUser",         // 임시 유저 아이디
+        movieId: Number(movieId),
+        userId: currentUser.userId,   // ✅ 로그인된 유저 ID 사용
       },
     });
 
     setSelectedVote(choice);
     setHasVoted(true);
 
-    // UI 갱신용 (투표 수 증가 반영)
     if (choice === "first" && topMovie) {
       setTopMovie({ ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 });
     } else if (choice === "second" && secondMovie) {
@@ -238,6 +245,7 @@ const handleVote = async (choice: "first" | "second") => {
     }
   } catch (err: any) {
     console.error("투표 실패:", err.response?.data || err.message);
+    alert(err.response?.data?.error || "투표에 실패했습니다.");
   }
 };
 
