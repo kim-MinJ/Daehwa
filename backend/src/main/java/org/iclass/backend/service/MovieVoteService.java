@@ -81,7 +81,7 @@ public class MovieVoteService {
                 movieInfoRepository.saveAndFlush(movie);
 
                 return MovieVoteDto.of(saved);
-
+        }
     /**
      * ✅ 특정 영화의 총 투표 수 (DB 집계 기준)
      */
