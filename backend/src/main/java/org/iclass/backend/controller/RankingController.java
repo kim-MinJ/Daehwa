@@ -32,20 +32,19 @@ public class RankingController {
 
     /** ✅ 버튼 클릭 시 vote_count +1 */
     @PostMapping("/vote")
-    public ResponseEntity<?> vote(@RequestParam Long movieId,
-            @RequestParam String userId) {
-        try {
-            UsersEntity user = usersRepository.findByUserId(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("회원 없음: " + userId));
+    public ResponseEntity<?> vote(@RequestParam Long movieId, @RequestParam String userId) {
+    try {
+        System.out.println("🎯 vote 요청 movieId=" + movieId + ", userId=" + userId);
+        MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId);
+        return ResponseEntity.ok(saved);
 
-            MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId);
-            return ResponseEntity.ok(saved);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
     }
+}
+
 
     private String mapGenreIdToName(int genreId) {
         switch (genreId) {

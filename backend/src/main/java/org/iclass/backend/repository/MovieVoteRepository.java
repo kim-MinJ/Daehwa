@@ -50,4 +50,20 @@ public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long
         List<Object[]> countVotesThisWeek(
                         @Param("startOfWeek") LocalDateTime startOfWeek,
                         @Param("endOfWeek") LocalDateTime endOfWeek);
+
+                // ✅ 특정 유저가 참여한 모든 VS 투표 조회
+        @Query("SELECT v FROM MovieVoteEntity v " +
+        "JOIN FETCH v.movieVS vs " +
+        "JOIN FETCH v.movie m " +
+        "WHERE v.user = :user " +
+        "ORDER BY vs.startDate DESC")
+        List<MovieVoteEntity> findAllByUser(@Param("user") UsersEntity user);
+
+        // ✅ userId 문자열 기반으로 바로 조회하고 싶으면 ↓
+        @Query("SELECT v FROM MovieVoteEntity v " +
+        "JOIN FETCH v.movieVS vs " +
+        "JOIN FETCH v.movie m " +
+        "WHERE v.user.userId = :userId " +
+        "ORDER BY vs.startDate DESC")
+        List<MovieVoteEntity> findAllByUserId(@Param("userId") String userId);
 }

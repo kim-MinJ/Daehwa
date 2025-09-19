@@ -1,15 +1,12 @@
 package org.iclass.backend.controller;
 
+import java.util.List;
 import java.util.Map;
 
+import org.iclass.backend.dto.VsBattleDto;
 import org.iclass.backend.service.MovieVoteService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,6 +39,14 @@ public class MovieVoteController {
     // ✅ 이번 주 전체 투표 집계
     @GetMapping("/this-week")
     public ResponseEntity<Map<Long, Long>> getWeeklyVotes() {
-    return ResponseEntity.ok(movieVoteService.getWeeklyVoteCounts());
+        return ResponseEntity.ok(movieVoteService.getWeeklyVoteCounts());
     }
+
+    // ✅ 특정 유저의 VS 투표 히스토리
+    // ✅ 유저 투표 기록 조회
+@   GetMapping("/user/{userId}/history")
+    public ResponseEntity<List<VsBattleDto>> getUserVoteHistory(@PathVariable String userId) {
+        return ResponseEntity.ok(movieVoteService.getUserVoteHistory(userId));
+    }
+
 }
