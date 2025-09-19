@@ -248,19 +248,19 @@ const getCurrentUser = () => {
 
   try {
     await axios.post(
-      "http://localhost:8080/api/movies/vote",
-      null, // body는 필요 없음
-      {
-        params: {
-          movieId: movie.movieIdx,
-          userId: currentUser.userId,
-          vsIdx: selectedVsIdx,
-        },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+  "http://localhost:8080/api/movies/vote",
+  null,
+  {
+    params: {
+      movieId: movie.movieIdx,
+      userId: currentUser.userId, // ✅ userIdx → userId로 수정
+      vsIdx: selectedVsIdx,        // ✅ vsId → vsIdx
+    },
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  }
+);
 
     setSelectedVote(choice);
     setHasVoted(true);

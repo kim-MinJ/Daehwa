@@ -33,7 +33,7 @@ public class MovieVoteService {
         private final MovieVSRepository movieVsRepository;
 
         /**
-         * ✅ 영화 투표 (1일 1회 제한, VS 포함)
+         * ✅ 영화 투표 (VS 기준 1일 1회 제한)
          */
         public MovieVoteDto voteMovie(Long movieId, String userId, Long vsId) {
                 // 유저 조회
@@ -53,17 +53,18 @@ public class MovieVoteService {
                 LocalDateTime startOfDay = today.atStartOfDay();
                 LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
 
-                // 중복 투표 확인
-                movieVoteRepository.findTodayVote(movie, user, startOfDay, endOfDay)
+                // **VS 단위 오늘 투표 확인**
+                movieVoteRepository
+                                .findTodayVoteByRoundAndPair(vs.getVsRound(), vs.getPair(), user, startOfDay, endOfDay)
                                 .ifPresent(v -> {
-                                        throw new IllegalStateException("오늘 이미 이 영화에 투표했습니다.");
+                                        throw new IllegalStateException("오늘 벌써 이 투표에 참가했습니다! 감사합니다!");
                                 });
 
                 // 새 투표 생성
                 MovieVoteEntity vote = MovieVoteEntity.builder()
                                 .movie(movie)
                                 .user(user)
-                                .movieVS(vs) // ⭐ VS 세팅 필수
+                                .movieVS(vs)
                                 .vsDate(LocalDateTime.now())
                                 .build();
 
