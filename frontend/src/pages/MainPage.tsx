@@ -8,7 +8,6 @@ import axios from "axios";
 import { Star, Info } from "lucide-react";
 import { HorizontalScrollList } from "@/components/HorizontalScrollList";
 
-
 const genreEnToKr: Record<string, string> = {
   "Action": "액션",
   "Adventure": "모험",
@@ -30,7 +29,7 @@ const genreEnToKr: Record<string, string> = {
   "War": "전쟁",
   "Western": "서부",
 };
-// UI 타입
+
 type UiMovie = {
   id: string | number;
   title: string;
@@ -62,14 +61,13 @@ function LoadingSpinner() {
   );
 }
 
-// 영화 기본 정보만 변환
 const mapApiMovieBasic = (m: any): UiMovie => ({
   id: m.movieIdx,
   title: m.title ?? "제목 없음",
   poster: m.posterPath ?? "",
   backdropPath: m.backdropPath ?? "",
   year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-  genres: [], // 장르는 API에서 별도 호출
+  genres: [],
   rating: m.voteAverage ?? 0,
   description: m.overview ?? "",
   releaseDate: m.releaseDate ?? null,
@@ -89,19 +87,17 @@ function MainPage() {
 
   const onMovieClick = (m: UiMovie) => navigate(`/movies/${m.id}`);
 
-  // 영화 리스트 & 장르 가져오기
   const fetchMoviesWithGenres = async (url: string, params?: any) => {
     const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
     const res = await axios.get(url, { headers: authHeader, params });
     const moviesBasic: UiMovie[] = res.data.map(mapApiMovieBasic);
 
-    // 장르 각각 가져오기
     const moviesWithGenres = await Promise.all(
       moviesBasic.map(async (m) => {
         try {
           const genreRes = await axios.get(`/api/movies/${m.id}/genres`, { headers: authHeader });
-const genresKr = convertGenresToKr(genreRes.data ?? []);
-return { ...m, genres: genresKr };
+          const genresKr = convertGenresToKr(genreRes.data ?? []);
+          return { ...m, genres: genresKr };
         } catch {
           return { ...m, genres: ["기타"] };
         }
@@ -111,13 +107,11 @@ return { ...m, genres: genresKr };
     return moviesWithGenres;
   };
 
-  // 인기/최신/맞춤 추천
   useEffect(() => {
     const fetchPopular = async () => {
       setLoading(true);
       try {
         const movies = await fetchMoviesWithGenres("/api/movies/popular", { count: 40 });
-
         setWeeklyTop10(movies.slice(0, 10));
 
         if (movies.length > 0) {
@@ -129,7 +123,7 @@ return { ...m, genres: genresKr };
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
         const latestMovies = movies.filter(m => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo);
-        setLatest([...latestMovies].sort(() => Math.random() - 0.5).slice(0, 10));
+        setLatest([...latestMovies].sort(() => Math.random() - 0.5).slice(0, 20));
 
       } catch (error) {
         console.error("영화 로딩 실패:", error);
@@ -140,10 +134,8 @@ return { ...m, genres: genresKr };
     fetchPopular();
   }, [token]);
 
-  // 감정 추천
   const handleFeelingClick = async (feeling: string) => {
     if (!token) return;
-
     try {
       setSelectedFeeling(feeling);
       setLoading(true);
@@ -156,18 +148,39 @@ return { ...m, genres: genresKr };
     }
   };
 
-  // 추억의 영화
   useEffect(() => {
     const fetchOldPopular = async () => {
       try {
         const movies = await fetchMoviesWithGenres("/api/movies/oldpopular", { count: 40 });
-        setOldPopular([...movies].sort(() => Math.random() - 0.5).slice(0, 10));
+        setOldPopular([...movies].sort(() => Math.random() - 0.5).slice(0, 12));
       } catch (error) {
         console.error("추억의 영화 로딩 실패:", error);
       }
     };
     fetchOldPopular();
   }, [token]);
+
+  // 공통 카드 컴포넌트
+  const MovieCard = ({ movie, badgeText }: { movie: UiMovie, badgeText?: string }) => (
+  <div className="group cursor-pointer flex-shrink-0 relative w-48">
+    <div className="aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
+      <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
+      {badgeText && (
+        <div className="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs">{badgeText}</div>
+      )}
+      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 rounded-md text-white text-xs">
+        <div className="font-semibold text-sm line-clamp-1">{movie.title}</div>
+        <div className="flex items-center gap-1 mt-1 text-xs">
+          <Star className="h-3 w-3 text-yellow-400 fill-current" />
+          <span>{movie.rating.toFixed(1)}</span>
+          <span>•</span>
+          <span>{movie.year}년</span>
+        </div>
+        <div className="mt-1">{movie.genres.join(", ")}</div>
+      </div>
+    </div>
+  </div>
+);
 
   return (
     <div className="min-h-screen bg-white">
@@ -238,27 +251,10 @@ return { ...m, genres: genresKr };
                 )}
                 {selectedFeeling && feelingMovies.length > 0 && (
                   <HorizontalScrollList>
-                    {feelingMovies.map((movie, index) => (
-                      <div key={movie.id} className="group cursor-pointer flex-shrink-0 relative" onClick={() => onMovieClick(movie)}>
-                        <div className="w-80 aspect-[16/9] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                          <ImageWithFallback src={getPosterUrl(movie.poster, "original")} alt={movie.title} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
-                            <div className="absolute bottom-4 left-4 right-4">
-                              <h3 className="text-white font-bold text-lg mb-1 line-clamp-1">{movie.title}</h3>
-                              <div className="flex items-center gap-2 text-white/80 text-sm">
-                                <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                <span>{movie.rating.toFixed(1)}</span>
-                                <span>•</span>
-                                <span>{movie.year}년</span>
-                                <span>•</span>
-                                <span>{movie.genres.join(", ")}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </HorizontalScrollList>
+  {selectedFeeling && feelingMovies.map((movie) => (
+    <MovieCard key={movie.id} movie={movie} />
+  ))}
+</HorizontalScrollList>
                 )}
               </div>
 
@@ -272,30 +268,13 @@ return { ...m, genres: genresKr };
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
                 <HorizontalScrollList>
-                  {latest.map((movie, index) => (
-                    <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
-                      <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
-                        <div className="absolute top-2 right-2">
-                          <Badge className="bg-blue-600 text-white text-xs">NEW</Badge>
-                        </div>
-                        <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
-                          <div className="font-semibold text-sm line-clamp-1">{movie.title}</div>
-                          <div className="flex items-center gap-1 text-xs mt-1">
-                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                            <span>{movie.rating.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>{movie.year}년</span>
-                          </div>
-                          <div className="mt-1 text-xs">{movie.genres.join(", ")}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </HorizontalScrollList>
+  {latest.map((movie) => (
+    <MovieCard key={movie.id} movie={movie} />
+  ))}
+</HorizontalScrollList>
               </div>
 
-              {/* weeklyTop10 */}
+              {/* 이번주 인기 */}
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
@@ -304,26 +283,12 @@ return { ...m, genres: genresKr };
                   </h2>
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
-                <HorizontalScrollList>
-                  {weeklyTop10.map((movie, index) => (
-                    <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0 relative" onClick={() => onMovieClick(movie)}>
-                      <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
-                        <div className="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">{index+1}</div>
-                        <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
-                          <h4 className="font-semibold text-sm line-clamp-2">{movie.title}</h4>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                            <span>{movie.rating.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>{movie.year}년</span>
-                          </div>
-                          <div className="mt-1 text-xs">{movie.genres.join(", ")}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </HorizontalScrollList>
+                
+<HorizontalScrollList>
+  {weeklyTop10.map((movie, index) => (
+    <MovieCard key={movie.id} movie={movie} badgeText={`${index+1}`} />
+  ))}
+</HorizontalScrollList>
               </div>
 
               {/* 추억의 영화 */}
@@ -335,25 +300,12 @@ return { ...m, genres: genresKr };
                   </h2>
                 </div>
                 <div className="w-full h-px bg-gray-200 mb-6" />
-                <HorizontalScrollList>
-                  {oldPopular.map((movie, index) => (
-                    <div key={`${movie.id}-${index}`} className="group cursor-pointer flex-shrink-0" onClick={() => onMovieClick(movie)}>
-                      <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-                        <ImageWithFallback src={getPosterUrl(movie.poster, "w500")} alt={movie.title} className="w-full h-full object-cover" />
-                        <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
-                          <h4 className="font-semibold text-sm line-clamp-2">{movie.title}</h4>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                            <span>{movie.rating.toFixed(1)}</span>
-                            <span>•</span>
-                            <span>{movie.year}년</span>
-                          </div>
-                          <div className="mt-1 text-xs">{movie.genres.join(", ")}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </HorizontalScrollList>
+                
+<HorizontalScrollList>
+  {oldPopular.map((movie) => (
+    <MovieCard key={movie.id} movie={movie} />
+  ))}
+</HorizontalScrollList>
               </div>
             </section>
           </>

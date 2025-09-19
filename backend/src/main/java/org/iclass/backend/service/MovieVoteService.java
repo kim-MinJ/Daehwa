@@ -33,9 +33,9 @@ public class MovieVoteService {
         private final MovieVSRepository movieVsRepository;
 
         /**
-         * ✅ 영화 투표 (1일 1회 제한)
+         * ✅ 영화 투표 (1일 1회 제한, VS 포함)
          */
-        public MovieVoteDto voteMovie(Long movieId, String userId) {
+        public MovieVoteDto voteMovie(Long movieId, String userId, Long vsId) {
                 // 유저 조회
                 UsersEntity user = usersRepository.findByUserId(userId)
                                 .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
@@ -43,6 +43,10 @@ public class MovieVoteService {
                 // 영화 조회
                 MovieInfoEntity movie = movieInfoRepository.findById(movieId)
                                 .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
+
+                // VS 조회
+                MovieVsEntity vs = movieVsRepository.findById(vsId)
+                                .orElseThrow(() -> new IllegalArgumentException("VS 없음: " + vsId));
 
                 // 오늘 하루의 시작/끝 시간
                 LocalDate today = LocalDate.now();
@@ -59,16 +63,15 @@ public class MovieVoteService {
                 MovieVoteEntity vote = MovieVoteEntity.builder()
                                 .movie(movie)
                                 .user(user)
+                                .movieVS(vs) // ⭐ VS 세팅 필수
                                 .vsDate(LocalDateTime.now())
                                 .build();
 
                 MovieVoteEntity saved = movieVoteRepository.save(vote);
 
-                // ✅ Movie_Info 테이블의 voteCount 증가
+                // Movie_Info 테이블의 voteCount 증가
                 Integer current = movie.getVoteCount();
-                if (current == null)
-                        current = 0;
-                movie.setVoteCount(current + 1);
+                movie.setVoteCount((current == null ? 0 : current) + 1);
                 movieInfoRepository.saveAndFlush(movie);
 
                 return MovieVoteDto.of(saved);

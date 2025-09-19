@@ -32,15 +32,13 @@ public class RankingController {
 
     /** ✅ 버튼 클릭 시 vote_count +1 */
     @PostMapping("/vote")
-    public ResponseEntity<?> vote(@RequestParam Long movieId,
+    public ResponseEntity<?> vote(
+            @RequestParam Long movieId,
+            @RequestParam Long vsIdx, // ⭐ 추가
             @RequestParam String userId) {
         try {
-            UsersEntity user = usersRepository.findByUserId(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("회원 없음: " + userId));
-
-            MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId);
+            MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId, vsIdx); // vsId 추가
             return ResponseEntity.ok(saved);
-
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", e.getMessage()));

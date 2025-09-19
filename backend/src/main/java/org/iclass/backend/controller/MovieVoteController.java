@@ -25,9 +25,9 @@ public class MovieVoteController {
     public ResponseEntity<?> vote(
             @RequestParam Long vsId,
             @RequestParam Long movieId,
-            @RequestParam String userId) {
+            @RequestParam String userIdx) {
         try {
-            return ResponseEntity.ok(movieVoteService.voteMovie(movieId, userId));
+            return ResponseEntity.ok(movieVoteService.voteMovie(movieId, userId, vsId)); // vsId 추가
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage()); // 이미 투표한 경우
         }
@@ -42,6 +42,6 @@ public class MovieVoteController {
     // ✅ 이번 주 전체 투표 집계
     @GetMapping("/this-week")
     public ResponseEntity<Map<Long, Long>> getWeeklyVotes() {
-    return ResponseEntity.ok(movieVoteService.getWeeklyVoteCounts());
+        return ResponseEntity.ok(movieVoteService.getWeeklyVoteCounts());
     }
 }
