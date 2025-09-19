@@ -51,6 +51,7 @@ public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long
                         @Param("startOfWeek") LocalDateTime startOfWeek,
                         @Param("endOfWeek") LocalDateTime endOfWeek);
 
+
                 // ✅ 특정 유저가 참여한 모든 VS 투표 조회
         @Query("SELECT v FROM MovieVoteEntity v " +
         "JOIN FETCH v.movieVS vs " +
@@ -66,4 +67,24 @@ public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long
         "WHERE v.user.userId = :userId " +
         "ORDER BY vs.startDate DESC")
         List<MovieVoteEntity> findAllByUserId(@Param("userId") String userId);
+
+        // ✅ [VS 단위] 특정 VS + 유저 + 오늘 기준 투표 여부 조회
+        @Query("SELECT v FROM MovieVoteEntity v " +
+                        "WHERE v.movieVS = :vs " +
+                        "AND v.user = :user " +
+                        "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
+        Optional<MovieVoteEntity> findTodayVoteByVS(
+                        @Param("vs") MovieVsEntity vs,
+                        @Param("user") UsersEntity user,
+                        @Param("startOfDay") LocalDateTime startOfDay,
+                        @Param("endOfDay") LocalDateTime endOfDay);
+
+        // MovieVoteRepository.java
+        @Query("SELECT v FROM MovieVoteEntity v WHERE v.user = :user AND v.movieVS.vsRound = :round AND v.movieVS.pair = :pair AND v.vsDate BETWEEN :start AND :end")
+        Optional<MovieVoteEntity> findTodayVoteByRoundAndPair(@Param("round") Integer round,
+                        @Param("pair") Integer pair,
+                        @Param("user") UsersEntity user,
+                        @Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
+
 }

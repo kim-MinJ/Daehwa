@@ -95,6 +95,7 @@ function LoadingSpinner() {
 export default function RankingPage({ onMovieClick, onNavigation }: RankingPageProps) {
   const navigate = useNavigate();
   const { userInfo, token, isLoggedIn } = useAuth();
+  const userId = userInfo?.userId;
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [topMovie, setTopMovie] = useState<Movie | null>(null);
@@ -229,11 +230,42 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
   };
 
   const handleVote = async (choice: "first" | "second") => {
-    console.log("투표 버튼 클릭됨:", choice, topMovie, secondMovie, userInfo);
+
     const currentUser = getCurrentUser();
     if (!currentUser) {
       alert("로그인 후 투표할 수 있습니다.");
       return;
+
+  const movie = choice === "first" ? topMovie : secondMovie;
+  if (!movie || !selectedVsIdx) return;
+
+  try {
+    await axios.post(
+  "http://localhost:8080/api/movies/vote",
+  null,
+  {
+    params: {
+      movieId: movie.movieIdx,
+      userId: currentUser.userId, // ✅ userIdx → userId로 수정
+      vsIdx: selectedVsIdx,        // ✅ vsId → vsIdx
+    },
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  }
+);
+
+    setSelectedVote(choice);
+    setHasVoted(true);
+
+    if (choice === "first" && topMovie) {
+      setTopMovie({ ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 });
+    } else if (choice === "second" && secondMovie) {
+      setSecondMovie({
+        ...secondMovie,
+        voteCount: (secondMovie.voteCount || 0) + 1,
+      });
+
     }
 
     const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;

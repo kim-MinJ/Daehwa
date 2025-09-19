@@ -32,52 +32,55 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class MovieVoteService {
 
-    private final MovieVoteRepository movieVoteRepository;
-    private final MovieInfoRepository movieInfoRepository;
-    private final UsersRepository usersRepository;
-    private final MovieVSRepository movieVsRepository;
-    private final MovieCrewRepository movieCrewRepository;
+     private final MovieVoteRepository movieVoteRepository;
+        private final MovieInfoRepository movieInfoRepository;
+        private final UsersRepository usersRepository;
+        private final MovieVSRepository movieVsRepository;
 
-    /**
-     * ✅ 영화 투표 (1일 1회 제한)
-     */
-    public MovieVoteDto voteMovie(Long movieId, String userId) {
-        // 유저 조회
-        UsersEntity user = usersRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
+        /**
+         * ✅ 영화 투표 (VS 기준 1일 1회 제한)
+         */
+        public MovieVoteDto voteMovie(Long movieId, String userId, Long vsId) {
+                // 유저 조회
+                UsersEntity user = usersRepository.findByUserId(userId)
+                                .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
 
-        // 영화 조회
-        MovieInfoEntity movie = movieInfoRepository.findById(movieId)
-                .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
+                // 영화 조회
+                MovieInfoEntity movie = movieInfoRepository.findById(movieId)
+                                .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
 
-        // 오늘 하루의 시작/끝 시간
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+                // VS 조회
+                MovieVsEntity vs = movieVsRepository.findById(vsId)
+                                .orElseThrow(() -> new IllegalArgumentException("VS 없음: " + vsId));
 
-        // 중복 투표 확인
-        movieVoteRepository.findTodayVote(movie, user, startOfDay, endOfDay)
-                .ifPresent(v -> {
-                    throw new IllegalStateException("오늘 이미 이 영화에 투표했습니다.");
-                });
+                // 오늘 하루의 시작/끝 시간
+                LocalDate today = LocalDate.now();
+                LocalDateTime startOfDay = today.atStartOfDay();
+                LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
 
-        // 새 투표 생성
-        MovieVoteEntity vote = MovieVoteEntity.builder()
-                .movie(movie)
-                .user(user)
-                .vsDate(LocalDateTime.now())
-                .build();
+                // **VS 단위 오늘 투표 확인**
+                movieVoteRepository
+                                .findTodayVoteByRoundAndPair(vs.getVsRound(), vs.getPair(), user, startOfDay, endOfDay)
+                                .ifPresent(v -> {
+                                        throw new IllegalStateException("오늘 벌써 이 투표에 참가했습니다! 감사합니다!");
+                                });
 
-        MovieVoteEntity saved = movieVoteRepository.save(vote);
+                // 새 투표 생성
+                MovieVoteEntity vote = MovieVoteEntity.builder()
+                                .movie(movie)
+                                .user(user)
+                                .movieVS(vs)
+                                .vsDate(LocalDateTime.now())
+                                .build();
 
-        // ✅ Movie_Info 테이블의 voteCount 증가
-        Integer current = movie.getVoteCount();
-        if (current == null) current = 0;
-        movie.setVoteCount(current + 1);
-        movieInfoRepository.saveAndFlush(movie);
+                MovieVoteEntity saved = movieVoteRepository.save(vote);
 
-        return MovieVoteDto.of(saved);
-    }
+                // Movie_Info 테이블의 voteCount 증가
+                Integer current = movie.getVoteCount();
+                movie.setVoteCount((current == null ? 0 : current) + 1);
+                movieInfoRepository.saveAndFlush(movie);
+
+                return MovieVoteDto.of(saved);
 
     /**
      * ✅ 특정 영화의 총 투표 수 (DB 집계 기준)
