@@ -59,34 +59,41 @@ export default function MainPage() {
   useEffect(() => {
     let mounted = true;
 
-    const initData = async () => {
+    const fetchFeaturedFirst = async () => {
       try {
+        // 🔹 1. Featured용 데이터 먼저 fetch
         const latest = await movieStore.fetchFirstPage(20);
-        const shuffledLatest = shuffle(latest.map(mapToUiMovie));
-        if (mounted) setLatestMovies(shuffledLatest);
+        if (!mounted) return;
 
-        const weekly = await movieStore.fetchWeeklyMovies();
-        if (mounted) setWeeklyMovies(weekly.map(mapToUiMovie));
+        const uiLatest = latest.map(mapToUiMovie);
 
-        const nostalgic = await movieStore.fetchNostalgicMovies();
-        const shuffledNostalgic = shuffle(nostalgic.map(mapToUiMovie));
-        if (mounted) setNostalgicMovies(shuffledNostalgic);
+        // Featured Movie 바로 렌더링
+        setFeatured(uiLatest[0]);
+        setLoadingFeatured(false);
 
-        movieStore.fetchAllBackground();
+        // 🔹 2. 나머지 섹션은 백그라운드 fetch
+        const fetchSections = async () => {
+          const [weekly, nostalgic] = await Promise.all([
+            movieStore.fetchWeeklyMovies(),
+            movieStore.fetchNostalgicMovies(),
+          ]);
+          if (!mounted) return;
 
-        if (mounted) {
-          if (shuffledLatest.length > 0) setFeatured(shuffledLatest[0]);
-          else if (weekly.length > 0) setFeatured(mapToUiMovie(weekly[0]));
-          else if (shuffledNostalgic.length > 0) setFeatured(shuffledNostalgic[0]);
-          setLoadingFeatured(false);
-        }
+          setLatestMovies(shuffle(uiLatest));
+          setWeeklyMovies(weekly.map(mapToUiMovie));
+          setNostalgicMovies(shuffle(nostalgic.map(mapToUiMovie)));
+
+          // 배경 이미지 미리 fetch
+          movieStore.fetchAllBackground();
+        };
+        fetchSections();
       } catch (err) {
         console.error("MainPage 초기화 에러:", err);
         if (mounted) setLoadingFeatured(false);
       }
     };
 
-    initData();
+    fetchFeaturedFirst();
     return () => {
       mounted = false;
     };
