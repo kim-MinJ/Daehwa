@@ -78,8 +78,8 @@ export default function MyPage({}: MyPageProps) {
   if (!token) return;
   try {
     const res = await axios.get("/api/movies/popular", {
-      headers: authHeader,
-      params: { count: 40 }, // 40개 가져오기
+        headers: authHeader,
+        params: { count: 40 }, // 40개 가져오기
     });
 
     const movies40: Movie[] = res.data;

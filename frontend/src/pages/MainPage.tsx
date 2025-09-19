@@ -80,11 +80,8 @@ function MainPage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [popular40, setPopular40] = useState<UiMovie[]>([]);
   const [weeklyTop10, setWeeklyTop10] = useState<UiMovie[]>([]);
-  const [personalizedTop3, setPersonalizedTop3] = useState<UiMovie[]>([]);
   const [latest, setLatest] = useState<UiMovie[]>([]);
-  const [reviewEvent3, setReviewEvent3] = useState<UiMovie[]>([]);
   const [oldPopular, setOldPopular] = useState<UiMovie[]>([]);
   const [featured, setFeatured] = useState<UiMovie | null>(null);
   const [selectedFeeling, setSelectedFeeling] = useState<string | null>(null);
@@ -121,7 +118,6 @@ return { ...m, genres: genresKr };
       try {
         const movies = await fetchMoviesWithGenres("/api/movies/popular", { count: 40 });
 
-        setPopular40(movies);
         setWeeklyTop10(movies.slice(0, 10));
 
         if (movies.length > 0) {
@@ -135,9 +131,6 @@ return { ...m, genres: genresKr };
         const latestMovies = movies.filter(m => m.releaseDate && new Date(m.releaseDate) >= sixMonthsAgo);
         setLatest([...latestMovies].sort(() => Math.random() - 0.5).slice(0, 10));
 
-        const shuffled = [...movies].sort(() => Math.random() - 0.5);
-        setPersonalizedTop3(shuffled.slice(0, 3));
-        setReviewEvent3(shuffled.slice(3, 6));
       } catch (error) {
         console.error("영화 로딩 실패:", error);
       } finally {
