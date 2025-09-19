@@ -87,6 +87,4 @@ public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long
                         @Param("start") LocalDateTime start,
                         @Param("end") LocalDateTime end);
 
-        List<MovieVoteEntity> findByUser(UsersEntity user);
-
 }

@@ -43,7 +43,7 @@ public class MovieVoteEntity {
   @ManyToOne
   @JoinColumn(name = "VS_idx", nullable = false) // 🔥 임시로 투표 증가 확인을 위해 true로 변경
   private MovieVsEntity movieVS;
-  
+
   @Column(name = "vs_date", nullable = false)
   @Builder.Default
   private LocalDateTime vsDate = LocalDateTime.now();

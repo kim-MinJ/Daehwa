@@ -229,13 +229,13 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
     return userInfo;
   };
 
- const handleVote = async (choice: "first" | "second") => {
-  console.log("투표 버튼 클릭됨:", choice, topMovie, secondMovie, userInfo);
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    alert("로그인 후 투표할 수 있습니다.");
-    return;
-  }
+  const handleVote = async (choice: "first" | "second") => {
+    console.log("투표 버튼 클릭됨:", choice, topMovie, secondMovie, userInfo);
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      alert("로그인 후 투표할 수 있습니다.");
+      return;
+    }
 
   const movie = choice === "first" ? topMovie : secondMovie;
   if (!movie || !selectedVsIdx) return;

@@ -11,12 +11,16 @@ import org.iclass.backend.service.MovieVoteService;
     import org.springframework.web.bind.annotation.RequestMapping;
     import org.springframework.web.bind.annotation.RequestParam;
     import org.springframework.web.bind.annotation.RestController;
+
     import lombok.RequiredArgsConstructor;
+
     @RestController
     @RequestMapping("/vote")
     @RequiredArgsConstructor
     public class MovieVoteController {
+
         private final MovieVoteService movieVoteService;
+
         // ✅ 투표하기
         @PostMapping
         public ResponseEntity<?> vote(
@@ -50,5 +54,6 @@ import org.iclass.backend.service.MovieVoteService;
     public ResponseEntity<List<VsBattleDto>> getUserVoteHistory(@PathVariable String userId) {
         return ResponseEntity.ok(movieVoteService.getUserVoteHistory(userId));
     }
-    
+
 }
+
