@@ -20,22 +20,17 @@ import MyPage from "./pages/MyPage";
 function AppContent() {
   const location = useLocation();
   const fetchFirstPage = useMovieStore((state) => state.fetchFirstPage);
-  const movies = useMovieStore((state) => state.movies);
   const scrollStore = useScrollStore();
 
+  // 🔹 loading은 UI용 첫 페이지 fetch만 기다림
   const [loading, setLoading] = useState(true);
 
-  // 🔹 앱 초기화: UI용 첫 페이지만 fetch
   useEffect(() => {
-    const initApp = async () => {
-      await getDB();
+    // 1️⃣ UI용 첫 페이지 fetch
+    fetchFirstPage(20).then(() => setLoading(false));
 
-      // 1️⃣ 첫 페이지 UI용 데이터 fetch
-      await fetchFirstPage(20);
-      setLoading(false); // 화면 바로 렌더링
-    };
-
-    initApp();
+    // 2️⃣ IndexedDB 초기화는 백그라운드
+    getDB().then(() => console.log("IndexedDB ready")).catch(console.error);
   }, []);
 
   // 🔹 페이지 이동 시 스크롤 복원
@@ -51,14 +46,9 @@ function AppContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
-  // 🔹 렌더링 조건: UI용 첫 페이지만 있으면 렌더링
-  if (loading || movies.length === 0) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <span className="ml-2 text-gray-600">영화 데이터 로딩중...</span>
-      </div>
-    );
+  if (loading) {
+    // Skeleton UI는 MainPage에서 처리하므로 최소 로딩 스피너
+    return <MainPage />;
   }
 
   return (

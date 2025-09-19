@@ -19,15 +19,15 @@ public class SearchMovieController {
 
     private final SearchMovieService service;
 
-    // 전체 영화 조회 + 페이징
+    // 전체 영화 조회 + 페이징(최신순, 이름순, 인기순)
     @GetMapping("/api/searchMovie")
     public Page<MovieInfoEntity> getAllMovies(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "30") int limit,
-            @RequestParam(defaultValue = "releaseDate") String sortBy,
-            @RequestParam(defaultValue = "desc") String order,
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) String genre
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int limit,
+        @RequestParam(defaultValue = "popularity") String sortBy, // 디폴트 인기도순
+        @RequestParam(defaultValue = "desc") String order,        // 내림차순
+        @RequestParam(required = false) String query,
+        @RequestParam(required = false) String genre
     ) {
         Sort sort = order.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, limit, sort);
@@ -40,6 +40,7 @@ public class SearchMovieController {
             return service.getAllMovies(pageable);
         }
     }
+
 
     // 단일 영화 조회
     @GetMapping("/api/movie/{movieIdx}")
