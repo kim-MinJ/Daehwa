@@ -52,7 +52,18 @@ const SearchPage: React.FC = () => {
   const hasFilter = searchTrigger.trim() || selectedYears.length > 0 || selectedGenres.length > 0;
 
   // -------------------------
-  // URL 동기화 (뒤로가기/헤더 검색)
+  // URL 업데이트 함수 (단일 source of truth)
+  // -------------------------
+  const updateUrl = (newQuery = query, newYears = selectedYears, newGenres = selectedGenres) => {
+    const params: Record<string,string> = {};
+    if (newQuery) params.query = newQuery;
+    if (newYears.length) params.years = newYears.join(",");
+    if (newGenres.length) params.genres = newGenres.join(",");
+    navigate(`/search?${new URLSearchParams(params).toString()}`, { replace: true });
+  };
+
+  // -------------------------
+  // URL 동기화 effect
   // -------------------------
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -79,17 +90,6 @@ const SearchPage: React.FC = () => {
   useEffect(() => localStorage.setItem(STORAGE_KEYS.displayCount, String(displayCount)), [displayCount]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.sortBy, sortBy), [sortBy]);
   useEffect(() => localStorage.setItem(STORAGE_KEYS.viewMode, viewMode), [viewMode]);
-
-  // -------------------------
-  // URL 업데이트 함수
-  // -------------------------
-  const updateUrl = (newQuery = query, newYears = selectedYears, newGenres = selectedGenres) => {
-    const params: Record<string,string> = {};
-    if (newQuery) params.query = newQuery;
-    if (newYears.length) params.years = newYears.join(",");
-    if (newGenres.length) params.genres = newGenres.join(",");
-    navigate(`/search?${new URLSearchParams(params).toString()}`, { replace: true });
-  };
 
   // -------------------------
   // 검색 실행
@@ -154,6 +154,9 @@ const SearchPage: React.FC = () => {
     setDisplayCount((prev) => prev + PAGE_SIZE);
   };
 
+  // -------------------------
+  // 정렬
+  // -------------------------
   const sortedMovies = useMemo(() => {
     const result = [...movies];
     switch (sortBy) {
@@ -180,7 +183,7 @@ const SearchPage: React.FC = () => {
   }, [location.pathname]);
 
   // -------------------------
-  // 필터 토글
+  // 필터 토글 (URL 기반)
   // -------------------------
   const toggleYearGroup = (group: string) => {
     const groupYears = YEAR_GROUPS[group];
@@ -188,7 +191,7 @@ const SearchPage: React.FC = () => {
     const newYears = allSelected
       ? selectedYears.filter((y) => !groupYears.includes(y))
       : [...new Set([...selectedYears, ...groupYears])];
-    setSelectedYears(newYears);
+
     updateUrl(query, newYears, selectedGenres);
   };
 
@@ -196,21 +199,16 @@ const SearchPage: React.FC = () => {
     const newGenres = selectedGenres.includes(genre)
       ? selectedGenres.filter((g) => g !== genre)
       : [...selectedGenres, genre];
-    setSelectedGenres(newGenres);
+
     updateUrl(query, selectedYears, newGenres);
   };
 
   const clearAllFilters = () => {
-    setQuery("");
-    setSearchTrigger("");
-    setSelectedYears([]);
-    setSelectedGenres([]);
     navigate("/search", { replace: true });
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchTrigger(query);
     updateUrl(query, selectedYears, selectedGenres);
   };
 
