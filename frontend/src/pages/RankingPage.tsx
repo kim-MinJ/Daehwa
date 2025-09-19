@@ -413,12 +413,8 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
             ) : (
               <>
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-3">
-                    최고 평점 대결
-                  </h2>
-                  <p className="text-gray-600 text-lg">
-                    이번 주 최고 평점 영화들의 투표 현황
-                  </p>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-3">최고 평점 대결</h2>
+                  <p className="text-gray-600 text-lg">이번 주 최고 평점 영화들의 투표 현황</p>
                 </div>
 
                 <div className="flex items-center justify-center gap-12">
