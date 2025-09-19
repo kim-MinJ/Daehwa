@@ -12,6 +12,7 @@ import {
   Crown,
   Medal,
   Filter,
+  Flag,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
@@ -404,195 +405,168 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
         </div>
 
         {/* VS 섹션 */}
-        <div className="mb-12">
-          <div className="bg-gray-100/50 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200/30">
-            {!topMovie || !secondMovie ? (
-              <div className="text-center py-16 text-gray-500 font-semibold">
-                현재 투표중인 영화가 없습니다
+<div className="mb-12">
+  <div className="bg-gray-100/50 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200/30">
+    {!topMovie || !secondMovie ? (
+      <div className="text-center py-16 text-gray-500 font-semibold">
+        현재 투표중인 영화가 없습니다
+      </div>
+    ) : (
+      <>
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-800 mb-3">최고 평점 대결</h2>
+          <p className="text-gray-600 text-lg">이번 주 최고 평점 영화들의 투표 현황</p>
+        </div>
+
+        <div className="flex items-center justify-center gap-12">
+          {/* 1위 영화 */}
+          <div className="text-center flex flex-col items-center">
+            <div className="group cursor-pointer" onClick={() => handleMovieClick(topMovie)}>
+              <div className="relative mb-4">
+                <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
+                  <ImageWithFallback src={topMovie.poster} alt={topMovie.title} className="w-full h-full object-cover"/>
+                </div>
+                <div className="absolute -top-3 -left-3">
+  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+    <Flag className="h-6 w-6 text-white" />
+  </div>
+</div>
               </div>
-            ) : (
+              <div className="w-48 h-28 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-red-500 transition-colors line-clamp-2 break-words">
+                    {topMovie.title}
+                  </h3>
+                  <p className="text-gray-600 mb-2 text-sm truncate">{topMovie.director}</p>
+                </div>
+                <div className="flex items-center justify-center gap-1">
+                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                  <span className="font-semibold text-xl text-gray-800">{topMovie.rating.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+            <div className="w-48 mt-4">
+              {!hasVoted ? (
+                <Button
+                  onClick={() => handleVote("first")}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold w-full"
+                >
+                  이 영화에 투표
+                </Button>
+              ) : (
+                <div className="bg-yellow-600/20 rounded-lg p-4 border border-yellow-500/30">
+                  <div className="font-bold text-xl mb-1" style={{ color: "#000000" }}>
+                    {topMoviePercentage}%
+                  </div>
+                  <div className="text-sm" style={{ color: "#000000" }}>
+                    {topMovieVotes.toLocaleString()}표
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* VS */}
+          <div className="flex flex-col items-center flex-shrink-0">
+            <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center shadow-2xl mb-3">
+              <span className="text-white font-bold text-2xl">VS</span>
+            </div>
+            <p className="text-gray-600 mb-3">대결</p>
+            {hasVoted && (
               <>
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-3">최고 평점 대결</h2>
-                  <p className="text-gray-600 text-lg">이번 주 최고 평점 영화들의 투표 현황</p>
+                <div className="w-40 bg-gray-700 rounded-full h-4 mb-2">
+                  <div
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-4 rounded-full transition-all duration-300"
+                    style={{ width: `${topMoviePercentage}%` }}
+                  />
                 </div>
-
-                <div className="flex items-center justify-center gap-12">
-                  {/* 1위 영화 */}
-                  <div className="text-center flex flex-col items-center">
-                    <div
-                      className="group cursor-pointer"
-                      onClick={() => handleMovieClick(topMovie)}
-                    >
-                      <div className="relative mb-4">
-                        <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                          <ImageWithFallback
-                            src={topMovie.poster}
-                            alt={topMovie.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="absolute -top-3 -left-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
-                            <Crown className="h-6 w-6 text-white" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="w-48 h-28 flex flex-col justify-between">
-                        <div>
-                          <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-red-500 transition-colors line-clamp-2 break-words">
-                            {topMovie.title}
-                          </h3>
-                          <p className="text-gray-600 mb-2 text-sm truncate">
-                            {topMovie.director}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-center gap-1">
-                          <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                          <span className="font-semibold text-xl text-gray-800">
-                            {topMovie.rating.toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-48 mt-4">
-                      {!hasVoted ? (
-                        <Button
-                          onClick={() => handleVote("first")}
-                          className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold w-full"
-                        >
-                          이 영화에 투표
-                        </Button>
-                      ) : (
-                        <div className="bg-yellow-600/20 rounded-lg p-4 border border-yellow-500/30">
-                          <div
-                            className="font-bold text-xl mb-1"
-                            style={{ color: "#000000" }}
-                          >
-                            {topMoviePercentage}%
-                          </div>
-                          <div
-                            className="text-sm"
-                            style={{ color: "#000000" }}
-                          >
-                            {topMovieVotes.toLocaleString()}표
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* VS 표시 */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center shadow-2xl mb-3">
-                      <span className="text-white font-bold text-2xl">VS</span>
-                    </div>
-                    <p className="text-gray-600 mb-3">대결</p>
-                  </div>
-
-                  {/* 2위 영화 */}
-                  <div className="text-center flex flex-col items-center">
-                    <div
-                      className="group cursor-pointer"
-                      onClick={() => handleMovieClick(secondMovie)}
-                    >
-                      <div className="relative mb-4">
-                        <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
-                          <ImageWithFallback
-                            src={secondMovie.poster}
-                            alt={secondMovie.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="absolute -top-3 -left-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center shadow-lg">
-                            <Medal className="h-6 w-6 text-white" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="w-48 h-28 flex flex-col justify-between">
-                        <div>
-                          <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-blue-500 transition-colors line-clamp-2 break-words">
-                            {secondMovie.title}
-                          </h3>
-                          <p className="text-gray-600 mb-2 text-sm truncate">
-                            {secondMovie.director}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-center gap-1">
-                          <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                          <span className="font-semibold text-xl text-gray-800">
-                            {secondMovie.rating.toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-48 mt-4">
-                      {!hasVoted ? (
-                        <Button
-                          onClick={() => handleVote("second")}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold w-full"
-                        >
-                          이 영화에 투표
-                        </Button>
-                      ) : (
-                        <div className="bg-blue-600/20 rounded-lg p-4 border border-blue-500/30">
-                          <div
-                            className="font-bold text-xl mb-1"
-                            style={{ color: "#000000" }}
-                          >
-                            {secondMoviePercentage}%
-                          </div>
-                          <div
-                            className="text-sm"
-                            style={{ color: "#000000" }}
-                          >
-                            {secondMovieVotes.toLocaleString()}표
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* VS 선택 버튼 */}
-                <div className="flex flex-wrap gap-2 mt-4 justify-center">
-                  {activeVsList.map((vs) => (
-                    <Button
-                      key={vs.vsIdx}
-                      variant="ghost"
-                      onClick={async () => {
-                        setSelectedVsIdx(vs.vsIdx);
-
-                        const topPoster = await fetchPosterFromTMDB(
-                          vs.topMovie.title,
-                          vs.topMovie.year
-                        );
-                        const secondPoster = await fetchPosterFromTMDB(
-                          vs.secondMovie.title,
-                          vs.secondMovie.year
-                        );
-
-                        setTopMovie({ ...vs.topMovie, poster: topPoster });
-                        setSecondMovie({
-                          ...vs.secondMovie,
-                          poster: secondPoster,
-                        });
-                      }}
-                      className={`px-4 py-2 rounded-lg border-2 transition-colors bg-white ${
-                        selectedVsIdx === vs.vsIdx
-                          ? "border-red-600 text-red-600"
-                          : "border-gray-300 text-gray-800 hover:border-black hover:text-gray-900"
-                      }`}
-                    >
-                      {vs.topMovie.title} vs {vs.secondMovie.title}
-                    </Button>
-                  ))}
-                </div>
+                <p className="text-xs text-gray-500">실시간 투표</p>
               </>
             )}
           </div>
+
+          {/* 2위 영화 */}
+          <div className="text-center flex flex-col items-center">
+            <div className="group cursor-pointer" onClick={() => handleMovieClick(secondMovie)}>
+              <div className="relative mb-4">
+                <div className="w-48 h-64 rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
+                  <ImageWithFallback src={secondMovie.poster} alt={secondMovie.title} className="w-full h-full object-cover"/>
+                </div>
+                <div className="absolute -top-3 -left-3">
+  <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center shadow-lg">
+    <Flag className="h-6 w-6 text-white" />
+  </div>
+</div>
+              </div>
+              <div className="w-48 h-28 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-blue-500 transition-colors line-clamp-2 break-words">
+                    {secondMovie.title}
+                  </h3>
+                  <p className="text-gray-600 mb-2 text-sm truncate">{secondMovie.director}</p>
+                </div>
+                <div className="flex items-center justify-center gap-1">
+                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                  <span className="font-semibold text-xl text-gray-800">{secondMovie.rating.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+            <div className="w-48 mt-4">
+              {!hasVoted ? (
+                <Button
+                  onClick={() => handleVote("second")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold w-full"
+                >
+                  이 영화에 투표
+                </Button>
+              ) : (
+                <div className="bg-blue-600/20 rounded-lg p-4 border border-blue-500/30">
+                  <div className="font-bold text-xl mb-1" style={{ color: "#000000" }}>
+                    {secondMoviePercentage}%
+                  </div>
+                  <div className="text-sm" style={{ color: "#000000" }}>
+                    {secondMovieVotes.toLocaleString()}표
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+      </>
+    )}
+
+    {/* VS 선택 버튼 */}
+    <div className="flex flex-wrap gap-2 mt-4 justify-center">
+      {activeVsList.map((vs) => (
+        <Button
+          key={vs.vsIdx}
+          variant="ghost"
+          onClick={async () => {
+            setSelectedVsIdx(vs.vsIdx);
+
+            const topPoster = await fetchPosterFromTMDB(vs.topMovie.title, vs.topMovie.year);
+            const secondPoster = await fetchPosterFromTMDB(vs.secondMovie.title, vs.secondMovie.year);
+
+            setTopMovie({ ...vs.topMovie, poster: topPoster });
+            setSecondMovie({ ...vs.secondMovie, poster: secondPoster });
+
+            // ✅ VS 바뀌면 투표 상태 초기화
+            setSelectedVote(null);
+            setHasVoted(false);
+          }}
+          className={`px-4 py-2 rounded-lg border-2 transition-colors bg-white ${
+            selectedVsIdx === vs.vsIdx
+              ? "border-red-600 text-red-600"
+              : "border-gray-300 text-gray-800 hover:border-black hover:text-gray-900"
+          }`}
+        >
+          {vs.topMovie.title} vs {vs.secondMovie.title}
+        </Button>
+      ))}
+    </div>
+  </div>
+</div>
+
 
         {/* 투표 안내 */}
         <div className="mt-8 text-center">
