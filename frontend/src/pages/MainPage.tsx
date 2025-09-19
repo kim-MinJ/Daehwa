@@ -55,23 +55,27 @@ export default function MainPage() {
   const [featured, setFeatured] = useState<UiMovie | undefined>();
   const [loadingFeatured, setLoadingFeatured] = useState(true);
 
-  // 🔹 초기 데이터 fetch
   useEffect(() => {
     let mounted = true;
 
     const fetchFeaturedFirst = async () => {
       try {
-        // 🔹 1. Featured용 데이터 먼저 fetch
+        // 🔹 1. Latest Movies fetch
         const latest = await movieStore.fetchFirstPage(20);
         if (!mounted) return;
 
         const uiLatest = latest.map(mapToUiMovie);
 
-        // Featured Movie 바로 렌더링
-        setFeatured(uiLatest[0]);
+        // 🔹 2. Featured Movie 랜덤 선택
+        const randomIndex = Math.floor(Math.random() * uiLatest.length);
+        const featuredMovie = uiLatest[randomIndex];
+        setFeatured(featuredMovie);
         setLoadingFeatured(false);
 
-        // 🔹 2. 나머지 섹션은 백그라운드 fetch
+        // 🔹 3. Remaining Latest Movies (Featured 제외)
+        const remainingLatest = uiLatest.filter((_, i) => i !== randomIndex);
+
+        // 🔹 4. 나머지 섹션 백그라운드 fetch
         const fetchSections = async () => {
           const [weekly, nostalgic] = await Promise.all([
             movieStore.fetchWeeklyMovies(),
@@ -79,8 +83,9 @@ export default function MainPage() {
           ]);
           if (!mounted) return;
 
-          setLatestMovies(shuffle(uiLatest));
-          setWeeklyMovies(weekly.map(mapToUiMovie));
+          // 모든 섹션 shuffle
+          setLatestMovies(shuffle(remainingLatest));
+          setWeeklyMovies(shuffle(weekly.map(mapToUiMovie)));
           setNostalgicMovies(shuffle(nostalgic.map(mapToUiMovie)));
 
           // 배경 이미지 미리 fetch
