@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star, Info } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useMovieStore } from "@/store/movieStore";
 import { getPosterUrl } from "@/utils/getPosterUrl";
 import { UiMovie, mapToUiMovie } from "@/types/uiMovie";
@@ -10,7 +11,7 @@ import { shuffle } from "@/utils/shuffle";
 import { SectionCarousel } from "@/components/mainPage/SectionCarousel";
 import { genreMap } from "@/constants/genres";
 
-// 🔹 MovieCard
+// 🔹 MovieCard 컴포넌트
 function MovieCard({ movie, onClick }: { movie: UiMovie; onClick: (m: UiMovie) => void }) {
   const koreanGenres = movie.genre
     .split(",")
@@ -43,6 +44,7 @@ function MovieCard({ movie, onClick }: { movie: UiMovie; onClick: (m: UiMovie) =
   );
 }
 
+// 🔹 MainPage 컴포넌트
 export default function MainPage() {
   const navigate = useNavigate();
   const movieStore = useMovieStore();
@@ -51,6 +53,7 @@ export default function MainPage() {
   const [weeklyMovies, setWeeklyMovies] = useState<UiMovie[]>([]);
   const [nostalgicMovies, setNostalgicMovies] = useState<UiMovie[]>([]);
   const [featured, setFeatured] = useState<UiMovie | undefined>();
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
 
   // 🔹 초기 데이터 fetch
   useEffect(() => {
@@ -71,14 +74,15 @@ export default function MainPage() {
 
         movieStore.fetchAllBackground();
 
-        // 🔹 Featured 한 번만 설정
         if (mounted) {
           if (shuffledLatest.length > 0) setFeatured(shuffledLatest[0]);
           else if (weekly.length > 0) setFeatured(mapToUiMovie(weekly[0]));
           else if (shuffledNostalgic.length > 0) setFeatured(shuffledNostalgic[0]);
+          setLoadingFeatured(false);
         }
       } catch (err) {
         console.error("MainPage 초기화 에러:", err);
+        if (mounted) setLoadingFeatured(false);
       }
     };
 
@@ -94,53 +98,68 @@ export default function MainPage() {
     <div className="min-h-screen bg-white">
       <main className="relative">
         {/* Featured Movie */}
-        {featured && (
-          <div
-            className="relative h-[85vh] mb-12 cursor-pointer"
-            onClick={() => onMovieClick(featured)}
-          >
-            <ImageWithFallback
-              src={getPosterUrl(featured.backdropPath ?? featured.backdropPath, "original")}
-              alt={featured.title}
-              className="w-full h-full object-cover"
+        <AnimatePresence>
+          {loadingFeatured ? (
+            <motion.div
+              className="relative h-[85vh] mb-12 bg-gray-300 animate-pulse rounded-lg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 w-full">
-              <div className="max-w-7xl mx-auto px-8 lg:px-16 pb-8 lg:pb-16">
-                <div className="max-w-lg text-white">
-                  <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">{featured.title}</h1>
-                  {featured.description && (
-                    <p className="text-white/90 text-lg lg:text-xl leading-relaxed mb-6">
-                      {featured.description.slice(0, 200)}...
-                    </p>
-                  )}
-                  <div className="flex items-center gap-4 mb-8 text-white/80">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                      <span className="text-lg font-semibold">{featured.rating.toFixed(1)}</span>
+          ) : (
+            featured && (
+              <motion.div
+                className="relative h-[85vh] mb-12 cursor-pointer"
+                onClick={() => onMovieClick(featured)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.6 }}
+              >
+                <ImageWithFallback
+                  src={getPosterUrl(featured.backdropPath ?? featured.backdropPath, "original")}
+                  alt={featured.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 w-full">
+                  <div className="max-w-7xl mx-auto px-8 lg:px-16 pb-8 lg:pb-16">
+                    <div className="max-w-lg text-white">
+                      <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">{featured.title}</h1>
+                      {featured.description && (
+                        <p className="text-white/90 text-lg lg:text-xl leading-relaxed mb-6">
+                          {featured.description.slice(0, 200)}...
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 mb-8 text-white/80">
+                        <div className="flex items-center gap-2">
+                          <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                          <span className="text-lg font-semibold">{featured.rating.toFixed(1)}</span>
+                        </div>
+                        <span>•</span>
+                        <span>{featured.year}년</span>
+                        <span>•</span>
+                        <span>
+                          {featured.genre
+                            .split(",")
+                            .map((g) => genreMap[g.trim()] || g.trim())
+                            .join(", ")}
+                        </span>
+                      </div>
+                      <div className="flex justify-start">
+                        <button className="flex items-center bg-white text-black hover:bg-white/90 px-12 py-4 text-xl font-semibold shadow-lg rounded-xl">
+                          <Info className="h-6 w-6 mr-3" />
+                          상세 정보
+                        </button>
+                      </div>
                     </div>
-                    <span>•</span>
-                    <span>{featured.year}년</span>
-                    <span>•</span>
-                    <span>
-                      {featured.genre
-                        .split(",")
-                        .map((g) => genreMap[g.trim()] || g.trim())
-                        .join(", ")}
-                    </span>
-                  </div>
-                  <div className="flex justify-start">
-                    <button className="flex items-center bg-white text-black hover:bg-white/90 px-12 py-4 text-xl font-semibold shadow-lg rounded-xl">
-                      <Info className="h-6 w-6 mr-3" />
-                      상세 정보
-                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
+              </motion.div>
+            )
+          )}
+        </AnimatePresence>
 
         {/* Sections */}
         <section className="max-w-7xl mx-auto px-8 lg:px-16 space-y-16 pb-16">
