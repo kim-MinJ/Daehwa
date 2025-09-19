@@ -1,5 +1,5 @@
 // src/pages/MainPage.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star, Info } from "lucide-react";
 import { useMovieStore } from "@/store/movieStore";
@@ -10,14 +10,8 @@ import { shuffle } from "@/utils/shuffle";
 import { SectionCarousel } from "@/components/mainPage/SectionCarousel";
 import { genreMap } from "@/constants/genres";
 
-// 🔹 Skeleton 컴포넌트
-function MovieSkeleton({ width, height }: { width: string; height: string }) {
-  return <div className={`${width} ${height} bg-gray-700 animate-pulse rounded-md`} />;
-}
-
 // 🔹 MovieCard
 function MovieCard({ movie, onClick }: { movie: UiMovie; onClick: (m: UiMovie) => void }) {
-  // 🔹 장르 매핑
   const koreanGenres = movie.genre
     .split(",")
     .map((g) => genreMap[g.trim()] || g.trim())
@@ -56,7 +50,7 @@ export default function MainPage() {
   const [latestMovies, setLatestMovies] = useState<UiMovie[]>([]);
   const [weeklyMovies, setWeeklyMovies] = useState<UiMovie[]>([]);
   const [nostalgicMovies, setNostalgicMovies] = useState<UiMovie[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [featured, setFeatured] = useState<UiMovie | undefined>();
 
   // 🔹 초기 데이터 fetch
   useEffect(() => {
@@ -65,20 +59,26 @@ export default function MainPage() {
     const initData = async () => {
       try {
         const latest = await movieStore.fetchFirstPage(20);
-        if (mounted) setLatestMovies(shuffle(latest.map(mapToUiMovie)));
+        const shuffledLatest = shuffle(latest.map(mapToUiMovie));
+        if (mounted) setLatestMovies(shuffledLatest);
 
         const weekly = await movieStore.fetchWeeklyMovies();
         if (mounted) setWeeklyMovies(weekly.map(mapToUiMovie));
 
         const nostalgic = await movieStore.fetchNostalgicMovies();
-        if (mounted) setNostalgicMovies(shuffle(nostalgic.map(mapToUiMovie)));
+        const shuffledNostalgic = shuffle(nostalgic.map(mapToUiMovie));
+        if (mounted) setNostalgicMovies(shuffledNostalgic);
 
         movieStore.fetchAllBackground();
 
-        if (mounted) setLoading(false);
+        // 🔹 Featured 한 번만 설정
+        if (mounted) {
+          if (shuffledLatest.length > 0) setFeatured(shuffledLatest[0]);
+          else if (weekly.length > 0) setFeatured(mapToUiMovie(weekly[0]));
+          else if (shuffledNostalgic.length > 0) setFeatured(shuffledNostalgic[0]);
+        }
       } catch (err) {
         console.error("MainPage 초기화 에러:", err);
-        if (mounted) setLoading(false);
       }
     };
 
@@ -89,32 +89,6 @@ export default function MainPage() {
   }, []);
 
   const onMovieClick = (m: UiMovie) => navigate(`/movie/${m.id}`);
-
-  // 🔹 Featured 데이터
-  const featured = useMemo(() => {
-    if (latestMovies.length > 0)
-      return latestMovies[Math.floor(Math.random() * latestMovies.length)];
-    if (weeklyMovies.length > 0) return weeklyMovies[0];
-    if (nostalgicMovies.length > 0) return nostalgicMovies[0];
-    return undefined;
-  }, [latestMovies, weeklyMovies, nostalgicMovies]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen px-8 lg:px-16 py-12 space-y-12 bg-gray-900">
-        <div className="w-full h-[85vh] bg-gray-700 animate-pulse rounded-md" />
-        <div className="space-y-8">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex gap-6 overflow-x-auto">
-              {Array.from({ length: 5 }).map((_, j) => (
-                <div key={j} className="w-48 h-72 bg-gray-700 animate-pulse rounded-lg" />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-white">

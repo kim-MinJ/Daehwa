@@ -51,15 +51,15 @@ export const SectionCarousel = ({
         <div className="flex gap-2">
           <button
             onClick={scrollLeft}
-            className="p-2 bg-white/20 hover:bg-white/40 rounded-full"
+            className="p-2 bg-gray-200 hover:bg-gray-300 rounded-full shadow-sm transition"
           >
-            <ChevronLeft className="h-6 w-6 text-white" />
+            <ChevronLeft className="h-6 w-6 text-gray-800" />
           </button>
           <button
             onClick={scrollRight}
-            className="p-2 bg-white/20 hover:bg-white/40 rounded-full"
+            className="p-2 bg-gray-200 hover:bg-gray-300 rounded-full shadow-sm transition"
           >
-            <ChevronRight className="h-6 w-6 text-white" />
+            <ChevronRight className="h-6 w-6 text-gray-800" />
           </button>
         </div>
       </div>
