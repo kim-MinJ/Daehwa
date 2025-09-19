@@ -12,6 +12,7 @@ import {
   Crown,
   Medal,
   Filter,
+  Flag,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
@@ -426,10 +427,10 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
                   <ImageWithFallback src={topMovie.poster} alt={topMovie.title} className="w-full h-full object-cover"/>
                 </div>
                 <div className="absolute -top-3 -left-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
-                    <Crown className="h-6 w-6 text-white" />
-                  </div>
-                </div>
+  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+    <Flag className="h-6 w-6 text-white" />
+  </div>
+</div>
               </div>
               <div className="w-48 h-28 flex flex-col justify-between">
                 <div>
@@ -492,10 +493,10 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
                   <ImageWithFallback src={secondMovie.poster} alt={secondMovie.title} className="w-full h-full object-cover"/>
                 </div>
                 <div className="absolute -top-3 -left-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Medal className="h-6 w-6 text-white" />
-                  </div>
-                </div>
+  <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center shadow-lg">
+    <Flag className="h-6 w-6 text-white" />
+  </div>
+</div>
               </div>
               <div className="w-48 h-28 flex flex-col justify-between">
                 <div>
