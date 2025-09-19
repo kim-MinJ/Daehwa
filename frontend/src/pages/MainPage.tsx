@@ -8,6 +8,7 @@ import axios from "axios";
 import { Star, Info } from "lucide-react";
 import { HorizontalScrollList } from "@/components/HorizontalScrollList";
 
+
 // UI 타입
 type UiMovie = {
   id: string | number;
@@ -195,6 +196,10 @@ function MainPage() {
   const [oldPopular, setOldPopular] = useState<UiMovie[]>([]);
   const [featured, setFeatured] = useState<UiMovie | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [showFeelings, setShowFeelings] = useState(false);
+const [randomMovies, setRandomMovies] = useState<UiMovie[]>([]);
+
+
 
   // 🔹 감정 섹션 상태
   const [feelings, setFeelings] = useState<string[]>([]);
@@ -399,6 +404,14 @@ const toUiMovie = (m: any): UiMovie => ({
     fetchOldPopular();
   }, [token]);
 
+  useEffect(() => {
+  if (popular40.length > 0) {
+    const shuffled = [...popular40].sort(() => Math.random() - 0.5);
+    setRandomMovies(shuffled.slice(0, 10));
+  }
+}, [popular40]);
+
+
   return (
     <div className="min-h-screen bg-white">
       <main className="relative">
@@ -452,13 +465,13 @@ const toUiMovie = (m: any): UiMovie => ({
 
             <section className="max-w-7xl mx-auto px-8 lg:px-16 pt-[100px] space-y-[100px] pb-16">
 
-              {/* 🔹 감정 선택 섹션: 같은 영역 전환 */}
-              <div>
+              {/* 🔹 감정 선택 섹션 */}
+<div>
   <div className="flex items-center justify-between mb-6">
     <h2 className="text-xl lg:text-2xl font-medium text-gray-900">
       당신만을 위한 추천
       <span className="text-sm text-gray-700 font-normal ml-3">
-        기분을 선택하면 바로 추천해드려요
+        지금 분위기에 맞게 골라보세요
       </span>
     </h2>
 
@@ -469,38 +482,59 @@ const toUiMovie = (m: any): UiMovie => ({
         onClick={() => {
           setSelectedFeeling(null);
           setFeelingMovies([]);
+          setShowFeelings(false); // 초기 화면으로 복귀
         }}
       >
-        다른 기분 선택하기
+        초기화
       </Button>
     )}
   </div>
   <div className="w-full h-px bg-gray-200 mb-6" />
 
-  {/* 버튼 선택 전: 기존 흰색 버튼 유지 */}
-  {!selectedFeeling && (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-  {feelings.map((feeling) => (
-    <button
-      key={feeling}
-      type="button"
-      onClick={() => handleFeelingClick(feeling)}
-      className={`group w-full rounded-2xl border-2 px-6 py-5 md:px-7 md:py-6
-                  flex flex-col items-center justify-center gap-2
-                  text-center font-semibold text-gray-900
-                  transition-transform duration-200
-                  hover:scale-105
-                  ${selectedFeeling === feeling ? "border-blue-500 bg-blue-100 shadow-lg" : "border-gray-200 bg-white shadow-sm"}
-                  focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
-    >
-      <span className="text-3xl">{FEELING_ICONS[feeling] || "🎬"}</span>
-      <span className="text-base md:text-lg">{feeling}</span>
-    </button>
-  ))}
-</div>
-)}
+  {/* 1단계: 랜덤 영화 10개 보여주기 */}
+  {!showFeelings && !selectedFeeling && (
+    <>
+      <HorizontalScrollList>
+        {randomMovies.map((movie) => (
+          <MovieCard key={movie.id} movie={movie} onClick={onMovieClick} />
+        ))}
+      </HorizontalScrollList>
 
-  {/* 선택 후: 같은 자리에서 최신 영화 카드와 동일 UI로 10개 */}
+      <div className="flex justify-center mt-6">
+        <Button
+          onClick={() => setShowFeelings(true)}
+          className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-xl shadow-md hover:scale-105 transition"
+        >
+          🎭 기분으로 추천받기
+        </Button>
+      </div>
+    </>
+  )}
+
+  {/* 2단계: 감정 버튼들 노출 */}
+  {showFeelings && !selectedFeeling && (
+    <div className="grid grid-cols-5 gap-4">
+      {feelings.map((feeling) => (
+        <button
+          key={feeling}
+          type="button"
+          onClick={() => handleFeelingClick(feeling)}
+          className="group w-full rounded-2xl border border-gray-200 bg-white px-4 py-4
+                     shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98]
+                     transition flex flex-col items-center justify-center gap-2"
+        >
+          <span className="text-3xl">
+            {FEELING_ICONS[feeling] ?? "🎬"}
+          </span>
+          <span className="text-sm font-semibold text-gray-900 text-center">
+            {feeling}
+          </span>
+        </button>
+      ))}
+    </div>
+  )}
+
+  {/* 3단계: 감정 영화 추천 */}
   {selectedFeeling && (
     <>
       {feelingLoading ? (
