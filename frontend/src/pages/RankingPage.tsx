@@ -348,14 +348,6 @@ const getCurrentUser = () => {
                 <div className="text-center mb-8">
                   <h2 className="text-3xl font-bold text-gray-800 mb-3">최고 평점 대결</h2>
                   <p className="text-gray-600 text-lg">이번 주 최고 평점 영화들의 투표 현황</p>
-                  {hasVoted && (
-  <div className="w-40 bg-gray-700 rounded-full h-4 mb-2">
-    <div
-      className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-4 rounded-full transition-all duration-300"
-      style={{ width: `${votePercentages.top}%` }}
-    />
-  </div>
-)}
                 </div>
 
                 <div className="flex items-center justify-center gap-12">
