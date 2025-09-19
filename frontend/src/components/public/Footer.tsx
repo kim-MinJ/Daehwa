@@ -1,15 +1,18 @@
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white mt-20">
+    <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <h3 className="text-xl font-bold text-red-400 mb-4">MovieSSG</h3>
+            <p className="text-gray-400">
+              영화를 사랑하는 모든 이들을 위한
+            </p>
             <p className="text-gray-400 mb-4">
-              영화를 사랑하는 모든 이들을 위한 스트리밍 서비스
+              스트리밍 서비스
             </p>
             <p className="text-gray-400 text-sm">
-              © 2024 MovieSSG. All rights reserved.
+              © 2025 MovieSSG. All rights reserved.
             </p>
           </div>
           <div>

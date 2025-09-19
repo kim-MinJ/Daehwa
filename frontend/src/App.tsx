@@ -1,6 +1,6 @@
 // src/App.tsx
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getDB } from "@/utils/indexedDB";
 import { useMovieStore } from "@/store/movieStore";
 import { useScrollStore } from "@/store/scrollStore";
@@ -22,14 +22,9 @@ function AppContent() {
   const fetchFirstPage = useMovieStore((state) => state.fetchFirstPage);
   const scrollStore = useScrollStore();
 
-  // 🔹 loading은 UI용 첫 페이지 fetch만 기다림
-  const [loading, setLoading] = useState(true);
-
+  // 🔹 앱 시작 시 UI용 첫 페이지 fetch & IndexedDB 백그라운드 초기화
   useEffect(() => {
-    // 1️⃣ UI용 첫 페이지 fetch
-    fetchFirstPage(20).then(() => setLoading(false));
-
-    // 2️⃣ IndexedDB 초기화는 백그라운드
+    // IndexedDB 초기화는 백그라운드로 진행
     getDB().then(() => console.log("IndexedDB ready")).catch(console.error);
   }, []);
 
@@ -46,11 +41,7 @@ function AppContent() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
-  if (loading) {
-    // Skeleton UI는 MainPage에서 처리하므로 최소 로딩 스피너
-    return <MainPage />;
-  }
-
+  // 🔹 UI 렌더링은 바로 MainPage → Skeleton은 MainPage 내부 처리
   return (
     <Routes>
       <Route path="*" element={<MainPage />} />
@@ -72,7 +63,7 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-white">
         <Header />
-        <main className="relative">
+        <main className="flex-grow relative">
           <AppContent />
         </main>
         <Footer />

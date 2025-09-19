@@ -5,6 +5,7 @@ export interface UiMovie {
   id: number;
   title: string;
   poster: string;
+  backdropPath: string;
   year: number;
   genre: string;
   rating: number;
@@ -26,6 +27,7 @@ export const mapToUiMovie = (m: Movie): UiMovie => {
     id: m.movieIdx,
     title: m.title?.trim() || "제목 없음",
     poster: m.posterPath || "",
+    backdropPath: m.backdropPath || "",
     year: releaseYear,
     genre: genreString,
     rating: m.voteAverage ?? 0,

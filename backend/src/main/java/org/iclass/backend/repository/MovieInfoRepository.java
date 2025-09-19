@@ -30,4 +30,10 @@ public interface MovieInfoRepository extends JpaRepository<MovieInfoEntity, Long
     // 랜덤 영화 조회 (native query 그대로)
     @Query(value = "SELECT * FROM MOVIE_INFO ORDER BY DBMS_RANDOM.VALUE FETCH FIRST 1 ROWS ONLY", nativeQuery = true)
     MovieInfoEntity findRandomMovie();
+
+    // 연도 범위 조회 + 페이징
+    @Query("SELECT m FROM MovieInfoEntity m WHERE YEAR(m.releaseDate) BETWEEN :startYear AND :endYear")
+    Page<MovieInfoEntity> findByReleaseYearBetween(@Param("startYear") int startYear,
+                                                   @Param("endYear") int endYear,
+                                                   Pageable pageable);
 }
