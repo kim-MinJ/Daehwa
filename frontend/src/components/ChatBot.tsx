@@ -18,7 +18,7 @@ const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: '안녕하세요! MovieSSG 고객지원 챗봇입니다. 영화 추천, 검색, 문의사항 등 무엇이든 도와드리겠습니다! 😊',
+      text: '안녕하세요! MovieSSG 이에요! 반가워요! 영화에 대해 얘기 나눠보아요 😊',
       isUser: false,
       timestamp: new Date()
     }
