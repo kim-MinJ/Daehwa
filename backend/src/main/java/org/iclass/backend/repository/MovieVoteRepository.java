@@ -50,4 +50,23 @@ public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long
         List<Object[]> countVotesThisWeek(
                         @Param("startOfWeek") LocalDateTime startOfWeek,
                         @Param("endOfWeek") LocalDateTime endOfWeek);
+
+        // ✅ [VS 단위] 특정 VS + 유저 + 오늘 기준 투표 여부 조회
+        @Query("SELECT v FROM MovieVoteEntity v " +
+                        "WHERE v.movieVS = :vs " +
+                        "AND v.user = :user " +
+                        "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
+        Optional<MovieVoteEntity> findTodayVoteByVS(
+                        @Param("vs") MovieVsEntity vs,
+                        @Param("user") UsersEntity user,
+                        @Param("startOfDay") LocalDateTime startOfDay,
+                        @Param("endOfDay") LocalDateTime endOfDay);
+
+        // MovieVoteRepository.java
+        @Query("SELECT v FROM MovieVoteEntity v WHERE v.user = :user AND v.movieVS.vsRound = :round AND v.movieVS.pair = :pair AND v.vsDate BETWEEN :start AND :end")
+        Optional<MovieVoteEntity> findTodayVoteByRoundAndPair(@Param("round") Integer round,
+                        @Param("pair") Integer pair,
+                        @Param("user") UsersEntity user,
+                        @Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
 }
