@@ -91,4 +91,13 @@ public class CommentController {
       return ResponseEntity.notFound().build();
     }
   }
+
+  // 특정 유저의 댓글 조회
+  @GetMapping("/mycomments")
+  public List<CommentsDto> getMyComments(@AuthenticationPrincipal UserDetails userDetails) {
+    String userId = userDetails.getUsername();
+    return commentService.getCommentsByUser(userId).stream()
+        .map(CommentsDto::of)
+        .toList();
+  }
 }

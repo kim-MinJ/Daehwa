@@ -22,4 +22,6 @@ public interface CommentsRepository extends JpaRepository<CommentsEntity, Long> 
   void deleteAllByReviewIn(List<ReviewEntity> reviews);
 
   List<CommentsEntity> findByReviewReviewIdx(Long reviewIdx);
+
+  List<CommentsEntity> findByUser(UsersEntity user);
 }
