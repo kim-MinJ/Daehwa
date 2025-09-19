@@ -82,7 +82,24 @@ const FEELING_TO_GENRES: Record<string, string[]> = {
   "심심하다": ["코미디", "애니메이션", "모험", "가족"],
 };
 
-
+const FEELING_ICONS: Record<string, string> = {
+  "편안함": "🛋️",
+  "흥분됨": "⚡",
+  "슬픔": "😢",
+  "기쁨": "😄",
+  "설렘": "💖",
+  "짜릿함": "🥳",
+  "즐거움": "🎉",
+  "화남": "😡",
+  "심심함": "😴",
+  "놀람": "😱",
+  "감동": "😭", 
+  "감동임": "😭",
+  "감동적임": "😭",
+  "긴장됨": "😬",
+  "생각남": "🤔",
+  "피곤함": "😪",
+};
 
 const genreMap: Record<number, string> = {
   28: "액션", 12: "모험", 16: "애니메이션", 35: "코미디",
@@ -198,16 +215,20 @@ function MainPage() {
           params: { count: 40 },
         });
         const movies: UiMovie[] = res.data.map((m: any) => ({
-          id: m.movieIdx,
-          title: m.title ?? "제목 없음",
-          poster: m.posterPath  ?? "",
-          backdropPath: m.backdropPath ?? "",
-          year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-          genres: m.genres?.length ? m.genres : ["기타"],
-          rating: m.voteAverage ?? 0,
-          description: m.overview ?? "",
-          releaseDate: m.releaseDate ?? null,
-        }));
+  id: m.movieIdx,
+  title: m.title ?? "제목 없음",
+  poster: m.posterPath ?? "",
+  backdropPath: m.backdropPath ?? "",
+  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+  genres: m.genres?.length
+    ? m.genres
+    : m.genre_ids?.length
+      ? m.genre_ids.map((id: number) => genreMap[id] ?? "기타")
+      : ["기타"],
+  rating: m.voteAverage ?? 0,
+  description: m.overview ?? "",
+  releaseDate: m.releaseDate ?? null,
+}));
         setPopular40(movies);
         setWeeklyTop10(movies.slice(0, 10));
 
@@ -236,6 +257,7 @@ function MainPage() {
     };
     fetchPopular();
   }, [token]);
+  
 const byPopularity = (a: UiMovie, b: UiMovie) => {
   const ap = a.popularity ?? a.voteCount ?? a.rating ?? 0;
   const bp = b.popularity ?? b.voteCount ?? b.rating ?? 0;
@@ -274,17 +296,21 @@ const byPopularity = (a: UiMovie, b: UiMovie) => {
       params: { feelingType: feeling, count: 10 },
     });
 
-    const movies: UiMovie[] = (res.data || []).map((m: any) => ({
-      id: m.movieIdx,
-      title: m.title ?? "제목 없음",
-      poster: m.posterPath ?? "",
-      backdropPath: m.backdropPath ?? "",
-      year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-      genres: m.genres?.length ? m.genres : ["기타"],
-      rating: m.voteAverage ?? 0,
-      description: m.overview ?? "",
-      releaseDate: m.releaseDate ?? null,
-    }));
+   const movies: UiMovie[] = res.data.map((m: any) => ({
+  id: m.movieIdx,
+  title: m.title ?? "제목 없음",
+  poster: m.posterPath ?? "",
+  backdropPath: m.backdropPath ?? "",
+  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+  genres: m.genres?.length
+    ? m.genres
+    : m.genre_ids?.length
+      ? m.genre_ids.map((id: number) => genreMap[id] ?? "기타")
+      : ["기타"],
+  rating: m.voteAverage ?? 0,
+  description: m.overview ?? "",
+  releaseDate: m.releaseDate ?? null,
+}));
 
     if (movies.length > 0) {
       setFeelingMovies(movies.slice(0, 10));
@@ -351,15 +377,20 @@ const toUiMovie = (m: any): UiMovie => ({
           params: { count: 40 },
         });
         const movies: UiMovie[] = res.data.map((m: any) => ({
-          id: m.movieIdx,
-          title: m.title ?? "제목 없음",
-          poster: m.posterPath ?? "",
-          year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-          genres: m.genres?.length ? m.genres : ["기타"],
-          rating: m.voteAverage ?? 0,
-          description: m.overview ?? "",
-          releaseDate: m.releaseDate ?? null,
-        }));
+  id: m.movieIdx,
+  title: m.title ?? "제목 없음",
+  poster: m.posterPath ?? "",
+  backdropPath: m.backdropPath ?? "",
+  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+  genres: m.genres?.length
+    ? m.genres
+    : m.genre_ids?.length
+      ? m.genre_ids.map((id: number) => genreMap[id] ?? "기타")
+      : ["기타"],
+  rating: m.voteAverage ?? 0,
+  description: m.overview ?? "",
+  releaseDate: m.releaseDate ?? null,
+}));
         setOldPopular([...movies].sort(() => Math.random() - 0.5).slice(0, 10));
       } catch (error) {
         console.error("추억의 영화 로딩 실패:", error);
@@ -449,22 +480,24 @@ const toUiMovie = (m: any): UiMovie => ({
   {/* 버튼 선택 전: 기존 흰색 버튼 유지 */}
   {!selectedFeeling && (
   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-    {feelings.map((feeling) => (
-      <button
-        key={feeling}
-        type="button"
-        onClick={() => handleFeelingClick(feeling)}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleFeelingClick(feeling)}
-        className="group w-full rounded-2xl border border-gray-200 bg-white px-6 py-5 md:px-7 md:py-6
-                   shadow-sm hover:shadow-md hover:border-gray-300 active:scale-[0.98]
-                   transition focus:outline-none focus:ring-2 focus:ring-blue-500/30
-                   flex items-center justify-center gap-3"
-      >
-        <span className="text-2xl md:text-3xl">🎬</span>
-        <span className="text-base md:text-lg font-semibold text-gray-900">{feeling}</span>
-      </button>
-    ))}
-  </div>
+  {feelings.map((feeling) => (
+    <button
+      key={feeling}
+      type="button"
+      onClick={() => handleFeelingClick(feeling)}
+      className={`group w-full rounded-2xl border-2 px-6 py-5 md:px-7 md:py-6
+                  flex flex-col items-center justify-center gap-2
+                  text-center font-semibold text-gray-900
+                  transition-transform duration-200
+                  hover:scale-105
+                  ${selectedFeeling === feeling ? "border-blue-500 bg-blue-100 shadow-lg" : "border-gray-200 bg-white shadow-sm"}
+                  focus:outline-none focus:ring-2 focus:ring-blue-500/30`}
+    >
+      <span className="text-3xl">{FEELING_ICONS[feeling] || "🎬"}</span>
+      <span className="text-base md:text-lg">{feeling}</span>
+    </button>
+  ))}
+</div>
 )}
 
   {/* 선택 후: 같은 자리에서 최신 영화 카드와 동일 UI로 10개 */}
