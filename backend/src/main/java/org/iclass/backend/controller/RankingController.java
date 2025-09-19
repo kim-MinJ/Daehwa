@@ -1,5 +1,4 @@
 package org.iclass.backend.controller;
-
 import lombok.RequiredArgsConstructor;
 import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.repository.MovieVoteRepository;
@@ -11,39 +10,35 @@ import org.iclass.backend.service.MovieVoteService;
 import org.iclass.backend.service.RankingService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.*;
-
 @RestController
 @RequestMapping("/api/movies")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173")
 public class RankingController {
-
     private final UsersRepository usersRepository;
     private final MovieVoteService movieVoteService;
     private final RankingService rankingService;
-
     /** ✅ 트렌딩 영화 가져오기 */
     @GetMapping("/trending")
     public ResponseEntity<?> getTrendingMovies() {
         return ResponseEntity.ok(rankingService.getTrendingMovies());
     }
-
     /** ✅ 버튼 클릭 시 vote_count +1 */
     @PostMapping("/vote")
-    public ResponseEntity<?> vote(@RequestParam Long movieId, @RequestParam String userId) {
-    try {
-        System.out.println("🎯 vote 요청 movieId=" + movieId + ", userId=" + userId);
-        MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<?> vote(
+            @RequestParam Long movieId,
+            @RequestParam Long vsIdx, // ⭐ 추가
+            @RequestParam String userId) {
+        try {
+            MovieVoteDto saved = movieVoteService.voteMovie(movieId, userId, vsIdx); // vsId 추가
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
     }
-}
 
 
     private String mapGenreIdToName(int genreId) {

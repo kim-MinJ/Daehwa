@@ -57,25 +57,25 @@ const genreMap: { [key: number]: string } = {
 };
 
 const genreTranslation: { [key: string]: string } = {
-  액션: "Action",
-  모험: "Adventure",
-  애니메이션: "Animation",
-  코미디: "Comedy",
-  범죄: "Crime",
-  다큐멘터리: "Documentary",
-  드라마: "Drama",
-  가족: "Family",
-  판타지: "Fantasy",
-  역사: "History",
-  공포: "Horror",
-  음악: "Music",
-  미스터리: "Mystery",
-  로맨스: "Romance",
-  SF: "Science Fiction",
+  "액션": "Action",
+  "모험": "Adventure",
+  "애니메이션": "Animation",
+  "코미디": "Comedy",
+  "범죄": "Crime",
+  "다큐멘터리": "Documentary",
+  "드라마": "Drama",
+  "가족": "Family",
+  "판타지": "Fantasy",
+  "역사": "History",
+  "공포": "Horror",
+  "음악": "Music",
+  "미스터리": "Mystery",
+  "로맨스": "Romance",
+  "SF": "Science Fiction",
   "TV 영화": "TV Movie",
-  스릴러: "Thriller",
-  전쟁: "War",
-  서부: "Western",
+  "스릴러": "Thriller",
+  "전쟁": "War",
+  "서부": "Western",
 };
 
 interface RankingPageProps {
@@ -95,6 +95,7 @@ function LoadingSpinner() {
 export default function RankingPage({ onMovieClick, onNavigation }: RankingPageProps) {
   const navigate = useNavigate();
   const { userInfo, token, isLoggedIn } = useAuth();
+  const userId = userInfo?.userId;
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [topMovie, setTopMovie] = useState<Movie | null>(null);
@@ -228,44 +229,71 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
     return userInfo;
   };
 
-  const handleVote = async (choice: "first" | "second") => {
-    console.log("투표 버튼 클릭됨:", choice, topMovie, secondMovie, userInfo);
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      alert("로그인 후 투표할 수 있습니다.");
-      return;
-    }
+ const handleVote = async (choice: "first" | "second") => {
+  console.log("투표 버튼 클릭됨:", choice, topMovie, secondMovie, userInfo);
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    alert("로그인 후 투표할 수 있습니다.");
+    return;
+  }
 
-    const movieId = choice === "first" ? topMovie?.id : secondMovie?.id;
-    if (!movieId) return;
+  const movie = choice === "first" ? topMovie : secondMovie;
+  if (!movie || !selectedVsIdx) return;
 
-    try {
-      await axios.post("http://localhost:8080/api/movies/vote", null, {
-        params: {
-          movieId: Number(movieId),
-          userId: currentUser.userId,
-        },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+  try {
+    await axios.post("http://localhost:8080/api/movies/vote", null, {
+      params: {
+        movieId: movie.movieIdx,
+        userId: currentUser.userId,
+        vsIdx: selectedVsIdx,
+      },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    setSelectedVote(choice);
+    setHasVoted(true);
+
+    // ✅ 투표수 반영
+    if (choice === "first" && topMovie) {
+      setTopMovie({ ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 });
+    } else if (choice === "second" && secondMovie) {
+      setSecondMovie({
+        ...secondMovie,
+        voteCount: (secondMovie.voteCount || 0) + 1,
       });
-
-      setSelectedVote(choice);
-      setHasVoted(true);
-
-      if (choice === "first" && topMovie) {
-        setTopMovie({ ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 });
-      } else if (choice === "second" && secondMovie) {
-        setSecondMovie({
-          ...secondMovie,
-          voteCount: (secondMovie.voteCount || 0) + 1,
-        });
-      }
-    } catch (err: any) {
-      console.error("투표 실패:", err.response?.data || err.message);
-      alert(err.response?.data?.error || "투표에 실패했습니다.");
     }
-  };
+
+    // ✅ VS 투표 기록 추가
+    if (topMovie && secondMovie) {
+      const updatedTopVotes =
+        choice === "first" ? (topMovie.voteCount || 0) + 1 : topMovie.voteCount || 0;
+      const updatedSecondVotes =
+        choice === "second" ? (secondMovie.voteCount || 0) + 1 : secondMovie.voteCount || 0;
+      const updatedTotal = updatedTopVotes + updatedSecondVotes;
+
+      const newRecord = {
+        vsIdx: selectedVsIdx,
+        daysAgo: "방금 전", // 일단 "방금 전"으로 표시
+        movie1Id: topMovie.movieIdx,
+        movie1Title: topMovie.title,
+        movie1Percentage:
+          updatedTotal > 0 ? Math.round((updatedTopVotes / updatedTotal) * 100) : 0,
+        movie2Id: secondMovie.movieIdx,
+        movie2Title: secondMovie.title,
+        movie2Percentage:
+          updatedTotal > 0 ? Math.round((updatedSecondVotes / updatedTotal) * 100) : 0,
+        votedMovieId: movie.movieIdx,
+      };
+
+      setVoteHistory((prev) => [newRecord, ...prev]); // 최신 투표가 위로 오도록
+    }
+  } catch (err: any) {
+    console.error("투표 실패:", err.response?.data || err.message);
+    alert(err.response?.data?.error || "투표에 실패했습니다.");
+  }
+};
 
   // 박스오피스 로직
   const boxOfficeMovies = movies.slice(0, 12);
