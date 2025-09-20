@@ -1,5 +1,5 @@
 // src/App.tsx
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { getDB } from "@/utils/indexedDB";
 import { useMovieStore } from "@/store/movieStore";
@@ -16,6 +16,10 @@ import ReviewPage from "./pages/ReviewPage";
 import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
 import MyPage from "./pages/MyPage";
+import ErrorPage from "./pages/ErrorPage";
+import ChatBot from "./components/public/ChatBot";
+import ErrorProvider from "./hooks/ErrorContext";
+import DetailReviewPage from "./pages/DetailReviewPage";
 
 function AppContent() {
   const location = useLocation();
@@ -44,7 +48,8 @@ function AppContent() {
   // 🔹 UI 렌더링은 바로 MainPage → Skeleton은 MainPage 내부 처리
   return (
     <Routes>
-      <Route path="*" element={<MainPage />} />
+      {/* 메인 페이지 */}
+      <Route path="/" element={<MainPage />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/movie/:id" element={<MovieDetailPage />} />
       <Route path="/ranking" element={<RankingPage />} />
@@ -52,6 +57,14 @@ function AppContent() {
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/mypage" element={<MyPage />} />
+      <Route path="/movie/:id/review" element={<DetailReviewPage />} />
+
+      {/* 에러 페이지 */}
+      <Route path="/error" element={<ErrorPage />} />
+
+      {/* 존재하지 않는 경로는 에러 페이지로 */}
+      <Route path="*" element={<Navigate to="/error" replace />} />
+
     </Routes>
   );
 }
@@ -61,13 +74,16 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-white">
+      <ErrorProvider>
+        <div className="min-h-screen bg-white">
         <Header />
         <main className="flex-grow relative">
           <AppContent />
         </main>
         <Footer />
+        <ChatBot />
       </div>
+      </ErrorProvider>
     </BrowserRouter>
   );
 }
