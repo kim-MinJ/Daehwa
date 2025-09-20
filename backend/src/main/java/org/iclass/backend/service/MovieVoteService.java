@@ -146,8 +146,8 @@ public class MovieVoteService {
         MovieInfoEntity movie2 = vs.getMovieVs2();
 
         // 투표 수 집계
-        long movie1Votes = movieVoteRepository.countByMovieVSAndMovie(vs, movie1);
-        long movie2Votes = movieVoteRepository.countByMovieVSAndMovie(vs, movie2);
+        long movie1Votes = movie1.getVoteCount() == null ? 0 : movie1.getVoteCount();
+        long movie2Votes = movie2.getVoteCount() == null ? 0 : movie2.getVoteCount();
         long totalVotes = movie1Votes + movie2Votes;
 
         int movie1Percentage = totalVotes > 0 ? (int)((movie1Votes * 100.0) / totalVotes) : 0;
