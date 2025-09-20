@@ -23,7 +23,8 @@ function LoadingSpinner() {
 export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabProps) {
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [movieVotes, setMovieVotes] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [movieSearchQuery, setMovieSearchQuery] = useState(""); // 영화 선택용
+const [voteSearchQuery, setVoteSearchQuery] = useState("");   // MovieVote 리스트용
   const [currentPage, setCurrentPage] = useState(1);
   const [vsMovie1, setVsMovie1] = useState<Movie | null>(null);
   const [vsMovie2, setVsMovie2] = useState<Movie | null>(null);
@@ -111,31 +112,27 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   // AdminVotesTab 내부, return 직전 useMemo 추가
 const filteredMovieVotes = useMemo(() => {
-  if (!searchQuery) return visibleMovieVotes;
+  if (!voteSearchQuery) return visibleMovieVotes;
 
-  const q = searchQuery.toLowerCase().replace(/\s/g, "");
+  const q = voteSearchQuery.toLowerCase().replace(/\s/g, "");
   return visibleMovieVotes.filter((mv: any) => {
-    // vs_idx-회차-순번 문자열 생성
     const vsString = `${mv.vsIdx}-${mv.vsRound}-${mv.pair}`.replace(/\s/g, "");
     const movie1Title = mv.movieVs1?.title?.toLowerCase() ?? "";
     const movie2Title = mv.movieVs2?.title?.toLowerCase() ?? "";
 
-    return (
-      movie1Title.includes(q) ||
-      movie2Title.includes(q) ||
-      vsString.includes(q)
-    );
+    return movie1Title.includes(q) || movie2Title.includes(q) || vsString.includes(q);
   });
-}, [visibleMovieVotes, searchQuery]);
+}, [visibleMovieVotes, voteSearchQuery]);
 
   // -------------------- 검색 & 필터링 --------------------
   const filteredMovies = useMemo(() => {
-    return allMovies.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        movie.director.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [allMovies, searchQuery]);
+  return allMovies.filter(
+    (movie) =>
+      movie.title.toLowerCase().includes(movieSearchQuery.toLowerCase()) ||
+      movie.director.toLowerCase().includes(movieSearchQuery.toLowerCase())
+  );
+}, [allMovies, movieSearchQuery]);
+
 
   const pagedMovies = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
@@ -202,15 +199,15 @@ const filteredMovieVotes = useMemo(() => {
               <div className="flex-1 flex items-center gap-2">
                 <Search className="h-4 w-4 text-gray-500" />
                 <input
-                  type="text"
-                  placeholder="검색"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="border p-2 rounded w-full"
-                />
+  type="text"
+  placeholder="검색"
+  value={movieSearchQuery}
+  onChange={(e) => {
+    setMovieSearchQuery(e.target.value);
+    setCurrentPage(1);
+  }}
+  className="border p-2 rounded w-full"
+/>
               </div>
 
               {/* 회차 선택 드롭다운 */}
@@ -347,12 +344,12 @@ const filteredMovieVotes = useMemo(() => {
         <div className="flex items-center gap-2 mb-2">
   <Search className="h-4 w-4 text-gray-500" />
   <input
-    type="text"
-    placeholder="영화 제목 또는 vsIdx-회차-순번으로 검색"
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-    className="border p-2 rounded w-full"
-  />
+  type="text"
+  placeholder="영화 제목 또는 vsIdx-회차-순번으로 검색"
+  value={voteSearchQuery}
+  onChange={(e) => setVoteSearchQuery(e.target.value)}
+  className="border p-2 rounded w-full"
+/>
 </div>
         {loadingVotes ? (
           <LoadingSpinner />

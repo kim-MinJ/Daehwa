@@ -76,10 +76,12 @@ public class MovieInfoEntity {
 
     // 장르 이름 리스트 반환
     public List<String> getGenres() {
-        if (movieGenres == null) return List.of();
+        if (movieGenres == null)
+            return List.of();
         return movieGenres.stream()
                 .map(mg -> mg.getGenre().getName())
                 .distinct()
                 .toList();
     }
+
 }

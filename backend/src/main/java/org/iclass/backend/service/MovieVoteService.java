@@ -1,4 +1,5 @@
 package org.iclass.backend.service;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class MovieVoteService {
 
-     private final MovieVoteRepository movieVoteRepository;
+        private final MovieVoteRepository movieVoteRepository;
         private final MovieInfoRepository movieInfoRepository;
         private final UsersRepository usersRepository;
         private final MovieVSRepository movieVsRepository;
@@ -82,49 +83,51 @@ public class MovieVoteService {
 
                 return MovieVoteDto.of(saved);
         }
-    /**
-     * ✅ 특정 영화의 총 투표 수 (DB 집계 기준)
-     */
-    public long getVoteCount(Long movieId) {
-        MovieInfoEntity movie = movieInfoRepository.findById(movieId)
-                .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
-        return movieVoteRepository.countByMovie_TmdbMovieId(movie.getTmdbMovieId());
-    }
 
-    /**
-     * ✅ 이번 주 영화별 투표 집계 (tmdbMovieId 기준)
-     */
-    public Map<Long, Long> getWeeklyVoteCounts() {
-        LocalDate today = LocalDate.now();
-        LocalDate start = today.with(java.time.DayOfWeek.MONDAY);
-        LocalDate end = today.with(java.time.DayOfWeek.SUNDAY);
-
-        LocalDateTime startOfWeek = start.atStartOfDay();
-        LocalDateTime endOfWeek = end.atTime(LocalTime.MAX);
-
-        List<Object[]> results = movieVoteRepository.countVotesThisWeek(startOfWeek, endOfWeek);
-
-        return results.stream()
-                .collect(Collectors.toMap(
-                        r -> (Long) r[0], // tmdbMovieId
-                        r -> (Long) r[1]  // 투표 수
-                ));
-    }
-
-    /**
-     * ✅ VS 모드 결과 조회 (특정 VS에 대해 영화별 집계)
-     */
-    public Map<Long, Long> getVoteResult(Long vsId) {
-        MovieVsEntity vs = movieVsRepository.findById(vsId)
-                .orElseThrow(() -> new RuntimeException("VS not found"));
-
-        var votes = movieVoteRepository.findByMovieVS(vs);
-
-        Map<Long, Long> result = new HashMap<>();
-        for (MovieVoteEntity vote : votes) {
-            Long movieId = vote.getMovie().getMovieIdx();
-            result.put(movieId, result.getOrDefault(movieId, 0L) + 1);
+        /**
+         * ✅ 특정 영화의 총 투표 수 (DB 집계 기준)
+         */
+        public long getVoteCount(Long movieId) {
+                MovieInfoEntity movie = movieInfoRepository.findById(movieId)
+                                .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
+                return movieVoteRepository.countByMovie_TmdbMovieId(movie.getTmdbMovieId());
         }
+
+        /**
+         * ✅ 이번 주 영화별 투표 집계 (tmdbMovieId 기준)
+         */
+        public Map<Long, Long> getWeeklyVoteCounts() {
+                LocalDate today = LocalDate.now();
+                LocalDate start = today.with(java.time.DayOfWeek.MONDAY);
+                LocalDate end = today.with(java.time.DayOfWeek.SUNDAY);
+
+                LocalDateTime startOfWeek = start.atStartOfDay();
+                LocalDateTime endOfWeek = end.atTime(LocalTime.MAX);
+
+                List<Object[]> results = movieVoteRepository.countVotesThisWeek(startOfWeek, endOfWeek);
+
+                return results.stream()
+                                .collect(Collectors.toMap(
+                                                r -> (Long) r[0], // tmdbMovieId
+                                                r -> (Long) r[1] // 투표 수
+                                ));
+        }
+
+        /**
+         * ✅ VS 모드 결과 조회 (특정 VS에 대해 영화별 집계)
+         */
+        public Map<Long, Long> getVoteResult(Long vsId) {
+                MovieVsEntity vs = movieVsRepository.findById(vsId)
+                                .orElseThrow(() -> new RuntimeException("VS not found"));
+
+                var votes = movieVoteRepository.findByMovieVS(vs);
+
+                Map<Long, Long> result = new HashMap<>();
+                for (MovieVoteEntity vote : votes) {
+                        Long movieId = vote.getMovie().getMovieIdx();
+                        result.put(movieId, result.getOrDefault(movieId, 0L) + 1);
+                }
+
         return result;
     }
 
@@ -198,4 +201,5 @@ public class MovieVoteService {
                 .userId(entity.getUser().getUserId())
                 .build();
     }
+
 }
