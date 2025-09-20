@@ -45,32 +45,32 @@
     movieTitle?: string; // 화면용
   }
 
-  interface Comment {
+interface Comment {
   commentIdx: number;
   userId: string;
   reviewIdx: number;
   content: string;
   createdAt: string;
   updateAt: string;
-
-  // Movie 객체 포함
-  movie?: Movie;
+  title?: string; // 선택적으로 둬야 API 원본에도 맞음
 }
+
   export default function MyPage({}: MyPageProps) {
-    const navigate = useNavigate();
-    const { token, userInfo, setUserInfo, logout, getUserInfo } = useAuth();
-    const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-    const [recommendMovies, setRecommendMovies] = useState<Movie[]>([]);
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [username, setUsername] = useState(userInfo?.username || "");
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-    const [adminCode, setAdminCode] = useState("");
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [deleteConfirmText, setDeleteConfirmText] = useState("");
-    const [comments, setComments] = useState<Comment[]>([]);
+  const navigate = useNavigate();
+  const { token, userInfo, setUserInfo, logout, getUserInfo } = useAuth();
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [recommendMovies, setRecommendMovies] = useState<Movie[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsWithTitle, setCommentsWithTitle] = useState<Comment[]>([]);
+  const [username, setUsername] = useState(userInfo?.username || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminCode, setAdminCode] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
     const TMDB_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
@@ -132,6 +132,24 @@
       fetchReviews();
       fetchComments();
     }, [token]);
+
+
+  // 댓글 ↔ 리뷰 매핑해서 영화 제목 붙이기
+  useEffect(() => {
+    if (comments.length && reviews.length) {
+      const mapped = comments.map((c) => {
+        const review = reviews.find((r) => r.reviewIdx === c.reviewIdx);
+        return {
+          ...c,
+          title: review?.movieTitle || `영화 #${review?.movieIdx}`,
+        };
+      });
+      setCommentsWithTitle(mapped);
+    } else {
+      setCommentsWithTitle(comments);
+    }
+  }, [comments, reviews]);
+
 
     useEffect(() => {
   if (location.hash.startsWith("#comment-")) {
@@ -349,7 +367,7 @@
                       <Card
                         key={movie.movieIdx}
                         className="cursor-pointer"
-                        onClick={() => navigate(`/movie/${movie.movieIdx}`)}
+                        onClick={() => navigate(`/movies/${movie.movieIdx}`)}
                       >
                         <img
                           src={movie.posterPath ? `${TMDB_BASE_URL}${movie.posterPath}` : "/default.jpg"}
@@ -390,7 +408,7 @@
                       <Card
                         key={b.bookmarkIdx}
                         className="cursor-pointer"
-                        onClick={() => navigate(`/movie/${b.movieIdx}`)}
+                        onClick={() => navigate(`/movies/${b.movieIdx}`)}
                       >
                         <img
                           src={b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"}
@@ -444,7 +462,7 @@
                         <Button
     size="sm"
     variant="outline"
-    onClick={() => navigate(`/movie/${r.movieIdx}/review#review-${r.reviewIdx}`)}
+    onClick={() => navigate(`/movies/${r.movieIdx}/review#review-${r.reviewIdx}`)}
   >
     리뷰 보러가기
   </Button>
@@ -457,12 +475,12 @@
               </TabsContent>
 
               <TabsContent value="comments">
-  {comments.length ? (
+  {commentsWithTitle.length ? (
     <div className="space-y-4">
-      {comments.map((c) => (
+      {commentsWithTitle.map((c) => (
         <div key={c.commentIdx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold">{c.movie?.title}에 단 댓글</h3>
+            <h3 className="font-semibold">{c.title}에 단 댓글</h3>
             <div className="text-sm text-gray-500 flex flex-col">
               <span>작성일: {new Date(c.createdAt).toLocaleDateString()}</span>
               <span>
@@ -487,7 +505,7 @@
       // 리뷰 탭 열고 해당 댓글로 스크롤
       const review = reviews.find(r => r.reviewIdx === c.reviewIdx);
       const movieIdx = review?.movieIdx;
-      navigate(`/movie/${movieIdx}/review#comment-${c.commentIdx}`);
+      navigate(`/movies/${movieIdx}/review#comment-${c.commentIdx}`);
     } catch (err) {
       console.error(err);
       alert("댓글을 불러오는 데 실패했습니다.");
