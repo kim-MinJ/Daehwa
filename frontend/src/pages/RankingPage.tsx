@@ -218,6 +218,21 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
     fetchActiveVs();
   }, []);
 
+    useEffect(() => {
+    if (!userId) return;
+    const fetchVoteHistory = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8080/vote/history/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+        setVoteHistory(res.data);
+      } catch (err) {
+        console.error("투표 기록 불러오기 실패:", err);
+      }
+    };
+    fetchVoteHistory();
+  }, [userId, token]);
+
   // ✅ VS 투표 퍼센티지 계산
   const topMovieVotes = topMovie?.voteCount || 0;
   const secondMovieVotes = secondMovie?.voteCount || 0;
@@ -255,6 +270,11 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
     setSelectedVote(choice);
     setHasVoted(true);
 
+    const res = await axios.get(`http://localhost:8080/vote/user/${userId}/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+    
     // ✅ 투표수 반영
     if (choice === "first" && topMovie) {
       setTopMovie({ ...topMovie, voteCount: (topMovie.voteCount || 0) + 1 });
