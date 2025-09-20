@@ -78,7 +78,7 @@ useEffect(() => {
       setPassword("");
       setUsername("");
 
-      navigate("/main");
+      navigate("/");
     } catch (e: any) {
       setMessage(e.message || "오류가 발생했습니다.");
     }
