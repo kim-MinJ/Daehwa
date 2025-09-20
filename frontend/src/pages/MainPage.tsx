@@ -8,24 +8,7 @@ import axios from "axios";
 import { Star, Info } from "lucide-react";
 import { HorizontalScrollList } from "@/components/HorizontalScrollList";
 
-const FEELING_ICONS: Record<string, string> = {
-  "편안함": "🛋️",
-  "흥분됨": "⚡",
-  "슬픔": "😢",
-  "기쁨": "😄",
-  "설렘": "💖",
-  "짜릿함": "🥳",
-  "즐거움": "🎉",
-  "화남": "😡",
-  "심심함": "😴",
-  "놀람": "😱",
-  "감동": "😭", 
-  "감동임": "😭",
-  "감동적임": "😭",
-  "긴장됨": "😬",
-  "생각남": "🤔",
-  "피곤함": "😪",
-};
+
 // UI 타입
 type UiMovie = {
   id: string | number;
@@ -100,7 +83,24 @@ const FEELING_TO_GENRES: Record<string, string[]> = {
   "심심하다": ["코미디", "애니메이션", "모험", "가족"],
 };
 
-
+const FEELING_ICONS: Record<string, string> = {
+  "편안함": "🛋️",
+  "흥분됨": "⚡",
+  "슬픔": "😢",
+  "기쁨": "😄",
+  "설렘": "💖",
+  "짜릿함": "🥳",
+  "즐거움": "🎉",
+  "화남": "😡",
+  "심심함": "😴",
+  "놀람": "😱",
+  "감동": "😭", 
+  "감동임": "😭",
+  "감동적임": "😭",
+  "긴장됨": "😬",
+  "생각남": "🤔",
+  "피곤함": "😪",
+};
 
 const genreMap: Record<number, string> = {
   28: "액션", 12: "모험", 16: "애니메이션", 35: "코미디",
@@ -220,16 +220,20 @@ const [randomMovies, setRandomMovies] = useState<UiMovie[]>([]);
           params: { count: 40 },
         });
         const movies: UiMovie[] = res.data.map((m: any) => ({
-          id: m.movieIdx,
-          title: m.title ?? "제목 없음",
-          poster: m.posterPath  ?? "",
-          backdropPath: m.backdropPath ?? "",
-          year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-          genres: m.genres?.length ? m.genres : ["기타"],
-          rating: m.voteAverage ?? 0,
-          description: m.overview ?? "",
-          releaseDate: m.releaseDate ?? null,
-        }));
+  id: m.movieIdx,
+  title: m.title ?? "제목 없음",
+  poster: m.posterPath ?? "",
+  backdropPath: m.backdropPath ?? "",
+  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+  genres: m.genres?.length
+    ? m.genres
+    : m.genre_ids?.length
+      ? m.genre_ids.map((id: number) => genreMap[id] ?? "기타")
+      : ["기타"],
+  rating: m.voteAverage ?? 0,
+  description: m.overview ?? "",
+  releaseDate: m.releaseDate ?? null,
+}));
         setPopular40(movies);
         setWeeklyTop10(movies.slice(0, 10));
 
@@ -258,6 +262,7 @@ const [randomMovies, setRandomMovies] = useState<UiMovie[]>([]);
     };
     fetchPopular();
   }, [token]);
+  
 const byPopularity = (a: UiMovie, b: UiMovie) => {
   const ap = a.popularity ?? a.voteCount ?? a.rating ?? 0;
   const bp = b.popularity ?? b.voteCount ?? b.rating ?? 0;
@@ -296,17 +301,21 @@ const byPopularity = (a: UiMovie, b: UiMovie) => {
       params: { feelingType: feeling, count: 10 },
     });
 
-    const movies: UiMovie[] = (res.data || []).map((m: any) => ({
-      id: m.movieIdx,
-      title: m.title ?? "제목 없음",
-      poster: m.posterPath ?? "",
-      backdropPath: m.backdropPath ?? "",
-      year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-      genres: m.genres?.length ? m.genres : ["기타"],
-      rating: m.voteAverage ?? 0,
-      description: m.overview ?? "",
-      releaseDate: m.releaseDate ?? null,
-    }));
+   const movies: UiMovie[] = res.data.map((m: any) => ({
+  id: m.movieIdx,
+  title: m.title ?? "제목 없음",
+  poster: m.posterPath ?? "",
+  backdropPath: m.backdropPath ?? "",
+  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+  genres: m.genres?.length
+    ? m.genres
+    : m.genre_ids?.length
+      ? m.genre_ids.map((id: number) => genreMap[id] ?? "기타")
+      : ["기타"],
+  rating: m.voteAverage ?? 0,
+  description: m.overview ?? "",
+  releaseDate: m.releaseDate ?? null,
+}));
 
     if (movies.length > 0) {
       setFeelingMovies(movies.slice(0, 10));
@@ -373,15 +382,20 @@ const toUiMovie = (m: any): UiMovie => ({
           params: { count: 40 },
         });
         const movies: UiMovie[] = res.data.map((m: any) => ({
-          id: m.movieIdx,
-          title: m.title ?? "제목 없음",
-          poster: m.posterPath ?? "",
-          year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
-          genres: m.genres?.length ? m.genres : ["기타"],
-          rating: m.voteAverage ?? 0,
-          description: m.overview ?? "",
-          releaseDate: m.releaseDate ?? null,
-        }));
+  id: m.movieIdx,
+  title: m.title ?? "제목 없음",
+  poster: m.posterPath ?? "",
+  backdropPath: m.backdropPath ?? "",
+  year: m.releaseDate ? Number(String(m.releaseDate).slice(0, 4)) : 0,
+  genres: m.genres?.length
+    ? m.genres
+    : m.genre_ids?.length
+      ? m.genre_ids.map((id: number) => genreMap[id] ?? "기타")
+      : ["기타"],
+  rating: m.voteAverage ?? 0,
+  description: m.overview ?? "",
+  releaseDate: m.releaseDate ?? null,
+}));
         setOldPopular([...movies].sort(() => Math.random() - 0.5).slice(0, 10));
       } catch (error) {
         console.error("추억의 영화 로딩 실패:", error);

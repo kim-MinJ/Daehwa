@@ -1,4 +1,5 @@
 package org.iclass.backend.service;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class MovieVoteService {
 
-     private final MovieVoteRepository movieVoteRepository;
+        private final MovieVoteRepository movieVoteRepository;
         private final MovieInfoRepository movieInfoRepository;
         private final UsersRepository usersRepository;
         private final MovieVSRepository movieVsRepository;
@@ -82,120 +83,122 @@ public class MovieVoteService {
 
                 return MovieVoteDto.of(saved);
         }
-    /**
-     * ✅ 특정 영화의 총 투표 수 (DB 집계 기준)
-     */
-    public long getVoteCount(Long movieId) {
-        MovieInfoEntity movie = movieInfoRepository.findById(movieId)
-                .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
-        return movieVoteRepository.countByMovie_TmdbMovieId(movie.getTmdbMovieId());
-    }
 
-    /**
-     * ✅ 이번 주 영화별 투표 집계 (tmdbMovieId 기준)
-     */
-    public Map<Long, Long> getWeeklyVoteCounts() {
-        LocalDate today = LocalDate.now();
-        LocalDate start = today.with(java.time.DayOfWeek.MONDAY);
-        LocalDate end = today.with(java.time.DayOfWeek.SUNDAY);
-
-        LocalDateTime startOfWeek = start.atStartOfDay();
-        LocalDateTime endOfWeek = end.atTime(LocalTime.MAX);
-
-        List<Object[]> results = movieVoteRepository.countVotesThisWeek(startOfWeek, endOfWeek);
-
-        return results.stream()
-                .collect(Collectors.toMap(
-                        r -> (Long) r[0], // tmdbMovieId
-                        r -> (Long) r[1]  // 투표 수
-                ));
-    }
-
-    /**
-     * ✅ VS 모드 결과 조회 (특정 VS에 대해 영화별 집계)
-     */
-    public Map<Long, Long> getVoteResult(Long vsId) {
-        MovieVsEntity vs = movieVsRepository.findById(vsId)
-                .orElseThrow(() -> new RuntimeException("VS not found"));
-
-        var votes = movieVoteRepository.findByMovieVS(vs);
-
-        Map<Long, Long> result = new HashMap<>();
-        for (MovieVoteEntity vote : votes) {
-            Long movieId = vote.getMovie().getMovieIdx();
-            result.put(movieId, result.getOrDefault(movieId, 0L) + 1);
+        /**
+         * ✅ 특정 영화의 총 투표 수 (DB 집계 기준)
+         */
+        public long getVoteCount(Long movieId) {
+                MovieInfoEntity movie = movieInfoRepository.findById(movieId)
+                                .orElseThrow(() -> new IllegalArgumentException("영화 없음: " + movieId));
+                return movieVoteRepository.countByMovie_TmdbMovieId(movie.getTmdbMovieId());
         }
-        return result;
-    }
 
-    /**
-     * ✅ 유저별 VS 투표 히스토리 조회 (RankingPage UI용)
-     */
-    public List<VsBattleDto> getVoteHistory(String userId) {
-    UsersEntity user = usersRepository.findByUserId(userId)
-            .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
+        /**
+         * ✅ 이번 주 영화별 투표 집계 (tmdbMovieId 기준)
+         */
+        public Map<Long, Long> getWeeklyVoteCounts() {
+                LocalDate today = LocalDate.now();
+                LocalDate start = today.with(java.time.DayOfWeek.MONDAY);
+                LocalDate end = today.with(java.time.DayOfWeek.SUNDAY);
 
-    List<MovieVoteEntity> votes = movieVoteRepository.findByUser(user);
+                LocalDateTime startOfWeek = start.atStartOfDay();
+                LocalDateTime endOfWeek = end.atTime(LocalTime.MAX);
 
-    return votes.stream().map(v -> {
-        MovieVsEntity vs = v.getMovieVS();
-        if (vs == null) return null; // 단일 투표 모드면 제외
+                List<Object[]> results = movieVoteRepository.countVotesThisWeek(startOfWeek, endOfWeek);
 
-        // 영화 정보
-        MovieInfoEntity movie1 = vs.getMovieVs1();
-        MovieInfoEntity movie2 = vs.getMovieVs2();
+                return results.stream()
+                                .collect(Collectors.toMap(
+                                                r -> (Long) r[0], // tmdbMovieId
+                                                r -> (Long) r[1] // 투표 수
+                                ));
+        }
 
-        // 투표 수 집계
-        long movie1Votes = movieVoteRepository.countByMovieVSAndMovie(vs, movie1);
-        long movie2Votes = movieVoteRepository.countByMovieVSAndMovie(vs, movie2);
-        long totalVotes = movie1Votes + movie2Votes;
+        /**
+         * ✅ VS 모드 결과 조회 (특정 VS에 대해 영화별 집계)
+         */
+        public Map<Long, Long> getVoteResult(Long vsId) {
+                MovieVsEntity vs = movieVsRepository.findById(vsId)
+                                .orElseThrow(() -> new RuntimeException("VS not found"));
 
-        int movie1Percentage = totalVotes > 0 ? (int)((movie1Votes * 100.0) / totalVotes) : 0;
-        int movie2Percentage = totalVotes > 0 ? 100 - movie1Percentage : 0;
+                var votes = movieVoteRepository.findByMovieVS(vs);
 
-        // startDate 기준 "n일 전"
-       // startDate 기준 "n일 전"
-        Date startDate = vs.getStartDate();
-        LocalDate vsStartDate = startDate.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+                Map<Long, Long> result = new HashMap<>();
+                for (MovieVoteEntity vote : votes) {
+                        Long movieId = vote.getMovie().getMovieIdx();
+                        result.put(movieId, result.getOrDefault(movieId, 0L) + 1);
+                }
+                return result;
+        }
 
-        long days = ChronoUnit.DAYS.between(vsStartDate, LocalDate.now());
-        String daysAgo = days == 0 ? "오늘" : days + "일 전";
+        /**
+         * ✅ 유저별 VS 투표 히스토리 조회 (RankingPage UI용)
+         */
+        public List<VsBattleDto> getVoteHistory(String userId) {
+                UsersEntity user = usersRepository.findByUserId(userId)
+                                .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
 
-        return VsBattleDto.builder()
-                .vsIdx(vs.getVsIdx())
-                .daysAgo(daysAgo)   // ✅ 문자열
-                .totalVotes(totalVotes)
+                List<MovieVoteEntity> votes = movieVoteRepository.findByUser(user);
 
-                .movie1Id(movie1.getMovieIdx())
-                .movie1Title(movie1.getTitle())
-                .movie1Poster(movie1.getPosterPath())
-                .movie1Director("알 수 없음")
-                .movie1Rating(movie1.getVoteAverage())
-                .movie1Votes(movie1Votes)
-                .movie1Percentage(movie1Percentage)
+                return votes.stream().map(v -> {
+                        MovieVsEntity vs = v.getMovieVS();
+                        if (vs == null)
+                                return null; // 단일 투표 모드면 제외
 
-                .movie2Id(movie2.getMovieIdx())
-                .movie2Title(movie2.getTitle())
-                .movie2Poster(movie2.getPosterPath())
-                .movie2Director("알 수 없음")
-                .movie2Rating(movie2.getVoteAverage())
-                .movie2Votes(movie2Votes)
-                .movie2Percentage(movie2Percentage)
+                        // 영화 정보
+                        MovieInfoEntity movie1 = vs.getMovieVs1();
+                        MovieInfoEntity movie2 = vs.getMovieVs2();
 
-                .isMovie1Winner(movie1Votes > movie2Votes)
-                .votedMovieId(v.getMovie().getMovieIdx()) // ✅ 이 유저가 실제 찍은 영화
-                .build();
-    }).filter(Objects::nonNull).toList();
-}
+                        // 투표 수 집계
+                        long movie1Votes = movieVoteRepository.countByMovieVSAndMovie(vs, movie1);
+                        long movie2Votes = movieVoteRepository.countByMovieVSAndMovie(vs, movie2);
+                        long totalVotes = movie1Votes + movie2Votes;
 
-    // ✅ DTO 변환 (단일)
-    private MovieVoteDto toDto(MovieVoteEntity entity) {
-        return MovieVoteDto.builder()
-                .voteIdx(entity.getVoteIdx())
-                .movieIdx(entity.getMovie().getMovieIdx())
-                .userId(entity.getUser().getUserId())
-                .build();
-    }
+                        int movie1Percentage = totalVotes > 0 ? (int) ((movie1Votes * 100.0) / totalVotes) : 0;
+                        int movie2Percentage = totalVotes > 0 ? 100 - movie1Percentage : 0;
+
+                        // startDate 기준 "n일 전"
+                        // startDate 기준 "n일 전"
+                        Date startDate = vs.getStartDate();
+                        LocalDate vsStartDate = startDate.toInstant()
+                                        .atZone(ZoneId.systemDefault())
+                                        .toLocalDate();
+
+                        long days = ChronoUnit.DAYS.between(vsStartDate, LocalDate.now());
+                        String daysAgo = days == 0 ? "오늘" : days + "일 전";
+
+                        return VsBattleDto.builder()
+                                        .vsIdx(vs.getVsIdx())
+                                        .daysAgo(daysAgo) // ✅ 문자열
+                                        .totalVotes(totalVotes)
+
+                                        .movie1Id(movie1.getMovieIdx())
+                                        .movie1Title(movie1.getTitle())
+                                        .movie1Poster(movie1.getPosterPath())
+                                        .movie1Director("알 수 없음")
+                                        .movie1Rating(movie1.getVoteAverage())
+                                        .movie1Votes(movie1Votes)
+                                        .movie1Percentage(movie1Percentage)
+
+                                        .movie2Id(movie2.getMovieIdx())
+                                        .movie2Title(movie2.getTitle())
+                                        .movie2Poster(movie2.getPosterPath())
+                                        .movie2Director("알 수 없음")
+                                        .movie2Rating(movie2.getVoteAverage())
+                                        .movie2Votes(movie2Votes)
+                                        .movie2Percentage(movie2Percentage)
+
+                                        .isMovie1Winner(movie1Votes > movie2Votes)
+                                        .votedMovieId(v.getMovie().getMovieIdx()) // ✅ 이 유저가 실제 찍은 영화
+                                        .build();
+                }).filter(Objects::nonNull).toList();
+        }
+
+        // ✅ DTO 변환 (단일)
+        private MovieVoteDto toDto(MovieVoteEntity entity) {
+                return MovieVoteDto.builder()
+                                .voteIdx(entity.getVoteIdx())
+                                .movieIdx(entity.getMovie().getMovieIdx())
+                                .userId(entity.getUser().getUserId())
+                                .build();
+        }
 }
