@@ -1,17 +1,14 @@
 package org.iclass.backend.service;
 
-import lombok.RequiredArgsConstructor;
-import org.iclass.backend.dto.FeelingGenreDto;
-import org.iclass.backend.dto.FeelingMovieDto;
-import org.iclass.backend.entity.FeelingGenreEntity;
-import org.iclass.backend.entity.MovieInfoEntity;
-import org.iclass.backend.repository.FeelingGenreRepository;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.iclass.backend.dto.FeelingMovieDto;
+import org.iclass.backend.entity.MovieInfoEntity;
+import org.iclass.backend.repository.FeelingGenreRepository;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +22,12 @@ public class FeelingGenreService {
         feelingType,
         10);
     return movies.stream()
-        .map(FeelingMovieDto::fromEntity)
-        .toList();
+        .collect(Collectors.toMap(
+            MovieInfoEntity::getMovieIdx,  // key
+            FeelingMovieDto::fromEntity,   // value
+            (a, b) -> a                    // 충돌 시 첫 번째
+        ))
+        .values().stream().toList();
   }
 
   public List<String> getAllFeelings() {

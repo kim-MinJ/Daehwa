@@ -11,9 +11,11 @@ import LoginPage from "./pages/LoginPage";
 import  MyPage from "./pages/MyPage";
 import ChatBot from "./components/ChatBot";
 import DetailReviewPage from "./pages/DetailReviewPage";
+import { FeelingProvider } from "./context/FeelingContext";
 
 export default function App() {
   return (
+  <FeelingProvider>
     <BrowserRouter>
       <div className="min-h-screen bg-white">
         <Header />
@@ -34,6 +36,7 @@ export default function App() {
         <ChatBot></ChatBot>
       </div>
     </BrowserRouter>
+  </FeelingProvider>
   );
 }
 

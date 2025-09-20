@@ -29,3 +29,4 @@ export interface TrendingMovie extends Movie {
   trendRank: number;
   trendChange: 'up' | 'down' | 'new' | 'same';
 }
+
