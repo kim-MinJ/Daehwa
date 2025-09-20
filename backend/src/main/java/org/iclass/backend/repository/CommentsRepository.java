@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.iclass.backend.entity.CommentsEntity;
 import org.iclass.backend.entity.ReviewEntity;
+import org.iclass.backend.entity.UsersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,8 @@ public interface CommentsRepository extends JpaRepository<CommentsEntity, Long> 
   List<CommentsEntity> findByReview(ReviewEntity review);
 
   List<CommentsEntity> findByReviewReviewIdx(Long reviewIdx);
+
+  List<CommentsEntity> findByUser(UsersEntity user);
+
+  void deleteAllByReview(ReviewEntity review);
 }

@@ -66,20 +66,11 @@ public class UsersController {
     return ResponseEntity.ok(user);
   }
 
-  // --- 마이페이지 데이터 ---
-  @GetMapping("/mypage")
-  public ResponseEntity<?> myPage(HttpServletRequest request) {
-    UsersDto user = usersService.getUserFromToken(request);
-    if (user == null)
-      return ResponseEntity.status(401).body("로그인 필요");
-    return ResponseEntity.ok(usersService.getMyPageData(user.getUserId()));
-  }
-
-  // --- 메인페이지 데이터 ---
-  @GetMapping("/main")
-  public ResponseEntity<?> mainPage() {
-    return ResponseEntity.ok(usersService.getMainPageData());
-  }
+  // // --- 메인페이지 데이터 ---
+  // @GetMapping("/main")
+  // public ResponseEntity<?> mainPage() {
+  //   return ResponseEntity.ok(usersService.getMainPageData());
+  // }
 
   // --- 비밀번호 변경 ---
   @PutMapping("/password")
@@ -120,6 +111,18 @@ public class UsersController {
     return ResponseEntity.ok(result);
   }
 
+  // --- 본인 계정 삭제 (하드 삭제)
+  @DeleteMapping("/me")
+  public ResponseEntity<?> deleteOwnAccount(HttpServletRequest request) {
+    UsersDto currentUser = usersService.getUserFromToken(request);
+    if (currentUser == null) {
+      return ResponseEntity.status(401).body("로그인 필요");
+    }
+
+    usersService.hardDeleteUser(currentUser.getUserId());
+    return ResponseEntity.ok("계정이 완전히 삭제되었습니다.");
+  }
+
   // --- DTO 클래스 (컨트롤러 내부) ---
   public static class PasswordChangeRequest {
     private String currentPassword;
@@ -141,4 +144,5 @@ public class UsersController {
       this.newPassword = newPassword;
     }
   }
+
 }

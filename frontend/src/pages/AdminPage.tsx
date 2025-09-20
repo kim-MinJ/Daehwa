@@ -1,7 +1,7 @@
 // src/pages/AdminPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, MessageSquare, MessageCircle } from "lucide-react";
+import { Users, MessageSquare, MessageCircle, CheckSquare } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { User, Review, Comment, Vote, Movie } from "../components/adminPage/types";
 import AdminUsersTab from "../components/adminPage/AdminUsersTab";
@@ -137,29 +137,7 @@ export default function AdminPage() {
     })();
   }, [token]);
 
-  // Votes API 호출
-// useEffect(() => {
-//   if (!token) return;
-//   (async () => {
-//     try {
-//       const res = await api.get("/votes", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       const formattedVotes: Vote[] = res.data.map((v: any) => ({
-//         id: v.id,
-//         movieTitle: v.movieTitle,
-//         voter: v.voter,
-//         voteCount: v.voteCount,
-//         status: v.status === 0 ? "active" : "inactive",
-//       }));
-//       setVotes(formattedVotes);
-//     } catch (err) {
-//       console.error(err);
-//       alert("투표 목록을 가져오는 데 실패했습니다.");
-//     }
-//   })();
-// }, [token]);
-
+ 
 
 
 // Votes API 호출
@@ -174,15 +152,16 @@ useEffect(() => {
 
       // API 데이터 → Vote 타입으로 변환
       const formattedVotes: Vote[] = res.data.map((v: any) => ({
-        id: String(v.voteIdx), // vsIdx 기준
-        movieTitle: `${v.movie1Title} vs ${v.movie2Title}`,
-        voter: "-", // 현재 API에 투표자 정보 없으면 "-" 처리
-        voteCount: v.voteCount ?? 0, // voteCount 없으면 0 처리
-        status: v.active ? "active" : "inactive",
-        posterPath: v.movie1Poster, // 선택적으로 첫 번째 영화 포스터
-        rating: v.movie1Rating, // 선택적으로 첫 번째 영화 평점
-        year: v.movie1Year, // 선택적으로 첫 번째 영화 년도
-      }));
+  id: String(v.voteIdx),
+  movieTitle: `${v.movie1Title} vs ${v.movie2Title}`,
+  voter: v.voterName ?? "-",
+  voteCount: v.voteCount ?? 0,
+  status: v.active ? "active" : "inactive",
+  posterPath: v.movie1Poster ?? "/fallback.png",
+  rating: v.movie1Rating ?? 0,
+  year: v.movie1Year ?? "-",
+}));
+
 
       setVotes(formattedVotes);
     } catch (err) {
@@ -236,12 +215,15 @@ useEffect(() => {
   };
 
   // Comment 내용 변경
-  const updateCommentContent = async (commentIdx: number, content: string) => {
+const updateCommentContent = async (commentIdx: number, content: string) => {
   if (!token) return;
   try {
-    await api.put(`/review/${commentIdx}`, { content }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    // URL을 백엔드 컨트롤러에 맞춤
+    await api.put(`/review/comments/${commentIdx}`, { content }, {
+  headers: { Authorization: `Bearer ${token}` }
+});
+    
+    // 상태 갱신
     setComments(prev => prev.map(c => c.commentIdx === commentIdx ? { ...c, content } : c));
   } catch (err) {
     console.error(err);
@@ -253,45 +235,13 @@ useEffect(() => {
   const deleteComment = async (commentIdx: number) => {
     if (!token) return;
     try {
-      await api.delete(`/comments/${commentIdx}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/review/comments/${commentIdx}`, { headers: { Authorization: `Bearer ${token}` } });
       setComments(prev => prev.filter(c => c.commentIdx !== commentIdx));
     } catch (err) {
       console.error(err);
       alert("댓글 삭제 실패");
     }
   };
-
-  // Vote 삭제
-  const deleteVote = async (id: string) => {
-  if (!token) return;
-  try {
-    await api.delete(`/votes/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setVotes(prev => prev.filter(v => v.id !== id));
-  } catch (err) {
-    console.error(err);
-    alert("투표 삭제 실패");
-  }
-};
-
-  const updateVoteStatus = async (id: string, status: "active" | "inactive") => {
-  if (!token) return;
-  try {
-    const statusNum = status === "active" ? 0 : 1;
-    await api.patch(`/votes/${id}/status`, { status: statusNum }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setVotes(prev =>
-      prev.map(v => (v.id === id ? { ...v, status } : v))
-    );
-  } catch (err) {
-    console.error(err);
-    alert("투표 상태 변경 실패");
-  }
-};
-
-  
 
   if (loading) return <p>로딩 중...</p>;
 
@@ -327,14 +277,16 @@ useEffect(() => {
           </Card>
           {/* 총 투표 수 */}
   <Card onClick={() => setActiveTab("votes")} className="p-6 shadow-md rounded-lg flex flex-col items-center justify-center cursor-pointer hover:shadow-xl transition">
-    <MessageCircle className="h-8 w-8 text-yellow-600 mb-2" />
+    <CheckSquare className="h-8 w-8 text-yellow-600 mb-2" />
     <h2 className="text-lg font-medium text-gray-700">총 투표 수</h2>
     <p className="text-3xl font-bold text-gray-900">{votes.length}</p>
   </Card>
         </div>
 
-        {/* 검색바 */}
-        <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        {/* 검색바 (votes 탭일 땐 숨김) */}
+{activeTab !== "votes" && (
+  <AdminSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+)}
 
         {/* 탭 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -375,7 +327,10 @@ useEffect(() => {
   />
 </TabsContent>
 <TabsContent value="votes">
-  <AdminVotesTab token={token!} />
+  <AdminVotesTab
+    token={token!}
+    onVotesChange={(updatedVotes) => setVotes(updatedVotes)} // ✅ 상위 상태 즉시 반영
+  />
 </TabsContent>
 
         </Tabs>
