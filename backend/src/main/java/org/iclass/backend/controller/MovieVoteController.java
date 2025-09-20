@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/vote")
+@RequestMapping("/api/vote")
 @RequiredArgsConstructor
 public class MovieVoteController {
 
