@@ -16,75 +16,84 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MovieVoteRepository extends JpaRepository<MovieVoteEntity, Long> {
 
-        // ✅ [VS 기반] 특정 VS + 유저로 투표 여부 조회
-        Optional<MovieVoteEntity> findByMovieVSAndUser(MovieVsEntity vs, UsersEntity user);
+    // ✅ [VS 기반] 특정 VS + 유저로 투표 여부 조회
+    Optional<MovieVoteEntity> findByMovieVSAndUser(MovieVsEntity vs, UsersEntity user);
 
-        // ✅ [VS 기반] 특정 VS에 속한 모든 투표 조회
-        List<MovieVoteEntity> findByMovieVS(MovieVsEntity vs);
+    // ✅ [VS 기반] 특정 VS에 속한 모든 투표 조회
+    List<MovieVoteEntity> findByMovieVS(MovieVsEntity vs);
 
-        // ✅ [단일 영화] 단일 영화 + 유저 기준으로 투표 여부 조회
-        Optional<MovieVoteEntity> findByMovieAndUser(MovieInfoEntity movie, UsersEntity user);
+    // ✅ [단일 영화] 단일 영화 + 유저 기준으로 투표 여부 조회
+    Optional<MovieVoteEntity> findByMovieAndUser(MovieInfoEntity movie, UsersEntity user);
 
-        // ✅ [단일 영화] 단일 영화 + 유저 + 오늘 날짜 기준으로 투표 여부 조회 (중복 방지)
-        @Query("SELECT v FROM MovieVoteEntity v " +
-                        "WHERE v.movie = :movie " +
-                        "AND v.user = :user " +
-                        "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
-        Optional<MovieVoteEntity> findTodayVote(
-                        @Param("movie") MovieInfoEntity movie,
-                        @Param("user") UsersEntity user,
-                        @Param("startOfDay") LocalDateTime startOfDay,
-                        @Param("endOfDay") LocalDateTime endOfDay);
+    // ✅ [단일 영화] 단일 영화 + 유저 + 오늘 날짜 기준으로 투표 여부 조회 (중복 방지)
+    @Query("SELECT v FROM MovieVoteEntity v " +
+           "WHERE v.movie = :movie " +
+           "AND v.user = :user " +
+           "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
+    Optional<MovieVoteEntity> findTodayVote(
+            @Param("movie") MovieInfoEntity movie,
+            @Param("user") UsersEntity user,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay);
 
-        // ✅ TMDB ID 기준 전체 투표 수
-        long countByMovie_TmdbMovieId(Long tmdbMovieId);
+    // ✅ TMDB ID 기준 전체 투표 수
+    long countByMovie_TmdbMovieId(Long tmdbMovieId);
 
-        // ✅ 특정 영화 기준 전체 투표 수
-        long countByMovie(MovieInfoEntity movie);
+    // ✅ 특정 영화 기준 전체 투표 수
+    long countByMovie(MovieInfoEntity movie);
 
-        // ✅ 이번 주 투표 수 집계 (월요일 ~ 일요일)
-        @Query("SELECT v.movie.tmdbMovieId, COUNT(v) " +
-                        "FROM MovieVoteEntity v " +
-                        "WHERE v.vsDate BETWEEN :startOfWeek AND :endOfWeek " +
-                        "GROUP BY v.movie.tmdbMovieId")
-        List<Object[]> countVotesThisWeek(
-                        @Param("startOfWeek") LocalDateTime startOfWeek,
-                        @Param("endOfWeek") LocalDateTime endOfWeek);
+    // ✅ 이번 주 투표 수 집계 (월요일 ~ 일요일)
+    @Query("SELECT v.movie.tmdbMovieId, COUNT(v) " +
+           "FROM MovieVoteEntity v " +
+           "WHERE v.vsDate BETWEEN :startOfWeek AND :endOfWeek " +
+           "GROUP BY v.movie.tmdbMovieId")
+    List<Object[]> countVotesThisWeek(
+            @Param("startOfWeek") LocalDateTime startOfWeek,
+            @Param("endOfWeek") LocalDateTime endOfWeek);
 
+    // ✅ 특정 유저가 참여한 모든 VS 투표 조회 (fetch join + 정렬)
+    @Query("SELECT v FROM MovieVoteEntity v " +
+           "JOIN FETCH v.movieVS vs " +
+           "JOIN FETCH v.movie m " +
+           "WHERE v.user = :user " +
+           "ORDER BY vs.startDate DESC")
+    List<MovieVoteEntity> findAllByUser(@Param("user") UsersEntity user);
 
-                // ✅ 특정 유저가 참여한 모든 VS 투표 조회
-        @Query("SELECT v FROM MovieVoteEntity v " +
-        "JOIN FETCH v.movieVS vs " +
-        "JOIN FETCH v.movie m " +
-        "WHERE v.user = :user " +
-        "ORDER BY vs.startDate DESC")
-        List<MovieVoteEntity> findAllByUser(@Param("user") UsersEntity user);
+    // ✅ userId 문자열 기반으로 바로 조회 (fetch join + 정렬)
+    @Query("SELECT v FROM MovieVoteEntity v " +
+           "JOIN FETCH v.movieVS vs " +
+           "JOIN FETCH v.movie m " +
+           "WHERE v.user.userId = :userId " +
+           "ORDER BY vs.startDate DESC")
+    List<MovieVoteEntity> findAllByUserId(@Param("userId") String userId);
 
-        // ✅ userId 문자열 기반으로 바로 조회하고 싶으면 ↓
-        @Query("SELECT v FROM MovieVoteEntity v " +
-        "JOIN FETCH v.movieVS vs " +
-        "JOIN FETCH v.movie m " +
-        "WHERE v.user.userId = :userId " +
-        "ORDER BY vs.startDate DESC")
-        List<MovieVoteEntity> findAllByUserId(@Param("userId") String userId);
+    // ✅ [VS 단위] 특정 VS + 유저 + 오늘 기준 투표 여부 조회
+    @Query("SELECT v FROM MovieVoteEntity v " +
+           "WHERE v.movieVS = :vs " +
+           "AND v.user = :user " +
+           "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
+    Optional<MovieVoteEntity> findTodayVoteByVS(
+            @Param("vs") MovieVsEntity vs,
+            @Param("user") UsersEntity user,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay);
 
-        // ✅ [VS 단위] 특정 VS + 유저 + 오늘 기준 투표 여부 조회
-        @Query("SELECT v FROM MovieVoteEntity v " +
-                        "WHERE v.movieVS = :vs " +
-                        "AND v.user = :user " +
-                        "AND v.vsDate BETWEEN :startOfDay AND :endOfDay")
-        Optional<MovieVoteEntity> findTodayVoteByVS(
-                        @Param("vs") MovieVsEntity vs,
-                        @Param("user") UsersEntity user,
-                        @Param("startOfDay") LocalDateTime startOfDay,
-                        @Param("endOfDay") LocalDateTime endOfDay);
+    // ✅ [VS 단위] 오늘 투표 여부 (round/pair 기준)
+    @Query("SELECT v FROM MovieVoteEntity v " +
+           "WHERE v.user = :user " +
+           "AND v.movieVS.vsRound = :round " +
+           "AND v.movieVS.pair = :pair " +
+           "AND v.vsDate BETWEEN :start AND :end")
+    Optional<MovieVoteEntity> findTodayVoteByRoundAndPair(
+            @Param("round") Integer round,
+            @Param("pair") Integer pair,
+            @Param("user") UsersEntity user,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
 
-        // MovieVoteRepository.java
-        @Query("SELECT v FROM MovieVoteEntity v WHERE v.user = :user AND v.movieVS.vsRound = :round AND v.movieVS.pair = :pair AND v.vsDate BETWEEN :start AND :end")
-        Optional<MovieVoteEntity> findTodayVoteByRoundAndPair(@Param("round") Integer round,
-                        @Param("pair") Integer pair,
-                        @Param("user") UsersEntity user,
-                        @Param("start") LocalDateTime start,
-                        @Param("end") LocalDateTime end);
+    // ✅ [추가] VS별 특정 영화 득표 수 (Service에서 사용)
+    long countByMovieVSAndMovie(MovieVsEntity movieVS, MovieInfoEntity movie);
 
+    // (선택) 간단 버전도 유지 가능
+    List<MovieVoteEntity> findByUser(UsersEntity user);
 }
