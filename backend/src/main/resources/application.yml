@@ -27,6 +27,7 @@ jwt:
   expiration: 3600000 # 1 hour in milliseconds
   #깃 저장용
 openai:
-  api: 
+  api:
+    key: ${OPENAI_API_KEY}
     # 이거 파워쉘로 환경변수 따로 넣어줌 윈도우환경변수넣는거 안되더라...
     
