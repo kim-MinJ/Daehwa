@@ -16,9 +16,10 @@ BEGIN
         SELECT table_name
         FROM user_tables
         WHERE table_name IN (
+            'CHAT_MESSAGES',
             'ARTICLES','BOOKMARK','COMMENTS','MOVIE_INFO','REVIEW',
             'NOTICE','GENRES','MOVIE_CAST','MOVIE_CREW','MOVIE_GENRES',
-            'MOVIE_VS','MOVIE_VOTE','RANKING','VIDEOS','SOUND_TRACK','USERS', 'CHAT_MESSAGE'
+            'MOVIE_VS','MOVIE_VOTE','RANKING','VIDEOS','SOUND_TRACK','USERS', 'FEELING_GENRES'
         )
     ) LOOP
         EXECUTE IMMEDIATE 'DROP TABLE ' || t.table_name || ' CASCADE CONSTRAINTS';
