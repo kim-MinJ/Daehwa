@@ -40,7 +40,7 @@ public class MovieInfoSave {
     private final String API_KEY = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxOWM5MGIzZDgzYzNlZTBjZmU5Y2ZiOTljYTA4ZjQyZSIsIm5iZiI6MTc1NjY4OTUxNi43ODcwMDAyLCJzdWIiOiI2OGI0ZjQ2Yzg0YWY0MWZiMTMyMDBiNTciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.av3Qh2B2Nkmv545z0YFIJpki3_6AeD_zhslr72_Xhp4"; // 실제
                                                                                                                                                                                                                                                                                                   // 키로
                                                                                                                                                                                                                                                                                                   // 교체
-    private final int TOTAL_PAGE = 100; // 224
+    private final int TOTAL_PAGE = 265; // 224
 
     private static final Map<String, String[]> genreToFeelingMap = Map.ofEntries(
             entry("액션", new String[] { "화남", "긴장됨", "놀람", "짜릿함", "흥분됨" }),
