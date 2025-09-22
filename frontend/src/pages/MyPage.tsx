@@ -367,7 +367,7 @@ interface Comment {
                       <Card
                         key={movie.movieIdx}
                         className="cursor-pointer"
-                        onClick={() => navigate(`/movies/${movie.movieIdx}`)}
+                        onClick={() => navigate(`/movie/${movie.movieIdx}`)}
                       >
                         <img
                           src={movie.posterPath ? `${TMDB_BASE_URL}${movie.posterPath}` : "/default.jpg"}
@@ -408,7 +408,7 @@ interface Comment {
                       <Card
                         key={b.bookmarkIdx}
                         className="cursor-pointer"
-                        onClick={() => navigate(`/movies/${b.movieIdx}`)}
+                        onClick={() => navigate(`/movie/${b.movieIdx}`)}
                       >
                         <img
                           src={b.posterPath ? `${TMDB_BASE_URL}${b.posterPath}` : "/default.jpg"}
@@ -462,7 +462,7 @@ interface Comment {
                         <Button
     size="sm"
     variant="outline"
-    onClick={() => navigate(`/movies/${r.movieIdx}/review#review-${r.reviewIdx}`)}
+    onClick={() => navigate(`/movie/${r.movieIdx}/review#review-${r.reviewIdx}`)}
   >
     리뷰 보러가기
   </Button>
@@ -505,7 +505,7 @@ interface Comment {
       // 리뷰 탭 열고 해당 댓글로 스크롤
       const review = reviews.find(r => r.reviewIdx === c.reviewIdx);
       const movieIdx = review?.movieIdx;
-      navigate(`/movies/${movieIdx}/review#comment-${c.commentIdx}`);
+      navigate(`/movie/${movieIdx}/review#comment-${c.commentIdx}`);
     } catch (err) {
       console.error(err);
       alert("댓글을 불러오는 데 실패했습니다.");
