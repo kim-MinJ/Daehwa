@@ -565,6 +565,11 @@ ALTER TABLE Feeling_Genres
   ADD CONSTRAINT FK_Genres_TO_Feeling_Genres
     FOREIGN KEY (genreIdx)
     REFERENCES Genres (genre_idx);
+  
+ALTER TABLE Feeling_Genres
+  ADD CONSTRAINT FK_Movie_Info_TO_Feeling_Genres
+    FOREIGN KEY (movieIdx)
+    REFERENCES Movie_Info (movie_idx);
 
 
 -- ===========================

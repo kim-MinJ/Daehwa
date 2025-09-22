@@ -13,9 +13,8 @@ import lombok.*;
 public class FeelingGenreEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "feeling_genres_seq")
-  @SequenceGenerator(name = "feeling_genres_seq", sequenceName = "SEQ_Feeling_Genres", allocationSize = 1)
   @Column(name = "FEELINGGENREIDX")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long feelingGenreIdx;
 
   @Column(name = "FEELINGTYPE", nullable = false, length = 100)
