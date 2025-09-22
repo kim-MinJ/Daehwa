@@ -34,11 +34,20 @@ export default function AdminEditCommentModal({
 };
 
   const handleDelete = async () => {
-    if (editingComment && confirm("정말 이 댓글을 삭제하시겠습니까?")) {
-      await deleteComment(editingComment.commentIdx);
-      setEditingComment(null);
-    }
-  };
+  if (!editingComment) return;
+
+  const confirmed = window.confirm("정말 이 댓글을 삭제하시겠습니까?");
+  if (!confirmed) return;
+
+  try {
+    await deleteComment(editingComment.commentIdx);
+    alert("댓글을 삭제했습니다."); // 삭제 후 알림
+    setEditingComment(null);
+  } catch (err) {
+    console.error(err);
+    alert("댓글 삭제에 실패했습니다.");
+  }
+};
 
   if (!editingComment) return null;
 

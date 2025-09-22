@@ -1,19 +1,9 @@
 package org.iclass.backend.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import java.util.Date;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @Setter
@@ -30,6 +20,12 @@ public class MovieVsEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long vsIdx;
 
+  @Column(name = "VS_round", nullable = false)
+  private Integer vsRound;
+
+  @Column(name = "pair", nullable = false)
+  private Integer pair;
+
   @ManyToOne
   @JoinColumn(name = "movie_VS1", nullable = false)
   private MovieInfoEntity movieVs1;
@@ -38,7 +34,13 @@ public class MovieVsEntity {
   @JoinColumn(name = "movie_VS2", nullable = false)
   private MovieInfoEntity movieVs2;
 
-  @Column
+  @Column(name = "active", nullable = false)
   @Builder.Default
-  private Integer active = 0;
+  private Integer active = 0; // 0: 비활성, 1: 활성
+
+  @Column(name = "start_date", nullable = false)
+  private Date startDate;
+
+  @Column(name = "end_date")
+  private Date endDate;
 }

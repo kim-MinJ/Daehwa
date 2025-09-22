@@ -1,6 +1,6 @@
 // src/components/admin/AdminDashboardCards.tsx
 import { Card, CardContent } from '../ui/card';
-import { Users, MessageSquare, FileText, Bell } from 'lucide-react';
+import { Users, MessageSquare, FileText, CheckSquare } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface AdminDashboardCardsProps {
@@ -52,7 +52,7 @@ export default function AdminDashboardCards({
 
       <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('votes')}>
         <CardContent className="p-6 flex items-center">
-          <Bell className="h-8 w-8 text-orange-600" />
+          <CheckSquare className="h-8 w-8 text-orange-600" />
           <div className="ml-4">
             <p className="text-sm font-medium text-gray-600">총 투표 수</p>
             <p className="text-2xl font-bold text-gray-900">{votesCount}</p>

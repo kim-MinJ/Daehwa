@@ -30,11 +30,20 @@ export default function AdminEditReviewModal({
   };
 
   const handleDelete = async () => {
-    if (editingReview && confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
-      await deleteReview(editingReview.reviewIdx);
-      setEditingReview(null);
-    }
-  };
+  if (!editingReview) return;
+
+  const confirmed = window.confirm("정말 이 리뷰를 삭제하시겠습니까?");
+  if (!confirmed) return;
+
+  try {
+    await deleteReview(editingReview.reviewIdx);
+    alert("리뷰를 삭제했습니다."); // 삭제 성공 메시지
+    setEditingReview(null);
+  } catch (err) {
+    console.error(err);
+    alert("리뷰 삭제에 실패했습니다.");
+  }
+};
 
   if (!editingReview) return null;
 
