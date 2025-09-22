@@ -27,7 +27,7 @@ public class GenresSave {
 
     @Transactional
     public void fetchAndSaveGenres() throws Exception {
-        String url = "https://api.themoviedb.org/3/genre/movie/list?language=en";
+        String url = "https://api.themoviedb.org/3/genre/movie/list?language=ko-KR";
 
         Request request = new Request.Builder()
                 .url(url)
