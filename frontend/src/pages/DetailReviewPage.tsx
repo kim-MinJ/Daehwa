@@ -4,7 +4,7 @@ import { Star, Edit3, MoreHorizontal } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Textarea } from "../components/ui/textarea";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { ImageWithFallback } from "../components/imageFallback/ImageWithFallback";
 import axios from "axios";
 import {
   DropdownMenu,

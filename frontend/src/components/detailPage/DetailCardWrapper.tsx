@@ -7,9 +7,11 @@ import { DetailCard, DetailCardProps } from "./DetailCard";
 interface Props {
   movie: Movie;
   credits: Credits;
+  movieIdx?: number;      // ✅ 북마크/리뷰용 ID
+  token?: string | null;  // ✅ JWT 토큰
 }
 
-export function DetailCardWrapper({ movie, credits }: Props) {
+export function DetailCardWrapper({ movie, credits, movieIdx, token }: Props) {
   // 연도
   const year = useMemo(
     () => (movie?.releaseDate ? movie.releaseDate.slice(0, 4) : "정보 없음"),
@@ -34,14 +36,14 @@ export function DetailCardWrapper({ movie, credits }: Props) {
 
     // id 또는 name+character 기준으로 중복 제거
     const uniqueMap = new Map<string, typeof cast[0]>();
-    for (const c of cast.slice(0, 20)) { // top 20 후보
+    for (const c of cast.slice(0, 20)) {
       if (!c.name) continue;
       const key = c.id?.toString() || `${c.name}-${c.character ?? ""}`;
       if (!uniqueMap.has(key)) uniqueMap.set(key, c);
     }
 
     return Array.from(uniqueMap.values())
-      .slice(0, 8) // 상위 8명만 사용
+      .slice(0, 8)
       .map((c) => ({
         id: c.id ?? Number(`${c.name?.replace(/\s+/g, "_")}-${c.character ?? ""}`),
         name: c.name,
@@ -53,7 +55,6 @@ export function DetailCardWrapper({ movie, credits }: Props) {
   // DetailCard Props
   const cardProps: DetailCardProps = useMemo(() => {
     const vote10 = Number(movie?.voteAverage ?? 0);
-    const userRating5 = Math.max(0, Math.min(5, Math.round((vote10 / 2) * 10) / 10));
 
     return {
       title: movie?.title ?? "",
@@ -63,9 +64,11 @@ export function DetailCardWrapper({ movie, credits }: Props) {
       director,
       description: movie?.overview || "줄거리 정보가 없습니다.",
       posterUrl: getPosterUrl(movie?.posterPath, "w500"),
-      userRating: userRating5,
+      userRating: vote10,
+      movieIdx, // ✅ 북마크/리뷰용
+      token,    // ✅ JWT 토큰
     };
-  }, [movie, year, genres, director]);
+  }, [movie, year, genres, director, movieIdx, token]);
 
   return (
     <>

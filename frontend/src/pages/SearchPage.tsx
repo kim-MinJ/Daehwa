@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+// src/pages/SearchPage.tsx
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SearchFilters } from "../components/searchPage/SearchFilters";
 import { SortAndViewToggle } from "../components/searchPage/SortAndViewToggle";
+import { MovieCard } from "../components/searchPage/MovieCard";
+import { SectionCarousel } from "../components/searchPage/SectionCarousel";
 import { useMovieStore } from "../store/movieStore";
 import { useScrollStore } from "../store/scrollStore";
 import { genreMap, YEAR_GROUPS } from "@/constants/genres";
-import { getPosterUrl } from "@/utils/getPosterUrl";
 import { Movie } from "@/types/movie";
 
 const BATCH_SIZE = 50;
 const PAGE_SIZE = 8;
-const WHEEL_SPEED = 2;
 
 const STORAGE_KEYS = {
   displayCount: "search_displayCount",
@@ -52,7 +53,7 @@ const SearchPage: React.FC = () => {
   const hasFilter = searchTrigger.trim() || selectedYears.length > 0 || selectedGenres.length > 0;
 
   // -------------------------
-  // URL 업데이트 함수 (단일 source of truth)
+  // URL 업데이트
   // -------------------------
   const updateUrl = (newQuery = query, newYears = selectedYears, newGenres = selectedGenres) => {
     const params: Record<string,string> = {};
@@ -63,7 +64,7 @@ const SearchPage: React.FC = () => {
   };
 
   // -------------------------
-  // URL 동기화 effect
+  // URL 동기화
   // -------------------------
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -82,6 +83,7 @@ const SearchPage: React.FC = () => {
       setSelectedGenres(urlGenres);
       setDisplayCount(PAGE_SIZE);
     }
+
   }, [location.search]);
 
   // -------------------------
@@ -129,10 +131,15 @@ const SearchPage: React.FC = () => {
     };
 
     loadInitial();
-    fetchAllBackground();
-
     return () => controller.abort();
-  }, [searchTrigger, selectedYears, selectedGenres, getMoviesFromDB, fetchAllBackground, hasFilter]);
+  }, [searchTrigger, selectedYears, selectedGenres, getMoviesFromDB, hasFilter]);
+
+  // -------------------------
+  // 전체 영화 로드 (추천용)
+  // -------------------------
+  useEffect(() => {
+    if (!allMovies || allMovies.length === 0) fetchAllBackground();
+  }, [allMovies, fetchAllBackground]);
 
   // -------------------------
   // 더보기
@@ -169,21 +176,7 @@ const SearchPage: React.FC = () => {
   const visibleMovies = sortedMovies.slice(0, displayCount);
 
   // -------------------------
-  // 스크롤 위치 복원
-  // -------------------------
-  useEffect(() => {
-    const pos = scrollStore.getScroll(location.pathname);
-    window.scrollTo(0, pos);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const handleScroll = () => scrollStore.setScroll(location.pathname, window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [location.pathname]);
-
-  // -------------------------
-  // 필터 토글 (URL 기반)
+  // 필터 토글
   // -------------------------
   const toggleYearGroup = (group: string) => {
     const groupYears = YEAR_GROUPS[group];
@@ -203,9 +196,7 @@ const SearchPage: React.FC = () => {
     updateUrl(query, selectedYears, newGenres);
   };
 
-  const clearAllFilters = () => {
-    navigate("/search", { replace: true });
-  };
+  const clearAllFilters = () => navigate("/search", { replace: true });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,7 +216,7 @@ const SearchPage: React.FC = () => {
   }, []);
 
   const recommendedSections = useMemo(() => {
-    if (hasFilter || !allMovies) return {};
+    if (hasFilter || !allMovies?.length) return {};
     const map: Record<string, Movie[]> = {};
     recommendedGenres.forEach((genre) => {
       const moviesOfGenre = allMovies.filter((m) => m.genres?.includes(genre));
@@ -233,21 +224,6 @@ const SearchPage: React.FC = () => {
     });
     return map;
   }, [recommendedGenres, allMovies, hasFilter]);
-
-  const carouselRefs = useRef<Record<string, HTMLDivElement>>({});
-
-  useEffect(() => {
-    Object.keys(carouselRefs.current).forEach((section) => {
-      const el = carouselRefs.current[section];
-      if (!el) return;
-      const handleWheel = (e: WheelEvent) => {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY * WHEEL_SPEED;
-      };
-      el.addEventListener("wheel", handleWheel, { passive: false });
-      return () => el.removeEventListener("wheel", handleWheel);
-    });
-  }, [recommendedSections]);
 
   // -------------------------
   // 렌더링
@@ -274,28 +250,12 @@ const SearchPage: React.FC = () => {
         <div className="w-3/4 space-y-12">
           {!hasFilter &&
             Object.keys(recommendedSections).map((section) => (
-              <div key={section} className="space-y-4">
-                <h2 className="text-xl font-semibold">{section}</h2>
-                <div
-                  className="flex overflow-x-auto gap-4 py-2 scroll-smooth carousel"
-                  ref={(el) => { carouselRefs.current[section] = el!; }}
-                >
-                  {recommendedSections[section].map((movie, idx) => (
-                    <div
-                      key={movie.movieIdx ?? `${section}-${idx}`}
-                      className="flex-none w-40 cursor-pointer"
-                      onClick={() => navigate(`/movie/${movie.movieIdx}`)}
-                    >
-                      <img
-                        src={getPosterUrl(movie.posterPath)}
-                        alt={movie.title}
-                        className="w-full h-56 object-cover rounded"
-                      />
-                      <h4 className="mt-1 text-sm font-medium">{movie.title}</h4>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <SectionCarousel
+                key={section}
+                title={section}
+                movies={recommendedSections[section]}
+                renderMovie={(movie) => <MovieCard movie={movie} />}
+              />
             ))
           }
 
@@ -308,28 +268,17 @@ const SearchPage: React.FC = () => {
                 setViewMode={setViewMode}
               />
               <div className={`grid ${viewMode === "grid" ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-1"} gap-4 mt-4`}>
-                {visibleMovies.map((movie, idx) => (
-                  <div
-                    key={movie.movieIdx ?? `grid-${idx}`}
-                    className="cursor-pointer"
-                    onClick={() => navigate(`/movie/${movie.movieIdx}`)}
-                  >
-                    <img
-                      src={getPosterUrl(movie.posterPath)}
-                      alt={movie.title}
-                      className="w-full h-56 object-cover rounded"
-                    />
-                    <h4 className="mt-2 text-sm font-medium">{movie.title}</h4>
-                  </div>
+                {visibleMovies.map((movie) => (
+                  <MovieCard key={movie.movieIdx} movie={movie} />
                 ))}
               </div>
               {displayCount < sortedMovies.length && (
-                <div className="flex justify-center mt-6">
+                <div className="flex justify-center mt-16">
                   <button
-                    className="px-4 py-2 bg-blue-500 text-white rounded"
+                    className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg shadow-sm hover:bg-gray-50 hover:shadow-md transition-all duration-150"
                     onClick={handleLoadMore}
                   >
-                    더보기
+                    더 많은 결과 보기
                   </button>
                 </div>
               )}
@@ -339,8 +288,9 @@ const SearchPage: React.FC = () => {
       </div>
 
       <style>{`
-        .carousel::-webkit-scrollbar { display: none; }
-        .carousel { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scroll-smooth { scroll-behavior: smooth; }
       `}</style>
     </div>
   );

@@ -10,11 +10,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface BookmarkRepository extends JpaRepository<BookMarkEntity, Long> {
+  List<BookMarkEntity> findByUser(UsersEntity user);
 
-    List<BookMarkEntity> findByUser(UsersEntity user);
+  void deleteAllByUser(UsersEntity user);
 
-    void deleteAllByUser(UsersEntity user);
-
-    @Query("SELECT b FROM BookMarkEntity b WHERE b.user = :user AND b.movie = :movie")
-    List<BookMarkEntity> findByUserAndMovie(@Param("user") UsersEntity user, @Param("movie") MovieInfoEntity movie);
+  @Query("SELECT b FROM BookMarkEntity b WHERE b.user = :user AND b.movie = :movie")
+  List<BookMarkEntity> findByUserAndMovie(@Param("user") UsersEntity user, @Param("movie") MovieInfoEntity movie);
+  // 09.07 추가
 }

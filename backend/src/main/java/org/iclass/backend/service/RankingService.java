@@ -13,6 +13,7 @@ import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.repository.MovieCrewRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.repository.MovieVoteRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +29,7 @@ public class RankingService {
     private final MovieCrewRepository movieCrewRepository;
 
     public List<Map<String, Object>> getTrendingMovies() {
-        var movies = movieInfoRepository.findAllWithGenres();
+        var movies = movieInfoRepository.findAllWithGenresMovies();
 
         // 정렬: null voteCount 방지
         movies.sort((a, b) -> Double.compare(

@@ -3,7 +3,9 @@ export type Movie = {
   id: number;
   title: string;
   overview: string;
-  posterUrl?: string;
+  posterUrl?: string; // poster 대체
+  poster?: string;    // poster 속성 추가
+  director?: string;  // director 속성 추가
   backdropUrl?: string;
   genres?: string[];
   runtime?: number;
@@ -11,8 +13,6 @@ export type Movie = {
   voteAverage?: number;
   voteCount?: number;
   posterPath?: string;
-  
-
 };
 
 export async function fetchMovieById(id: number) {

@@ -1,8 +1,12 @@
-import { Calendar, Clock, Star, Users } from "lucide-react";
-import { ImageWithFallback } from "../imageFallback/ImageWithFallback";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+// src/components/cards/DetailCard.tsx
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Calendar, Clock, Star, Users, Heart } from "lucide-react";
 import { Card } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { ImageWithFallback } from "../imageFallback/ImageWithFallback";
+import axios from "axios";
 
 export interface DetailCardProps {
   title?: string;
@@ -13,7 +17,9 @@ export interface DetailCardProps {
   runtime?: string;
   description?: string;
   posterUrl?: string;
-  userRating?: number;
+  userRating?: number;       // 0~10 범위
+  movieIdx?: number;         // 북마크/리뷰용
+  token?: string | null;     // JWT 토큰
 }
 
 export function DetailCard({
@@ -25,9 +31,85 @@ export function DetailCard({
   runtime,
   description,
   posterUrl,
-  userRating = 0
+  userRating = 0,
+  movieIdx,
+  token
 }: DetailCardProps) {
+  const navigate = useNavigate();
+  const [bookmarked, setBookmarked] = useState(false);
   const genreList = genre ?? [];
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+  // 초기 북마크 상태 확인
+  useEffect(() => {
+    if (!movieIdx || !token) return;
+    axios
+      .get("/api/bookmarks", { headers: authHeader })
+      .then(res => {
+        const exists = res.data.some((b: any) => b.movieIdx === movieIdx);
+        setBookmarked(exists);
+      })
+      .catch(console.error);
+  }, [movieIdx, token]);
+
+  // 북마크 토글
+  const toggleBookmark = async () => {
+    if (!token) {
+      alert("로그인해야 찜할 수 있어요!");
+      return;
+    }
+    if (!movieIdx) return;
+    try {
+      if (bookmarked) {
+        const res = await axios.get("/api/bookmarks", { headers: authHeader });
+        const bm = res.data.find((b: any) => b.movieIdx === movieIdx);
+        if (bm) await axios.delete(`/api/bookmarks/${bm.bookmarkIdx}`, { headers: authHeader });
+        setBookmarked(false);
+      } else {
+        await axios.post("/api/bookmarks", null, { params: { movieIdx }, headers: authHeader });
+        setBookmarked(true);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("북마크 처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 공유하기
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    alert("URL이 복사되었습니다!");
+  };
+
+  // 별 5개로 별점 10점 단위로 표시 (반별 가능)
+  const renderStars = () => {
+    const stars = [];
+    const rating = Math.round(userRating); // 10점 단위 정수
+    for (let i = 1; i <= 5; i++) {
+      const starValue = i * 2; // 별 하나 = 2점
+      let fillClass = "text-gray-300";
+      let isHalf = false;
+
+      if (rating >= starValue) {
+        fillClass = "fill-yellow-400 text-yellow-400"; // 꽉 찬 별
+      } else if (rating >= starValue - 1) {
+        isHalf = true; // 반별
+      }
+
+      stars.push(
+        <span key={i} className="relative w-5 h-5">
+          <Star className={`w-5 h-5 ${fillClass}`} />
+          {isHalf && (
+            <Star
+              className="w-5 h-5 fill-yellow-400 text-yellow-400 absolute top-0 left-0"
+              style={{ clipPath: "inset(0 50% 0 0)" }}
+            />
+          )}
+        </span>
+      );
+    }
+    return stars;
+  };
 
   return (
     <Card className="p-6 w-full">
@@ -68,19 +150,8 @@ export function DetailCard({
               {/* 평점 */}
               {userRating > 0 && (
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(userRating)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                    <span className="ml-2">{userRating.toFixed(1)}/5.0</span>
-                  </div>
+                  {renderStars()}
+                  <span className="ml-2">{userRating.toFixed(1)}/10</span>
                 </div>
               )}
             </div>
@@ -92,9 +163,7 @@ export function DetailCard({
               <h3>장르</h3>
               <div className="flex gap-2">
                 {genreList.map((g, index) => (
-                  <Badge key={index} variant="secondary">
-                    {g}
-                  </Badge>
+                  <Badge key={index} variant="secondary">{g}</Badge>
                 ))}
               </div>
             </div>
@@ -118,12 +187,28 @@ export function DetailCard({
 
           {/* 액션 버튼 */}
           <div className="flex gap-3 pt-4">
-            <Button className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              평가하기
+            {/* 평가하기 */}
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => movieIdx && navigate(`/movie/${movieIdx}/review`)}
+            >
+              <Users className="w-4 h-4" /> 평가하기
             </Button>
-            <Button variant="outline">찜하기</Button>
-            <Button variant="outline">공유하기</Button>
+
+            {/* 북마크 */}
+            <Button className="flex items-center gap-2" onClick={toggleBookmark}>
+              <Heart
+                className="w-4 h-4"
+                fill={bookmarked ? "white" : "none"}
+                stroke={bookmarked ? "white" : "currentColor"}
+              />
+              {bookmarked ? "찜하기" : "찜하기"}
+            </Button>
+
+            {/* 공유하기 */}
+            <Button variant="outline" onClick={copyLink}>
+              공유하기
+            </Button>
           </div>
         </div>
       </div>

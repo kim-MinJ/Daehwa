@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "../components/ui/button";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { ImageWithFallback } from "../components/imageFallback/ImageWithFallback";
 import {
   TrendingUp,
   Trophy,
@@ -306,11 +306,13 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
 
   // 장르별 로직
   const getMoviesByGenre = (genre: string) => {
-    const englishGenre = genreTranslation[genre] || genre;
-    return movies
-      .filter((movie) => movie.genres?.includes(englishGenre))
-      .sort((a, b) => b.rating - a.rating);
-  };
+  const englishGenre = genreTranslation[genre] || genre;
+  return movies
+    .filter((movie) =>
+      movie.genres?.includes(englishGenre) || movie.genres?.includes(genre)
+    )
+    .sort((a, b) => b.rating - a.rating);
+};
 
   const genreMovies = getMoviesByGenre(selectedGenre);
   const genreTotalSlides = Math.ceil(

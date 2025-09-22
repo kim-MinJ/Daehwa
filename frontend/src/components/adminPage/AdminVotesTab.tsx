@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { ImageWithFallback } from "../imageFallback/ImageWithFallback";
-import { Movie } from "../../pages/RankingPage";
+import { Movie } from "@/services/movies";
 
 interface AdminVotesTabProps {
   token: string;
@@ -38,39 +38,42 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   // -------------------- 전체 영화 데이터 불러오기 --------------------
   useEffect(() => {
-    (async () => {
-      try {
-        setLoadingMovies(true);
-        const res = await fetch("/api/searchMovie?page=1&limit=1000");
-        const data: any[] = await res.json();
+  (async () => {
+    try {
+      setLoadingMovies(true);
+      const res = await fetch("/api/searchMovie?page=1&limit=1000");
+      const json = await res.json();
+      console.log("API 응답:", json); // 확인용
 
-        const mapped: Movie[] = data
-  .filter((m) => m.posterPath)
-  .map((m) => ({
-    id: m.movieIdx, // id 필드 추가
-    movieIdx: String(m.movieIdx),
-    tmdbMovieId: m.tmdbMovieId ?? "",
-    title: m.title,
-    poster: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : "",
-    year: m.releaseDate?.split("-")[0] ?? "",
-    genres: m.genre ? m.genre.split(",") : [], // genres 배열
-    genre: m.genre ?? "",
-    rating: m.voteAverage ?? 0,
-    runtime: m.runtime ?? 0,
-    description: m.overview ?? "",
-    director: m.director ?? "",
-    rank: 0,
-    voteCount: 0,
-  }));
+      // data가 배열인지 확인, 아니라면 객체 안에서 배열 꺼내기
+      const data: any[] = Array.isArray(json) ? json : json.data ?? [];
 
-        setAllMovies(mapped);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingMovies(false);
-      }
-    })();
-  }, []);
+      const mapped: Movie[] = data
+        .filter((m) => m.posterPath)
+        .map((m) => ({
+          movieIdx: Number(m.movieIdx), // number 타입
+          id: Number(m.movieIdx),
+          title: m.title,
+          overview: m.overview ?? "",
+          posterUrl: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : undefined,
+          backdropUrl: undefined,
+          genres: m.genre ? m.genre.split(",") : [],
+          runtime: m.runtime ?? undefined,
+          releaseDate: m.releaseDate ?? undefined,
+          voteAverage: m.voteAverage ?? undefined,
+          voteCount: m.voteCount ?? undefined,
+          posterPath: m.posterPath,
+          director: m.director ?? "", // director 없으면 빈 문자열
+        }));
+
+      setAllMovies(mapped);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMovies(false);
+    }
+  })();
+}, []);
 
   // -------------------- MovieVote 리스트 불러오기 --------------------
   const fetchMovieVotes = async () => {
@@ -130,12 +133,12 @@ const filteredMovieVotes = useMemo(() => {
 
   // -------------------- 검색 & 필터링 --------------------
   const filteredMovies = useMemo(() => {
-    return allMovies.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        movie.director.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [allMovies, searchQuery]);
+  return allMovies.filter(
+    (movie) =>
+      movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (movie.director?.toLowerCase() ?? "").includes(searchQuery.toLowerCase())
+  );
+}, [allMovies, searchQuery]);
 
   const pagedMovies = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
@@ -263,15 +266,15 @@ const filteredMovieVotes = useMemo(() => {
               onClick={() => setSelecting("movie1")}
             >
               {vsMovie1 ? (
-                <img
-                  src={vsMovie1.poster}
-                  className="w-48 h-64 object-cover rounded-xl border-4 border-yellow-400"
-                />
-              ) : (
-                <div className="w-48 h-64 bg-gray-200 rounded-xl flex items-center justify-center">
-                  무비1 선택
-                </div>
-              )}
+  <img
+    src={vsMovie1.posterUrl ?? ""}
+    className="w-48 h-64 object-cover rounded-xl border-4 border-yellow-400"
+  />
+) : (
+  <div className="w-48 h-64 bg-gray-200 rounded-xl flex items-center justify-center">
+    무비1 선택
+  </div>
+)}
               <p className="mt-2 font-semibold">무비1</p>
             </div>
 
@@ -318,7 +321,11 @@ const filteredMovieVotes = useMemo(() => {
                   }`}
                   onClick={() => handleCardClick(movie)}
                 >
-                  <ImageWithFallback src={movie.poster} alt={movie.title} className="w-full h-64 object-cover" />
+                  <ImageWithFallback
+  src={movie.posterUrl ?? ""}
+  alt={movie.title}
+  className="w-full h-64 object-cover"
+/>
                   <h3 className="mt-2 font-semibold text-gray-800 line-clamp-1">{movie.title}</h3>
                 </div>
               ))}

@@ -16,9 +16,11 @@ import java.util.*;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173")
 public class RankingController {
+
     private final UsersRepository usersRepository;
     private final MovieVoteService movieVoteService;
     private final RankingService rankingService;
+
     /** ✅ 트렌딩 영화 가져오기 */
     @GetMapping("/trending")
     public ResponseEntity<?> getTrendingMovies() {
@@ -39,7 +41,6 @@ public class RankingController {
         }
 
     }
-
 
     private String mapGenreIdToName(int genreId) {
         switch (genreId) {

@@ -4,10 +4,13 @@ import { ImageWithFallback } from "@/components/imageFallback/ImageWithFallback"
 import { getPosterUrl } from "@/utils/getPosterUrl";
 import { UiMovie } from "@/types/uiMovie";
 import LazyLoad from "react-lazyload";
+import { useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SectionProps {
   title: string;
   movies: UiMovie[];
+  subtitle?: string;
   onClick: (m: UiMovie) => void;
   badge?: string;
   rank?: boolean;
@@ -20,17 +23,54 @@ export const SectionCarousel = ({
   onClick,
   badge,
   rank,
-  renderMovie, // 추가
+  renderMovie,
+  subtitle,
 }: SectionProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    scrollRef.current?.scrollBy({ left: -400, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    scrollRef.current?.scrollBy({ left: 400, behavior: "smooth" });
+  };
+
   if (!movies || movies.length === 0) return null;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl lg:text-2xl font-medium text-gray-900">{title}</h2>
+    <div className="relative">
+      {/* 제목 + 버튼 */}
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">{title}</h2>
+          {subtitle && (
+            <p className="text-sm lg:text-base font-semibold text-gray-700">{subtitle}</p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={scrollLeft}
+            className="p-2 bg-gray-200 hover:bg-gray-300 rounded-full shadow-sm transition"
+          >
+            <ChevronLeft className="h-6 w-6 text-gray-800" />
+          </button>
+          <button
+            onClick={scrollRight}
+            className="p-2 bg-gray-200 hover:bg-gray-300 rounded-full shadow-sm transition"
+          >
+            <ChevronRight className="h-6 w-6 text-gray-800" />
+          </button>
+        </div>
       </div>
+
       <div className="w-full h-px bg-gray-200 mb-6" />
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4">
+
+      {/* 영화 목록 */}
+      <div
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+      >
         {movies.map((movie, index) => (
           <div
             key={movie.id}
@@ -38,7 +78,6 @@ export const SectionCarousel = ({
             onClick={() => onClick(movie)}
           >
             {renderMovie ? (
-              // renderMovie가 있으면 LazyLoad와 함께 사용
               <LazyLoad height={180} offset={100} once>
                 {renderMovie(movie)}
               </LazyLoad>
