@@ -526,7 +526,10 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
                       variant="ghost"
                       onClick={async () => {
                         setSelectedVsIdx(vs.vsIdx);
-
+                        
+                        setHasVoted(false);
+                        setSelectedVote(null);
+                        
                         const topPoster = await fetchPosterFromTMDB(
                           vs.topMovie.title,
                           vs.topMovie.year
