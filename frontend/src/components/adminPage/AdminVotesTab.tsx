@@ -35,6 +35,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   const [roundSelectOpen, setRoundSelectOpen] = useState(false);
   const [selectedRound, setSelectedRound] = useState(1);
   const [maxRound, setMaxRound] = useState(1);
+  const [warning, setWarning] = useState<string | null>(null);
   const PAGE_SIZE = 12;
 
   // -------------------- 전체 영화 데이터 불러오기 --------------------
@@ -131,11 +132,20 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   // -------------------- VS 선택 --------------------
   const handleCardClick = (movie: Movie) => {
-    if (!vsMovie1) return setVsMovie1(movie);
-    if (!vsMovie2) return setVsMovie2(movie);
-    if (selecting === "movie1") return setVsMovie1(movie);
-    if (selecting === "movie2") return setVsMovie2(movie);
-  };
+  // 이미 선택된 영화면 경고
+  if ((vsMovie1 && vsMovie1.movieIdx === movie.movieIdx) ||
+      (vsMovie2 && vsMovie2.movieIdx === movie.movieIdx)) {
+    setWarning("⚠️ 같은 영화는 선택할 수 없습니다!");
+    return;
+  }
+
+  setWarning(null); // 정상 선택 시 경고 제거
+
+  if (!vsMovie1) return setVsMovie1(movie);
+  if (!vsMovie2) return setVsMovie2(movie);
+  if (selecting === "movie1") return setVsMovie1(movie);
+  if (selecting === "movie2") return setVsMovie2(movie);
+};
 
   const handleApply = async () => {
     if (!vsMovie1 || !vsMovie2) return;
@@ -238,6 +248,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
               </div>
 
               {/* VS 선택 카드 */}
+              {warning && <p className="text-red-600 font-semibold mb-2">{warning}</p>}
               <div className="flex items-center justify-center gap-4 mb-6">
                 <div
                   className={`text-center cursor-pointer ${
