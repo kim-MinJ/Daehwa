@@ -604,7 +604,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
         </div>
 
 
-        {/* 박스오피스 TOP 10 */}
+        {/* 박스오피스 TOP 선정작 */}
         <div className="mb-12">
           <div className="bg-gradient-to-b from-gray-100/80 to-gray-200/60 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg">
             <div className="bg-gradient-to-r from-red-600 to-red-700 p-6">
@@ -613,7 +613,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
                   <Trophy className="h-7 w-7 text-white" />
                   <div>
                     <h3 className="text-2xl font-bold text-white">
-                      박스오피스 TOP 10
+                      박스오피스 TOP 선정작
                     </h3>
                     <p className="text-red-100">별점 합계 기준</p>
                   </div>
