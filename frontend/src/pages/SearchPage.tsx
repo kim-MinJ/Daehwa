@@ -1,4 +1,3 @@
-// src/pages/SearchPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SearchFilters } from "../components/searchPage/SearchFilters";
@@ -7,7 +6,7 @@ import { MovieCard } from "../components/searchPage/MovieCard";
 import { SectionCarousel } from "../components/searchPage/SectionCarousel";
 import { useMovieStore } from "../store/movieStore";
 import { useScrollStore } from "../store/scrollStore";
-import { genreMap, YEAR_GROUPS } from "@/constants/genres";
+import { YEAR_GROUPS } from "@/constants/genres";
 import { Movie } from "@/types/movie";
 
 const BATCH_SIZE = 50;
@@ -27,9 +26,6 @@ const SearchPage: React.FC = () => {
   const { getMoviesFromDB, fetchAllBackground, allMovies } = useMovieStore();
   const scrollStore = useScrollStore();
 
-  // -------------------------
-  // 상태
-  // -------------------------
   const [query, setQuery] = useState(queryParams.get("query") || "");
   const [searchTrigger, setSearchTrigger] = useState(queryParams.get("query") || "");
   const [selectedYears, setSelectedYears] = useState<string[]>(queryParams.get("years")?.split(",") || []);
@@ -83,7 +79,6 @@ const SearchPage: React.FC = () => {
       setSelectedGenres(urlGenres);
       setDisplayCount(PAGE_SIZE);
     }
-
   }, [location.search]);
 
   // -------------------------
@@ -197,30 +192,26 @@ const SearchPage: React.FC = () => {
   };
 
   const clearAllFilters = () => navigate("/search", { replace: true });
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateUrl(query, selectedYears, selectedGenres);
-  };
-
+  const handleSearchSubmit = (e: React.FormEvent) => { e.preventDefault(); updateUrl(query, selectedYears, selectedGenres); };
   const handleSortChange = (val: string) => setSortBy(val as "latest"|"rating"|"title");
 
   // -------------------------
   // 추천 섹션
   // -------------------------
   const recommendedGenres = useMemo(() => {
-    const genres = Object.keys(genreMap);
-    if (genres.length <= 2) return genres;
-    const shuffled = genres.sort(() => Math.random() - 0.5);
+    if (!allMovies?.length) return [];
+    const allGenres = Array.from(new Set(allMovies.flatMap(m => m.genres || [])));
+    if (allGenres.length <= 2) return allGenres;
+    const shuffled = allGenres.sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 2);
-  }, []);
+  }, [allMovies]);
 
   const recommendedSections = useMemo(() => {
     if (hasFilter || !allMovies?.length) return {};
     const map: Record<string, Movie[]> = {};
     recommendedGenres.forEach((genre) => {
       const moviesOfGenre = allMovies.filter((m) => m.genres?.includes(genre));
-      if (moviesOfGenre.length > 0) map[genreMap[genre]] = moviesOfGenre.slice(0, 10);
+      if (moviesOfGenre.length > 0) map[genre] = moviesOfGenre.slice(0, 10);
     });
     return map;
   }, [recommendedGenres, allMovies, hasFilter]);
@@ -238,12 +229,11 @@ const SearchPage: React.FC = () => {
             yearGroups={YEAR_GROUPS}
             selectedYears={selectedYears}
             toggleYearGroup={toggleYearGroup}
-            genres={Object.keys(genreMap)}
+            genres={Array.from(new Set(allMovies?.flatMap(m => m.genres || [])))}
             selectedGenres={selectedGenres}
             toggleGenre={toggleGenre}
             clearAllFilters={clearAllFilters}
             handleSearchSubmit={handleSearchSubmit}
-            genreMap={genreMap}
           />
         </div>
 
@@ -286,12 +276,6 @@ const SearchPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .scroll-smooth { scroll-behavior: smooth; }
-      `}</style>
     </div>
   );
 };
