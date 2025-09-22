@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,11 +27,10 @@ import lombok.ToString;
 @Table(name = "RANKING")
 public class RankingEntity {
 
-@Id
-@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_Ranking")
-@SequenceGenerator(name = "SEQ_Ranking", sequenceName = "SEQ_Ranking", allocationSize = 1)
-@Column(name = "ranking_idx")
-private Long rankingIdx;
+  @Id
+  @Column(name = "ranking_idx")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long rankingIdx;
 
   @ManyToOne
   @JoinColumn(name = "movie_idx", nullable = false)

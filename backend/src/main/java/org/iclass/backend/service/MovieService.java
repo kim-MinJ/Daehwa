@@ -21,8 +21,8 @@ public class MovieService {
 
   private final MovieInfoRepository movieInfoRepository;
 
-  // TMDB API 연동을 위한 정보 (사용하지 않아도 됨)
-  private final String API_KEY = "302b783e860b19b6822ef0a445e7ae53";
+  // // TMDB API 연동을 위한 정보 (사용하지 않아도 됨)
+  // private final String API_KEY = "302b783e860b19b6822ef0a445e7ae53";
 
   /**
    * DB ID 기준 단일 영화 조회

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import org.iclass.backend.dto.MovieInfoDto;
+import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.service.MovieInfoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 public class MovieInfoController {
   private final MovieInfoService movieInfoService;
 
-@GetMapping("/random")
-public ResponseEntity<MovieInfoDto> getRandomMovie() {
-    return ResponseEntity.ok(movieInfoService.getRandomMovie());
-}
+  @GetMapping("/random")
+  public MovieInfoEntity getRandomMovie() {
+    return movieInfoService.getRandomMovie();
+  }
 
   @GetMapping
   public ResponseEntity<List<MovieInfoDto>> getAllMovies() {

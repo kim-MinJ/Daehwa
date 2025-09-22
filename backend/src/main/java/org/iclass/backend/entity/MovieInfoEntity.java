@@ -27,7 +27,7 @@ import lombok.ToString;
 @ToString
 @Entity
 @Builder
-@Table(name = "Movie_Info")
+@Table(name = "MOVIE_INFO")
 public class MovieInfoEntity {
 
     @Id

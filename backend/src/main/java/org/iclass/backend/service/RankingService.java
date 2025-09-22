@@ -13,7 +13,6 @@ import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.repository.MovieCrewRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
 import org.iclass.backend.repository.MovieVoteRepository;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

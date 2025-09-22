@@ -71,7 +71,7 @@ public class CommentService {
   public List<CommentsEntity> getAllComments() {
     return commentsRepository.findAll();
   }
-  
+
   public List<CommentsEntity> getCommentsByUser(String userId) {
     UsersEntity user = usersRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("사용자 없음"));

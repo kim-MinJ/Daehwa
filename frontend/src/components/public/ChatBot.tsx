@@ -1,15 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, User, Bot } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { ScrollArea } from '../ui/scroll-area';
-
+import { useState, useEffect, useRef } from "react";
+import { X, Send, User, Bot } from "lucide-react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { ScrollArea } from "../ui/scroll-area";
+import "../ChatBot.css";
+import { useFeeling } from "@/context/FeelingContext";
+import { FEELING_ICONS } from "../utils/FeelingIcons";
+import axios from "axios";
+import { FEELING_SYNONYMS } from "../utils/FeelingDictionary";
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  type?: "text" | "options" | "feelings"; // 메시지 종류
 }
 
 const ChatBot = () => {
@@ -17,213 +22,240 @@ const ChatBot = () => {
   const [showIcon, setShowIcon] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      text: '안녕하세요! MovieSSG 이에요! 반가워요! 영화에 대해 얘기 나눠보아요 😊',
+      id: "1",
+      text: "안녕하세요! 무빈이에요 😊 영화에 대해 얘기 나눠보아요!",
       isUser: false,
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    },
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-   const userId = localStorage.getItem("userId"); 
+  const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
-const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  
-  // 아이콘과 텍스트 번갈아 표시하기
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const { setSelectedFeeling, setTriggerModal } = useFeeling();
+
+  // 아이콘/텍스트 번갈아 표시
   useEffect(() => {
-    const interval = setInterval(() => {
-      setShowIcon(prev => !prev);
-    }, 2500);
+    const interval = setInterval(() => setShowIcon((prev) => !prev), 2500);
     return () => clearInterval(interval);
   }, []);
 
+  // 스크롤 맨 아래로
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
+  // ✅ 로그인 유저 대화 이력 불러오기
+  useEffect(() => {
+    if (token && userId) {
+      axios
+        .get(`http://localhost:8080/api/chat/history/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          const history = res.data.map((m: any, idx: number) => ({
+            id: "h-" + idx,
+            text: m.content,
+            isUser: m.role === "user",
+            timestamp: new Date(m.createdAt),
+          }));
+          setMessages((prev) => [...prev, ...history]);
+        })
+        .catch(() => console.warn("이전 대화 불러오기 실패"));
+    }
+  }, [isOpen]);
 
   // ✅ 메시지 전송
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
+    const userInput = inputMessage;
     const newUserMessage: Message = {
       id: Date.now().toString(),
-      text: inputMessage,
+      text: userInput,
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
+    setMessages((prev) => [...prev, newUserMessage]);
+    setInputMessage("");
 
-    setMessages(prev => [...prev, newUserMessage]);
-    const userInput = inputMessage;
-    setInputMessage('');
+    // 추천 키워드 감지
+    if (userInput.includes("추천")) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: "opt-1",
+          text: "추천 방식을 선택해주세요 👇",
+          isUser: false,
+          timestamp: new Date(),
+          type: "options",
+        },
+      ]);
+      return;
+    }
+
+    // 감정 키워드 딕셔너리
+  
+
+Object.keys(FEELING_SYNONYMS).forEach((key) => {
+  if (userInput.includes(key)) {
+    setSelectedFeeling(FEELING_SYNONYMS[key]);
+  }
+});
+    // 일반 대화 → 백엔드
     setLoading(true);
-
-
-    
     try {
-      // ✅ 백엔드 호출 (Spring Boot API)
-      const response = await fetch('http://localhost:8080/api/chat', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          "Authorization": token ? `Bearer ${token}` : ""
+      const response = await fetch("http://localhost:8080/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
         },
         body: JSON.stringify({
-          userId: userId, // 👉 localStorage에서 가져온 실제 로그인 유저 ID
-          messages: [{ role: 'user', content: userInput }]
-        })
+          userId: userId,
+          messages: [{ role: "user", content: userInput }],
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('챗봇 응답 실패');
-      }
+      if (!response.ok) throw new Error("챗봇 응답 실패");
 
       const data = await response.json();
-      // localStorage.setItem("token", data.token);
-      // localStorage.setItem("userId", data.userId);  
-      // assistant 응답 꺼내기
       const botReply =
         data?.choices?.[0]?.message?.content ||
-        '죄송해요, 답변을 가져올 수 없어요.';
+        "죄송해요, 답변을 가져올 수 없어요.";
 
-      const newBotMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: botReply,
-        isUser: false,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, newBotMessage]);
-    } catch (error) {
-      console.error(error);
-      const errorMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        text: '서버와 연결할 수 없어요. 잠시 후 다시 시도해주세요.',
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          text: botReply,
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 2).toString(),
+          text: "서버와 연결할 수 없어요. 잠시 후 다시 시도해주세요.",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
+  // 옵션 클릭 처리
+  const handleOptionClick = (type: "감정" | "장르") => {
+    if (type === "감정") {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: "feelings-btns",
+          text: "감정을 선택해주세요 👇",
+          isUser: false,
+          timestamp: new Date(),
+          type: "feelings",
+        },
+      ]);
+    } else {
+      // 장르 기반 추천 로직 추가 가능
     }
+  };
+
+  // 감정 버튼 클릭 → 모달 열기
+  const handleFeelingClick = (feeling: string) => {
+    setSelectedFeeling(feeling);
+    setTriggerModal(true);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSendMessage();
   };
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* 챗봇 버튼 */}
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="w-20 h-20 rounded-full bg-red-600 hover:bg-red-700 shadow-lg transition-all duration-300 hover:scale-110 animate-pulse"
+          className="w-20 h-20 rounded-full bg-red-600 hover:bg-red-700 shadow-lg animate-pulse"
         >
-          {showIcon ? (
-            <Bot className="w-16 h-16 text-white robot-animation" />
-          ) : (
-            <span className="text-white font-bold text-lg text-center leading-tight">
-              챗봇
-            </span>
-          )}
+          {showIcon ? <Bot className="big-icon text-white" /> : <span className="big-text text-white font-bold">무빈</span>}
         </Button>
       )}
 
-      {/* 챗봇 창 */}
       {isOpen && (
-        <div className="bg-white rounded-2xl shadow-2xl w-96 h-[975px] flex flex-col border border-gray-200 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="bg-white rounded-2xl shadow-2xl w-96 h-[900px] flex flex-col border border-gray-200">
           {/* 헤더 */}
-          <div className="bg-red-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
-                <Bot className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="font-semibold">MovieSSG Bot</h3>
-                <p className="text-red-100 text-sm">
-                  {loading ? '답변 작성중...' : '온라인'}
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-red-700 h-8 w-8 p-0"
-            >
+          <div className="bg-red-600 text-white p-4 rounded-t-2xl flex justify-between items-center">
+            <h3 className="font-semibold">MovieSSG 무빈</h3>
+            <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)} className="text-white">
               <X className="h-4 w-4" />
             </Button>
           </div>
 
           {/* 메시지 영역 */}
-           <ScrollArea className="flex-1 p-4 overflow-y-auto">
+          <ScrollArea className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-4">
-              {messages.map(message => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                >
+              {messages.map((message) => (
+                <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[80%] p-3 rounded-2xl ${
-                      message.isUser
-                        ? 'bg-red-600 text-white'
-                        : 'bg-gray-100 text-gray-800'
+                      message.isUser ? "bg-red-600 text-white" : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    <div className="flex items-start gap-2">
-                      {!message.isUser && (
-                        <Bot className="h-4 w-4 mt-0.5 text-red-600" />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm">{message.text}</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            message.isUser ? 'text-red-100' : 'text-gray-500'
-                          }`}
-                        >
-                          {message.timestamp.toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
+                    <p className="text-sm">{message.text}</p>
+
+                    {/* 옵션 버튼 */}
+                    {message.type === "options" && (
+                      <div className="flex gap-2 mt-2">
+                        <Button size="sm" onClick={() => handleOptionClick("감정")}>감정 기반</Button>
+                        {/* <Button size="sm" onClick={() => handleOptionClick("장르")}>장르 기반</Button> */}
                       </div>
-                      {message.isUser && (
-                        <User className="h-4 w-4 mt-0.5 text-red-100" />
-                      )}
-                    </div>
+                    )}
+
+                    {/* 감정 버튼 */}
+                    {message.type === "feelings" && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {Object.entries(FEELING_ICONS).map(([feeling, icon]) => (
+                          <Button
+                            key={feeling}
+                            size="sm"
+                            className="bg-gray-200"
+                            onClick={() => handleFeelingClick(feeling)}
+                          >
+                            {icon} {feeling}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
-              {/* ✅ 맨 아래 ref */}
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
 
           {/* 입력 영역 */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex gap-2">
-              <Input
-                value={inputMessage}
-                onChange={e => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="메시지를 입력하세요..."
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || loading}
-                size="sm"
-                className="bg-red-600 hover:bg-red-700"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="p-4 border-t border-gray-200 flex gap-2">
+            <Input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="메시지를 입력하세요..."
+              className="flex-1"
+            />
+            <Button onClick={handleSendMessage} disabled={!inputMessage.trim() || loading} size="sm" className="bg-red-600">
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       )}

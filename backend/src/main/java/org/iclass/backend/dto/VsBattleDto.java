@@ -32,6 +32,5 @@ public class VsBattleDto {
     private boolean isMovie1Winner;
     private Long votedMovieId;
 
-    // ✅ 정렬용 (추가)
     private java.util.Date startDate;
 }

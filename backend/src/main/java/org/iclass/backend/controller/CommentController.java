@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.iclass.backend.dto.CommentsDto;
-import org.iclass.backend.entity.CommentsEntity;
 import org.iclass.backend.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

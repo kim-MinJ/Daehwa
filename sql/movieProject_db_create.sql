@@ -114,10 +114,6 @@ CREATE TABLE Movie_Info
   CONSTRAINT PK_Movie_Info PRIMARY KEY (movie_idx)
 );
 
-SELECT *
-FROM Users AS OF TIMESTAMP (SYSTIMESTAMP - INTERVAL '10' MINUTE);
-
-
 ALTER TABLE Movie_Info
   ADD CONSTRAINT UQ_tmdb_movie_id UNIQUE (tmdb_movie_id);
 
@@ -426,9 +422,7 @@ CREATE TABLE CHAT_MESSAGES (
     role      VARCHAR2(100),
     content   VARCHAR2(4000),
     created_at TIMESTAMP,
-    CONSTRAINT PK_CHAT_MESSAGES PRIMARY KEY (id),
-    CONSTRAINT FK_CHAT_MESSAGES_USER FOREIGN KEY (user_id)
-        REFERENCES USERS(user_id)
+    CONSTRAINT PK_CHAT_MESSAGES PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE CHAT_MESSAGES IS '채팅 메시지';
@@ -571,6 +565,11 @@ ALTER TABLE Feeling_Genres
   ADD CONSTRAINT FK_Genres_TO_Feeling_Genres
     FOREIGN KEY (genreIdx)
     REFERENCES Genres (genre_idx);
+  
+ALTER TABLE Feeling_Genres
+  ADD CONSTRAINT FK_Movie_Info_TO_Feeling_Genres
+    FOREIGN KEY (movieIdx)
+    REFERENCES Movie_Info (movie_idx);
 
 
 -- ===========================

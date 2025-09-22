@@ -20,6 +20,7 @@ import ErrorPage from "./pages/ErrorPage";
 import ChatBot from "./components/public/ChatBot";
 import ErrorProvider from "./hooks/ErrorContext";
 import DetailReviewPage from "./pages/DetailReviewPage";
+import { FeelingProvider } from "./context/FeelingContext";
 
 function AppContent() {
   const location = useLocation();
@@ -73,17 +74,19 @@ export default function App() {
   useBackspaceNavigate();
 
   return (
-    <BrowserRouter>
-      <ErrorProvider>
-        <div className="min-h-screen bg-white">
-        <Header />
-        <main className="flex-grow relative">
-          <AppContent />
-        </main>
-        <Footer />
-        <ChatBot />
-      </div>
-      </ErrorProvider>
-    </BrowserRouter>
+    <FeelingProvider>
+      <BrowserRouter>
+        <ErrorProvider>
+          <div className="min-h-screen bg-white">
+          <Header />
+          <main className="flex-grow relative">
+            <AppContent />
+          </main>
+          <Footer />
+          <ChatBot></ChatBot>
+        </div>
+        </ErrorProvider>
+      </BrowserRouter>
+    </FeelingProvider>
   );
 }

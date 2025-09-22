@@ -1,6 +1,5 @@
 // src/hooks/useMoviePage.ts
 import { useEffect, useState } from "react";
-import { useError } from "./ErrorContext";
 
 export const genreMap: Record<string, string> = {
   Action: '액션',
@@ -28,6 +27,7 @@ export type MovieDetail = {
   id?: number;
   title?: string;
   overview?: string;
+  runtime?: number;
   poster_path?: string;
   release_date?: string;
   vote_average?: number;
@@ -80,6 +80,7 @@ const mapMovie = (m: any): MovieDetail => ({
   id: m?.movieIdx ?? m?.id,
   title: m?.title,
   overview: m?.overview ?? m?.description ?? "",
+  runtime: m?.runtime ?? 0,
   poster_path: toPath(m?.posterPath ?? m?.posterUrl ?? m?.poster_path),
   release_date: m?.releaseDate ?? m?.release_date ?? "",
   vote_average: typeof m?.voteAverage === "number" ? m.voteAverage : (m?.vote_average ?? 0),
@@ -108,16 +109,10 @@ async function safeGet(urls: string[]) {
   throw new Error("fetch failed");
 }
 
-export function useMoviePage(id: number) {
-  const { throwError } = useError(); // ErrorContext 사용
+export function useMoviePage(id: number): State {
   const [state, setState] = useState<State>({
-  loading: true,
-  error: null,
-  movie: null,
-  credits: null,
-  similar: [] as MovieDetail[],
-  trailers: [] as any[],
-});
+    loading: true, error: null, movie: null, credits: null, similar: [], trailers: [],
+  });
 
   useEffect(() => {
     if (!Number.isFinite(id)) return;
@@ -131,12 +126,9 @@ export function useMoviePage(id: number) {
           `/api/movie/${id}`,
           `/api/movies/info/${id}`,
         ]);
-
-        if (!detailRaw) throw new Error("영화 정보를 찾을 수 없습니다.");
-
         const movie = mapMovie(detailRaw);
 
-        let credits = { cast: [], crew: [] };
+        let credits: Credits = { cast: [], crew: [] };
         try {
           const cr = await safeGet([`/api/movies/${id}/credits`]);
           credits = {
@@ -162,13 +154,12 @@ export function useMoviePage(id: number) {
         setState({ loading: false, error: null, movie, credits, similar, trailers });
       } catch (e: any) {
         if (!alive) return;
-        // 🔥 에러 발생 시 ErrorPage로 이동
-        throwError(e?.message ?? "영화 정보를 가져올 수 없습니다.", 500);
+        setState({ loading: false, error: e?.message ?? "load error", movie: null, credits: null, similar: [], trailers: [] });
       }
     })();
 
     return () => { alive = false; };
-  }, [id, throwError]);
+  }, [id]);
 
   return state;
 }

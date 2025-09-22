@@ -10,6 +10,10 @@
   import { shuffle } from "@/utils/shuffle";
   import { SectionCarousel } from "@/components/mainPage/SectionCarousel";
   import { genreMap } from "@/constants/genres";
+  import { FeelingRecommendationSection } from "@/components/FeelingRecommendationSection";
+  import { useFeeling } from "@/context/FeelingContext"; // ✅ 챗봇 감정 context
+  import { X } from "lucide-react";
+
 
   // 🔹 MovieCard 컴포넌트
   function MovieCard({ movie, onClick }: { movie: UiMovie; onClick: (m: UiMovie) => void }) {
@@ -48,6 +52,7 @@
   export default function MainPage() {
     const navigate = useNavigate();
     const movieStore = useMovieStore();
+    const { selectedFeeling } = useFeeling(); // ✅ 챗봇에서 넘어온 감정
 
     const [latestMovies, setLatestMovies] = useState<UiMovie[]>([]);
     const [weeklyMovies, setWeeklyMovies] = useState<UiMovie[]>([]);
@@ -105,6 +110,7 @@
     }, []);
 
     const onMovieClick = (m: UiMovie) => navigate(`/movie/${m.id}`);
+    const { triggerModal, setTriggerModal } = useFeeling();
 
     return (
       <div className="min-h-screen bg-white">
@@ -175,6 +181,11 @@
 
           {/* Sections */}
           <section className="max-w-7xl mx-auto px-8 lg:px-16 space-y-16 pb-16">
+            {/* ✅ 감정 기반 추천 (챗봇 연동됨) */}
+              <FeelingRecommendationSection
+                onMovieClick={onMovieClick}
+              />
+            
             <SectionCarousel
               title="최신 영화"
               subtitle="이거? 지금 볼만한데? 도전? ㄱ?"
@@ -197,6 +208,31 @@
               renderMovie={(movie) => <MovieCard movie={movie} onClick={onMovieClick} />}
             />
           </section>
+
+          {triggerModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600"
+              onClick={() => setTriggerModal(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h2 className="text-xl font-bold mb-4">추천 영화</h2>
+            <FeelingRecommendationSection
+              onMovieClick={(m) => {
+                console.log("영화 클릭:", m);
+                setTriggerModal(false);
+                
+              }}
+              showFeelingButtons={false}
+            />
+          </div>
+        </div>
+      )}
+
+
+
         </main>
       </div>
     );
