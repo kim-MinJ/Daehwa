@@ -401,9 +401,8 @@ CREATE TABLE Sound_Track
 (
   soundtrack_idx NUMBER        NOT NULL,
   movie_idx      NUMBER        NOT NULL,
-  title          VARCHAR2(100),
-  artist         VARCHAR2(255),
-  playback_url   VARCHAR2(255),
+  youtube_idx    VARCHAR2(500),
+  title          VARCHAR2(500),
   CONSTRAINT PK_Sound_Track PRIMARY KEY (soundtrack_idx)
 );
 
@@ -412,6 +411,8 @@ COMMENT ON TABLE Sound_Track IS 'OST정보';
 COMMENT ON COLUMN Sound_Track.soundtrack_idx IS 'ost 인덱스';
 
 COMMENT ON COLUMN Sound_Track.movie_idx IS '영화 인덱스';
+
+COMMENT ON COLUMN Sound_Track.youtube_idx IS 'youtube ID번호';
 
 COMMENT ON COLUMN Sound_Track.title IS 'ost제목';
 

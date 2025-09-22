@@ -3,7 +3,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SearchPage from "./pages/SearchPage";
-import MovieDetailPage from "./pages/MovieDetailPage";
+import MovieDetailPage from "./pages/DetailPage";
 import RankingPage from "./pages/RankingPage";
 import ReviewPage from "./pages/ReviewPage";
 import AdminPage from "./pages/AdminPage";
@@ -15,6 +15,8 @@ import ErrorProvider from "./hooks/ErrorContext";
 import ErrorPage from "./pages/ErrorPage";
 
 export default function App() {
+  useBackspaceNavigate();
+
   return (
     <BrowserRouter>
       <ErrorProvider>

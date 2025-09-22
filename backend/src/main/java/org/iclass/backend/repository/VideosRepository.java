@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface VideosRepository extends JpaRepository<VideosEntity, Long> {
   List<VideosEntity> findByMovie(MovieInfoEntity movie);
+  List<VideosEntity> findByMovie_MovieIdx(Long movieIdx);
+
 }

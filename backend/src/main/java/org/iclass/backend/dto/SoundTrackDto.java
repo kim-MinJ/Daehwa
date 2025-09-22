@@ -23,8 +23,7 @@ public class SoundTrackDto {
     private Long soundtrackIdx;
     private Long movieIdx; // MovieInfoEntity의 movieIdx
     private String title;
-    private String artist;
-    private String playbackUrl;
+    private String youtubeIdx;
 
     // ✅ Entity → DTO 변환
     public static SoundTrackDto of(SoundTrackEntity entity) {
@@ -32,8 +31,7 @@ public class SoundTrackDto {
                 .soundtrackIdx(entity.getSoundtrackIdx())
                 .movieIdx(entity.getMovieInfo() != null ? entity.getMovieInfo().getMovieIdx() : null)
                 .title(entity.getTitle())
-                .artist(entity.getArtist())
-                .playbackUrl(entity.getPlaybackUrl())
+                .youtubeIdx(entity.getYoutubeIdx())
                 .build();
     }
 
@@ -43,8 +41,7 @@ public class SoundTrackDto {
                 .soundtrackIdx(this.soundtrackIdx)
                 .movieInfo(movie) // 연관관계 매핑 (MovieInfoEntity)
                 .title(this.title)
-                .artist(this.artist)
-                .playbackUrl(this.playbackUrl)
+                .youtubeIdx(this.youtubeIdx)
                 .build();
     }
 }

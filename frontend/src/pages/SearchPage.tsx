@@ -1,294 +1,349 @@
-import { Grid, List, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import { Button } from '../components/ui/button';
-import { Checkbox } from '../components/ui/checkbox';
-import { Input } from '../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { useEffect, useMemo, useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { SearchFilters } from "../components/searchPage/SearchFilters";
+import { SortAndViewToggle } from "../components/searchPage/SortAndViewToggle";
+import { useMovieStore } from "../store/movieStore";
+import { useScrollStore } from "../store/scrollStore";
+import { genreMap, YEAR_GROUPS } from "@/constants/genres";
+import { getPosterUrl } from "@/utils/getPosterUrl";
+import { Movie } from "@/types/movie";
 
-interface Movie {
-  movieIdx: number;
-  title: string;
-  overview?: string;
-  posterPath?: string;
-  releaseDate?: string;
-  genres?: string[];
-  voteAverage?: number;
-}
+const BATCH_SIZE = 50;
+const PAGE_SIZE = 8;
+const WHEEL_SPEED = 2;
 
-const genreMap: Record<string, string> = {
-  Action: '액션',
-  Adventure: '모험',
-  Animation: '애니메이션',
-  Comedy: '코미디',
-  Crime: '범죄',
-  Documentary: '다큐멘터리',
-  Drama: '드라마',
-  Family: '가족',
-  Fantasy: '판타지',
-  History: '역사',
-  Horror: '공포',
-  Music: '음악',
-  Mystery: '미스터리',
-  Romance: '로맨스',
-  'Science Fiction': 'SF',
-  'TV Movie': 'TV 영화',
-  Thriller: '스릴러',
-  War: '전쟁',
-  Western: '서부극',
+const STORAGE_KEYS = {
+  displayCount: "search_displayCount",
+  sortBy: "search_sortBy",
+  viewMode: "search_viewMode",
 };
 
-// 간단한 fetch helper
-async function fetchMoviesFromApi(page: number, limit = 20): Promise<Movie[]> {
-  const res = await fetch(`/api/searchMovie?page=${page}&limit=${limit}`);
-  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-  const data = await res.json();
-  if (!Array.isArray(data)) throw new Error('서버에서 배열이 아닌 데이터를 반환했습니다.');
-  // 포스터 없는 영화는 제외
-  return data.filter((m: Movie) => m.posterPath && m.posterPath.trim() !== '');
-}
-
-// 로딩 스피너 컴포넌트
-function LoadingSpinner() {
-  return (
-    <div className="flex justify-center items-center py-6">
-      <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      <span className="ml-2 text-gray-600">로딩중...</span>
-    </div>
-  );
-}
-
-export default function SearchPage() {
+const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const queryParams = new URLSearchParams(location.search);
-  const queryFromUrl = queryParams.get('query') || '';
+
+  const { getMoviesFromDB, fetchAllBackground, allMovies } = useMovieStore();
+  const scrollStore = useScrollStore();
+
+  // -------------------------
+  // 상태
+  // -------------------------
+  const [query, setQuery] = useState(queryParams.get("query") || "");
+  const [searchTrigger, setSearchTrigger] = useState(queryParams.get("query") || "");
+  const [selectedYears, setSelectedYears] = useState<string[]>(queryParams.get("years")?.split(",") || []);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>(queryParams.get("genres")?.split(",") || []);
+
+  const [sortBy, setSortBy] = useState<"latest" | "rating" | "title">(
+    (localStorage.getItem(STORAGE_KEYS.sortBy) as "latest" | "rating" | "title") || "latest"
+  );
+  const [viewMode, setViewMode] = useState<"grid" | "list">(
+    (localStorage.getItem(STORAGE_KEYS.viewMode) as "grid" | "list") || "grid"
+  );
+  const [displayCount, setDisplayCount] = useState<number>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.displayCount);
+    return saved ? Number(saved) : PAGE_SIZE;
+  });
 
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [query, setQuery] = useState(queryFromUrl);
-  const [selectedYears, setSelectedYears] = useState<string[]>([]);
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'latest' | 'rating' | 'title'>('latest');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [displayCount, setDisplayCount] = useState(8);
-  const [years, setYears] = useState<string[]>([]);
-  const [genres, setGenres] = useState<string[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loadedCount, setLoadedCount] = useState(0);
 
+  const hasFilter = searchTrigger.trim() || selectedYears.length > 0 || selectedGenres.length > 0;
+
+  // -------------------------
+  // URL 업데이트 함수 (단일 source of truth)
+  // -------------------------
+  const updateUrl = (newQuery = query, newYears = selectedYears, newGenres = selectedGenres) => {
+    const params: Record<string,string> = {};
+    if (newQuery) params.query = newQuery;
+    if (newYears.length) params.years = newYears.join(",");
+    if (newGenres.length) params.genres = newGenres.join(",");
+    navigate(`/search?${new URLSearchParams(params).toString()}`, { replace: true });
+  };
+
+  // -------------------------
+  // URL 동기화 effect
+  // -------------------------
   useEffect(() => {
-    setQuery(queryFromUrl);
-  }, [queryFromUrl]);
+    const params = new URLSearchParams(location.search);
+    const urlQuery = params.get("query") || "";
+    const urlYears = params.get("years")?.split(",") || [];
+    const urlGenres = params.get("genres")?.split(",") || [];
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        setLoading(true);
-        const newMovies = await fetchMoviesFromApi(page);
-        if (!alive) return;
-
-        const combined = [...movies, ...newMovies];
-        const uniqueMovies = Array.from(new Map(combined.map(m => [m.movieIdx, m])).values());
-        setMovies(uniqueMovies);
-
-        const allYears = [...new Set(uniqueMovies.map(m => m.releaseDate ? `${m.releaseDate.split('-')[0]}년` : ''))].filter(Boolean);
-        setYears(allYears.sort((a, b) => parseInt(b) - parseInt(a)));
-
-        const allGenres = [...new Set(uniqueMovies.flatMap(m => m.genres || []))];
-        setGenres(allGenres.sort());
-      } catch (err) {
-        console.error('Fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-
-    return () => { alive = false; };
-  }, [page]);
-
-  const yearGroups = useMemo(() => {
-    const groups: Record<string, string[]> = { '2020년대': [], '2010년대': [], '2000년대': [] };
-    years.forEach(y => {
-      const num = parseInt(y);
-      if (num >= 2020) groups['2020년대'].push(y);
-      else if (num >= 2010) groups['2010년대'].push(y);
-      else if (num >= 2000) groups['2000년대'].push(y);
-    });
-    return groups;
-  }, [years]);
-
-  const filteredMovies = useMemo(() => {
-    return movies.filter(movie => {
-      const matchesSearch = !query || movie.title.toLowerCase().includes(query.toLowerCase());
-      const movieYear = movie.releaseDate ? `${movie.releaseDate.split('-')[0]}년` : '';
-      const matchesYear = selectedYears.length === 0 || selectedYears.includes(movieYear);
-      const matchesGenre = selectedGenres.length === 0 || (movie.genres || []).some(g => selectedGenres.includes(g));
-      return matchesSearch && matchesYear && matchesGenre;
-    });
-  }, [movies, query, selectedYears, selectedGenres]);
-
-  const sortedMovies = useMemo(() => {
-    const sorted = [...filteredMovies];
-    switch (sortBy) {
-      case 'latest':
-        return sorted.sort((a, b) => (parseInt(b.releaseDate?.split('-')[0] || '0')) - (parseInt(a.releaseDate?.split('-')[0] || '0')));
-      case 'rating':
-        return sorted.sort((a, b) => (b.voteAverage || 0) - (a.voteAverage || 0));
-      case 'title':
-        return sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-      default:
-        return sorted;
+    if (
+      urlQuery !== searchTrigger ||
+      JSON.stringify(urlYears) !== JSON.stringify(selectedYears) ||
+      JSON.stringify(urlGenres) !== JSON.stringify(selectedGenres)
+    ) {
+      setQuery(urlQuery);
+      setSearchTrigger(urlQuery);
+      setSelectedYears(urlYears);
+      setSelectedGenres(urlGenres);
+      setDisplayCount(PAGE_SIZE);
     }
-  }, [filteredMovies, sortBy]);
+  }, [location.search]);
 
+  // -------------------------
+  // 로컬스토리지 동기화
+  // -------------------------
+  useEffect(() => localStorage.setItem(STORAGE_KEYS.displayCount, String(displayCount)), [displayCount]);
+  useEffect(() => localStorage.setItem(STORAGE_KEYS.sortBy, sortBy), [sortBy]);
+  useEffect(() => localStorage.setItem(STORAGE_KEYS.viewMode, viewMode), [viewMode]);
+
+  // -------------------------
+  // 검색 실행
+  // -------------------------
+  useEffect(() => {
+    if (!hasFilter) return;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const loadInitial = async () => {
+      try {
+        const batch = await getMoviesFromDB({
+          query: searchTrigger,
+          years: selectedYears,
+          genres: selectedGenres,
+          offset: 0,
+          limit: BATCH_SIZE,
+          signal,
+        });
+        if (!signal.aborted && Array.isArray(batch)) {
+          setMovies(batch);
+          setLoadedCount(batch.length);
+        }
+
+        const count = await getMoviesFromDB({
+          query: searchTrigger,
+          years: selectedYears,
+          genres: selectedGenres,
+          countOnly: true,
+          signal,
+        });
+        if (!signal.aborted && typeof count === "number") setTotalCount(count);
+      } catch (err) {
+        if ((err as any).name !== "AbortError") console.error(err);
+      }
+    };
+
+    loadInitial();
+    fetchAllBackground();
+
+    return () => controller.abort();
+  }, [searchTrigger, selectedYears, selectedGenres, getMoviesFromDB, fetchAllBackground, hasFilter]);
+
+  // -------------------------
+  // 더보기
+  // -------------------------
+  const handleLoadMore = async () => {
+    if (loadedCount < totalCount && displayCount >= movies.length) {
+      const nextBatch = await getMoviesFromDB({
+        query: searchTrigger,
+        years: selectedYears,
+        genres: selectedGenres,
+        offset: loadedCount,
+        limit: BATCH_SIZE,
+      });
+      if (Array.isArray(nextBatch)) {
+        setMovies((prev) => [...prev, ...nextBatch]);
+        setLoadedCount((prev) => prev + nextBatch.length);
+      }
+    }
+    setDisplayCount((prev) => prev + PAGE_SIZE);
+  };
+
+  // -------------------------
+  // 정렬
+  // -------------------------
+  const sortedMovies = useMemo(() => {
+    const result = [...movies];
+    switch (sortBy) {
+      case "latest": return result.sort((a,b)=> (b.releaseDate||"").localeCompare(a.releaseDate||""));
+      case "rating": return result.sort((a,b)=> (b.voteAverage||0)-(a.voteAverage||0));
+      case "title": return result.sort((a,b)=> a.title.localeCompare(b.title));
+    }
+  }, [movies, sortBy]);
+
+  const visibleMovies = sortedMovies.slice(0, displayCount);
+
+  // -------------------------
+  // 스크롤 위치 복원
+  // -------------------------
+  useEffect(() => {
+    const pos = scrollStore.getScroll(location.pathname);
+    window.scrollTo(0, pos);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleScroll = () => scrollStore.setScroll(location.pathname, window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [location.pathname]);
+
+  // -------------------------
+  // 필터 토글 (URL 기반)
+  // -------------------------
   const toggleYearGroup = (group: string) => {
-    const groupYears = yearGroups[group];
-    const allSelected = groupYears.every(y => selectedYears.includes(y));
-    if (allSelected) setSelectedYears(prev => prev.filter(y => !groupYears.includes(y)));
-    else setSelectedYears(prev => [...new Set([...prev, ...groupYears])]);
-    setDisplayCount(8);
+    const groupYears = YEAR_GROUPS[group];
+    const allSelected = groupYears.every((y) => selectedYears.includes(y));
+    const newYears = allSelected
+      ? selectedYears.filter((y) => !groupYears.includes(y))
+      : [...new Set([...selectedYears, ...groupYears])];
+
+    updateUrl(query, newYears, selectedGenres);
   };
 
   const toggleGenre = (genre: string) => {
-    setSelectedGenres(prev => prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]);
-    setDisplayCount(8);
+    const newGenres = selectedGenres.includes(genre)
+      ? selectedGenres.filter((g) => g !== genre)
+      : [...selectedGenres, genre];
+
+    updateUrl(query, selectedYears, newGenres);
   };
 
   const clearAllFilters = () => {
-    setQuery('');
-    setSelectedYears([]);
-    setSelectedGenres([]);
-    setDisplayCount(8);
-    navigate('/search');
+    navigate("/search", { replace: true });
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/search?query=${encodeURIComponent(query)}`);
+    updateUrl(query, selectedYears, selectedGenres);
   };
 
-  const handleSortChange = (val: string) => setSortBy(val as 'latest' | 'rating' | 'title');
+  const handleSortChange = (val: string) => setSortBy(val as "latest"|"rating"|"title");
 
+  // -------------------------
+  // 추천 섹션
+  // -------------------------
+  const recommendedGenres = useMemo(() => {
+    const genres = Object.keys(genreMap);
+    if (genres.length <= 2) return genres;
+    const shuffled = genres.sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 2);
+  }, []);
+
+  const recommendedSections = useMemo(() => {
+    if (hasFilter || !allMovies) return {};
+    const map: Record<string, Movie[]> = {};
+    recommendedGenres.forEach((genre) => {
+      const moviesOfGenre = allMovies.filter((m) => m.genres?.includes(genre));
+      if (moviesOfGenre.length > 0) map[genreMap[genre]] = moviesOfGenre.slice(0, 10);
+    });
+    return map;
+  }, [recommendedGenres, allMovies, hasFilter]);
+
+  const carouselRefs = useRef<Record<string, HTMLDivElement>>({});
+
+  useEffect(() => {
+    Object.keys(carouselRefs.current).forEach((section) => {
+      const el = carouselRefs.current[section];
+      if (!el) return;
+      const handleWheel = (e: WheelEvent) => {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY * WHEEL_SPEED;
+      };
+      el.addEventListener("wheel", handleWheel, { passive: false });
+      return () => el.removeEventListener("wheel", handleWheel);
+    });
+  }, [recommendedSections]);
+
+  // -------------------------
+  // 렌더링
+  // -------------------------
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-8 lg:px-16 py-8 flex gap-8">
-        {/* 필터 */}
-        <div className="w-64 flex-shrink-0">
-          <div className="bg-gray-100/50 rounded-2xl p-6 shadow-lg border sticky top-24 space-y-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 cursor-pointer" onClick={handleSearchSubmit} />
-              <form onSubmit={handleSearchSubmit}>
-                <Input
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder="영화 제목 검색"
-                  className="pl-10"
-                />
-              </form>
-            </div>
-
-            {loading ? (
-              <LoadingSpinner />
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(yearGroups).map(([label, groupYears]) => (
-                  <div key={label} className="flex items-center space-x-3">
-                    <Checkbox
-                      id={`group-${label}`}
-                      checked={groupYears.every(y => selectedYears.includes(y))}
-                      onCheckedChange={() => toggleYearGroup(label)}
-                    />
-                    <label htmlFor={`group-${label}`} className="text-sm text-gray-700 cursor-pointer">{label}</label>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {genres.map((genre, idx) => (
-                <div key={`${genre}-${idx}`} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`genre-${genre}`}
-                    checked={selectedGenres.includes(genre)}
-                    onCheckedChange={() => toggleGenre(genre)}
-                  />
-                  <label htmlFor={`genre-${genre}`} className="text-sm text-gray-700 cursor-pointer">{genreMap[genre] || genre}</label>
-                </div>
-              ))}
-            </div>
-
-            <Button variant="outline" onClick={clearAllFilters} className="w-full">
-              필터 초기화
-            </Button>
-          </div>
+    <div className="min-h-screen bg-white max-w-7xl mx-auto px-8 lg:px-16 py-8 space-y-12">
+      <div className="flex gap-8">
+        <div className="w-1/4">
+          <SearchFilters
+            query={query}
+            setQuery={setQuery}
+            yearGroups={YEAR_GROUPS}
+            selectedYears={selectedYears}
+            toggleYearGroup={toggleYearGroup}
+            genres={Object.keys(genreMap)}
+            selectedGenres={selectedGenres}
+            toggleGenre={toggleGenre}
+            clearAllFilters={clearAllFilters}
+            handleSearchSubmit={handleSearchSubmit}
+            genreMap={genreMap}
+          />
         </div>
 
-        {/* 영화 리스트 */}
-        <div className="flex-1 space-y-6">
-          {!query && selectedYears.length === 0 && selectedGenres.length === 0 ? (
-            <p className="text-center text-gray-600 py-12">검색어를 입력하거나 필터를 선택해주세요.</p>
-          ) : loading ? (
-            <LoadingSpinner />
-          ) : (
-            <>
-              <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">영화 {sortedMovies.length}건</h1>
-                <div className="flex gap-2">
-                  <Select value={sortBy} onValueChange={handleSortChange}>
-                    <SelectTrigger className="w-32 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="latest">최신순</SelectItem>
-                      <SelectItem value="rating">평점순</SelectItem>
-                      <SelectItem value="title">제목순</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} onClick={() => setViewMode('grid')}><Grid className="h-4 w-4" /></Button>
-                  <Button variant={viewMode === 'list' ? 'default' : 'ghost'} onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
-                </div>
-              </div>
-
-              {sortedMovies.length === 0 ? (
-                <p className="text-center text-gray-600 py-12">검색 결과가 없습니다.</p>
-              ) : (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'space-y-4'}>
-                  {sortedMovies.slice(0, displayCount).map((movie, idx) => (
+        <div className="w-3/4 space-y-12">
+          {!hasFilter &&
+            Object.keys(recommendedSections).map((section) => (
+              <div key={section} className="space-y-4">
+                <h2 className="text-xl font-semibold">{section}</h2>
+                <div
+                  className="flex overflow-x-auto gap-4 py-2 scroll-smooth carousel"
+                  ref={(el) => { carouselRefs.current[section] = el!; }}
+                >
+                  {recommendedSections[section].map((movie, idx) => (
                     <div
-                      key={`${movie.movieIdx}-${idx}`}
-                      className="cursor-pointer"
-                      onClick={() => navigate(`/movies/${movie.movieIdx}`)}
+                      key={movie.movieIdx ?? `${section}-${idx}`}
+                      className="flex-none w-40 cursor-pointer"
+                      onClick={() => navigate(`/movie/${movie.movieIdx}`)}
                     >
-                      <div className="aspect-[2/3] rounded-lg overflow-hidden relative">
-                        <ImageWithFallback
-                          src={movie.posterPath ? `https://image.tmdb.org/t/p/w500${movie.posterPath}` : '/default-poster.png'}
-                          alt={movie.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <h3 className="mt-2 font-semibold text-gray-800 line-clamp-1">{movie.title}</h3>
-                      <p className="text-gray-600 text-xs">{movie.releaseDate?.split('-')[0]}년 • {(movie.genres || []).map(g => genreMap[g] || g).join(', ')}</p>
+                      <img
+                        src={getPosterUrl(movie.posterPath)}
+                        alt={movie.title}
+                        className="w-full h-56 object-cover rounded"
+                      />
+                      <h4 className="mt-1 text-sm font-medium">{movie.title}</h4>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
+            ))
+          }
 
-              {displayCount < sortedMovies.length && (
-                <div className="text-center mt-8">
-                  <Button
-                    variant="outline"
-                    className="px-8 bg-white border-gray-400 text-gray-800 hover:bg-gray-100 hover:text-gray-900"
-                    onClick={() => setDisplayCount(prev => prev + 8)}
+          {hasFilter && sortedMovies.length > 0 && (
+            <div>
+              <SortAndViewToggle
+                sortBy={sortBy}
+                handleSortChange={handleSortChange}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+              />
+              <div className={`grid ${viewMode === "grid" ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-1"} gap-4 mt-4`}>
+                {visibleMovies.map((movie, idx) => (
+                  <div
+                    key={movie.movieIdx ?? `grid-${idx}`}
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/movie/${movie.movieIdx}`)}
                   >
-                    더 많은 결과 보기
-                  </Button>
+                    <img
+                      src={getPosterUrl(movie.posterPath)}
+                      alt={movie.title}
+                      className="w-full h-56 object-cover rounded"
+                    />
+                    <h4 className="mt-2 text-sm font-medium">{movie.title}</h4>
+                  </div>
+                ))}
+              </div>
+              {displayCount < sortedMovies.length && (
+                <div className="flex justify-center mt-6">
+                  <button
+                    className="px-4 py-2 bg-blue-500 text-white rounded"
+                    onClick={handleLoadMore}
+                  >
+                    더보기
+                  </button>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
+
+      <style>{`
+        .carousel::-webkit-scrollbar { display: none; }
+        .carousel { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
-}
+};
+
+export default SearchPage;

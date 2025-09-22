@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import axios from "axios";
 import { Star, Info } from "lucide-react";
 import { HorizontalScrollList } from "@/components/HorizontalScrollList";
 
@@ -73,8 +69,7 @@ const mapApiMovieBasic = (m: any): UiMovie => ({
   releaseDate: m.releaseDate ?? null,
 });
 
-function MainPage() {
-  const { token } = useAuth();
+export default function MainPage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -85,7 +80,7 @@ function MainPage() {
   const [selectedFeeling, setSelectedFeeling] = useState<string | null>(null);
   const [feelingMovies, setFeelingMovies] = useState<UiMovie[]>([]);
 
-  const onMovieClick = (m: UiMovie) => navigate(`/movies/${m.id}`);
+  const onMovieClick = (m: UiMovie) => navigate(`/movie/${m.id}`);
 
   const fetchMoviesWithGenres = async (url: string, params?: any) => {
     const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
@@ -232,6 +227,7 @@ function MainPage() {
               </div>
             )}
 
+            {/* Sections */}
             <section className="max-w-7xl mx-auto px-8 lg:px-16 pt-[100px] space-y-[100px] pb-16">
               {/* 맞춤 추천 */}
               <div>

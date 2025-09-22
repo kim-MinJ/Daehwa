@@ -20,11 +20,6 @@ public ResponseEntity<MovieInfoDto> getRandomMovie() {
     return ResponseEntity.ok(movieInfoService.getRandomMovie());
 }
 
-  @GetMapping("/{movieIdx}")
-  public ResponseEntity<MovieInfoDto> getMovieById(@PathVariable Long movieIdx) {
-    return ResponseEntity.ok(movieInfoService.getMovieById(movieIdx));
-  }
-
   @GetMapping
   public ResponseEntity<List<MovieInfoDto>> getAllMovies() {
     return ResponseEntity.ok(movieInfoService.getAllMovies());

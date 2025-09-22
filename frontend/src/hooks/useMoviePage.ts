@@ -128,7 +128,7 @@ export function useMoviePage(id: number) {
         setState(s => ({ ...s, loading: true, error: null }));
 
         const detailRaw = await safeGet([
-          `/api/movies/${id}`,
+          `/api/movie/${id}`,
           `/api/movies/info/${id}`,
         ]);
 

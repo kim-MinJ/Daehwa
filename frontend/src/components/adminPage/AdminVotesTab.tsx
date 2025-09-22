@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
-import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { ImageWithFallback } from "../imageFallback/ImageWithFallback";
 import { Movie } from "../../pages/RankingPage";
 
 interface AdminVotesTabProps {

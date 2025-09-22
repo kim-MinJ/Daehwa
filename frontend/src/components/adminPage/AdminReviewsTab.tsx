@@ -69,7 +69,7 @@ export default function AdminReviewsTab({
                   <td className="p-2">
   {movie ? (
     <Link
-      to={`/movies/${movie.id}`}   // 영화 상세 페이지 이동
+      to={`/movie/${movie.id}`}   // 영화 상세 페이지 이동
       className="text-blue-600 hover:underline"
     >
       {movie.title}
