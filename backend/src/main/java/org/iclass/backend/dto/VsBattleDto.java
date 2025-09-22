@@ -9,9 +9,9 @@ import lombok.*;
 @Builder
 @ToString
 public class VsBattleDto {
-    private Long vsIdx;           // VS 대결 PK
-    private String daysAgo;       // "n일 전" 형식
-    private long totalVotes;      // 총 투표 수
+    private Long vsIdx;           
+    private String daysAgo;       
+    private long totalVotes;      
 
     private Long movie1Id;
     private String movie1Title;
@@ -30,6 +30,7 @@ public class VsBattleDto {
     private int movie2Percentage;
 
     private boolean isMovie1Winner;
+    private Long votedMovieId;
 
-    private Long votedMovieId;    // ✅ 이 유저가 실제 찍은 영화
+    private java.util.Date startDate;
 }

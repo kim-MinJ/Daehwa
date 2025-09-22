@@ -136,57 +136,63 @@ public class MovieVoteService {
 
     List<MovieVoteEntity> votes = movieVoteRepository.findByUser(user);
 
-    return votes.stream().map(v -> {
-        MovieVsEntity vs = v.getMovieVS();
-        if (vs == null) return null; // 단일 투표 모드면 제외
+    return votes.stream()
+            .map(v -> {
+                MovieVsEntity vs = v.getMovieVS();
+                if (vs == null) return null; // 단일 투표 모드면 제외
 
-        // 영화 정보
-        MovieInfoEntity movie1 = vs.getMovieVs1();
-        MovieInfoEntity movie2 = vs.getMovieVs2();
+                // 영화 정보
+                MovieInfoEntity movie1 = vs.getMovieVs1();
+                MovieInfoEntity movie2 = vs.getMovieVs2();
 
-        // 투표 수 집계
-        long movie1Votes = movie1.getVoteCount() == null ? 0 : movie1.getVoteCount();
-        long movie2Votes = movie2.getVoteCount() == null ? 0 : movie2.getVoteCount();
-        long totalVotes = movie1Votes + movie2Votes;
+                // 투표 수 집계
+                long movie1Votes = movie1.getVoteCount() == null ? 0 : movie1.getVoteCount();
+                long movie2Votes = movie2.getVoteCount() == null ? 0 : movie2.getVoteCount();
+                long totalVotes = movie1Votes + movie2Votes;
 
-        int movie1Percentage = totalVotes > 0 ? (int)((movie1Votes * 100.0) / totalVotes) : 0;
-        int movie2Percentage = totalVotes > 0 ? 100 - movie1Percentage : 0;
+                int movie1Percentage = totalVotes > 0 ? (int)((movie1Votes * 100.0) / totalVotes) : 0;
+                int movie2Percentage = totalVotes > 0 ? 100 - movie1Percentage : 0;
 
-        // startDate 기준 "n일 전"
-       // startDate 기준 "n일 전"
-        Date startDate = vs.getStartDate();
-        LocalDate vsStartDate = startDate.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+                // startDate 기준 "n일 전"
+                Date startDate = vs.getStartDate();
+                LocalDate vsStartDate = startDate.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
 
-        long days = ChronoUnit.DAYS.between(vsStartDate, LocalDate.now());
-        String daysAgo = days == 0 ? "오늘" : days + "일 전";
+                long days = ChronoUnit.DAYS.between(vsStartDate, LocalDate.now());
+                String daysAgo = days == 0 ? "오늘" : days + "일 전";
 
-        return VsBattleDto.builder()
-                .vsIdx(vs.getVsIdx())
-                .daysAgo(daysAgo)   // ✅ 문자열
-                .totalVotes(totalVotes)
+                return VsBattleDto.builder()
+                        .vsIdx(vs.getVsIdx())
+                        .daysAgo(daysAgo)
+                        .totalVotes(totalVotes)
 
-                .movie1Id(movie1.getMovieIdx())
-                .movie1Title(movie1.getTitle())
-                .movie1Poster(movie1.getPosterPath())
-                .movie1Director("알 수 없음")
-                .movie1Rating(movie1.getVoteAverage())
-                .movie1Votes(movie1Votes)
-                .movie1Percentage(movie1Percentage)
+                        .movie1Id(movie1.getMovieIdx())
+                        .movie1Title(movie1.getTitle())
+                        .movie1Poster(movie1.getPosterPath())
+                        .movie1Director("알 수 없음")
+                        .movie1Rating(movie1.getVoteAverage())
+                        .movie1Votes(movie1Votes)
+                        .movie1Percentage(movie1Percentage)
 
-                .movie2Id(movie2.getMovieIdx())
-                .movie2Title(movie2.getTitle())
-                .movie2Poster(movie2.getPosterPath())
-                .movie2Director("알 수 없음")
-                .movie2Rating(movie2.getVoteAverage())
-                .movie2Votes(movie2Votes)
-                .movie2Percentage(movie2Percentage)
+                        .movie2Id(movie2.getMovieIdx())
+                        .movie2Title(movie2.getTitle())
+                        .movie2Poster(movie2.getPosterPath())
+                        .movie2Director("알 수 없음")
+                        .movie2Rating(movie2.getVoteAverage())
+                        .movie2Votes(movie2Votes)
+                        .movie2Percentage(movie2Percentage)
 
-                .isMovie1Winner(movie1Votes > movie2Votes)
-                .votedMovieId(v.getMovie().getMovieIdx()) // ✅ 이 유저가 실제 찍은 영화
-                .build();
-    }).filter(Objects::nonNull).toList();
+                        .isMovie1Winner(movie1Votes > movie2Votes)
+                        .votedMovieId(v.getMovie().getMovieIdx())
+                        // ✅ 정렬용 startDate 포함
+                        .startDate(vs.getStartDate())
+                        .build();
+            })
+            .filter(Objects::nonNull)
+            // ✅ 최신순 정렬
+            .sorted((a, b) -> b.getStartDate().compareTo(a.getStartDate()))
+            .toList();
 }
 
     // ✅ DTO 변환 (단일)
