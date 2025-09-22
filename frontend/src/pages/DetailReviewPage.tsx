@@ -405,11 +405,12 @@ export default function DetailReviewPage() {
         <h2 className="text-xl font-bold mb-4">리뷰 작성</h2>
         <div className="flex gap-1 mb-3">{renderRatingStars(userRating, setUserRating)}</div>
         <Textarea
-          value={newReview}
-          onChange={(e) => setNewReview(e.target.value)}
-          placeholder="솔직한 리뷰를 작성해주세요."
-          rows={4}
-        />
+  value={newReview}
+  onChange={(e) => setNewReview(e.target.value)}
+  placeholder="솔직한 리뷰를 작성해주세요."
+  rows={4}
+  className="border border-gray-300 rounded-md p-2"
+/>
         <div className="flex items-center gap-2 mt-2">
           <input
             type="checkbox"
