@@ -1,4 +1,3 @@
-// src/components/searchPage/SearchFilters.tsx
 import { Checkbox } from '../ui/checkbox';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -15,7 +14,6 @@ interface SearchFiltersProps {
   toggleGenre: (genre: string) => void;
   clearAllFilters: () => void;
   handleSearchSubmit: (e: React.FormEvent) => void;
-  genreMap: Record<string, string>;
 }
 
 // 공통 체크박스 컴포넌트
@@ -38,7 +36,6 @@ const FilterCheckbox = ({
   </div>
 );
 
-// named export로 변경
 export const SearchFilters = ({
   query,
   setQuery,
@@ -50,7 +47,6 @@ export const SearchFilters = ({
   toggleGenre,
   clearAllFilters,
   handleSearchSubmit,
-  genreMap,
 }: SearchFiltersProps) => (
   <div className="w-64 flex-shrink-0">
     <div className="bg-gray-100/50 rounded-2xl p-6 shadow-lg border sticky top-24 space-y-6">
@@ -91,7 +87,7 @@ export const SearchFilters = ({
             <FilterCheckbox
               key={`${genre}-${idx}`}
               id={`genre-${genre}`}
-              label={genreMap[genre] ?? genre}
+              label={genre}
               checked={selectedGenres.includes(genre)}
               onChange={() => toggleGenre(genre)}
             />
