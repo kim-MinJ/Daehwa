@@ -109,7 +109,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
     if (!voteSearchQuery) return visibleMovieVotes;
     const q = voteSearchQuery.toLowerCase().replace(/\s/g, "");
     return visibleMovieVotes.filter((mv: any) => {
-      const vsString = `${mv.vsIdx}-${mv.vsRound}-${mv.pair}`.replace(/\s/g, "");
+      const vsString = `${mv.vsRound}-${mv.pair}`.replace(/\s/g, "");
       const movie1Title = mv.movieVs1?.title?.toLowerCase() ?? "";
       const movie2Title = mv.movieVs2?.title?.toLowerCase() ?? "";
       return movie1Title.includes(q) || movie2Title.includes(q) || vsString.includes(q);
@@ -339,7 +339,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
               <Search className="h-4 w-4 text-gray-500" />
               <input
                 type="text"
-                placeholder="영화 제목 또는 vsIdx-회차-순번으로 검색"
+                placeholder="영화 제목 또는 회차-순번으로 검색"
                 value={voteSearchQuery}
                 onChange={(e) => setVoteSearchQuery(e.target.value)}
                 className="border p-2 rounded w-full"
@@ -354,7 +354,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
                 <table className="w-full border-collapse text-center">
                   <thead>
                     <tr className="border-b bg-gray-100">
-                      <th className="p-2">번호-회차-순번</th>
+                      <th className="p-2">회차-순번</th>
                       <th className="p-2">Movie 1</th>
                       <th className="p-2">Movie 2</th>
                       <th className="p-2">Start Date</th>
@@ -370,7 +370,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
                       return (
                         <tr key={mv.vsIdx} className="border-b">
-                          <td className="p-2">{mv.vsIdx} - {mv.vsRound} - {mv.pair}</td>
+                          <td className="p-2">{mv.vsRound} - {mv.pair}</td>
                           <td className="p-2 text-center">
                             <div className="flex flex-col items-center">
                               <ImageWithFallback
