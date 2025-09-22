@@ -1,5 +1,7 @@
 package org.iclass.backend.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,7 +24,7 @@ import lombok.ToString;
 @ToString
 @Builder
 @Entity
-@Table(name = "MOVIE_VOTE")
+@Table(name = "Movie_Vote")
 public class MovieVoteEntity {
 
   @Id
@@ -39,6 +41,10 @@ public class MovieVoteEntity {
   private UsersEntity user;
 
   @ManyToOne
-  @JoinColumn(name = "VS_idx", nullable = false)
+  @JoinColumn(name = "VS_idx", nullable = false) // 🔥 임시로 투표 증가 확인을 위해 true로 변경
   private MovieVsEntity movieVS;
+
+  @Column(name = "vs_date", nullable = false)
+  @Builder.Default
+  private LocalDateTime vsDate = LocalDateTime.now();
 }
