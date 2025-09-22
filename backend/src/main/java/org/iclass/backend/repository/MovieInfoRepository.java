@@ -1,5 +1,6 @@
 package org.iclass.backend.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.iclass.backend.entity.MovieInfoEntity;
@@ -23,6 +24,9 @@ public interface MovieInfoRepository extends JpaRepository<MovieInfoEntity, Long
     // 모든 영화 조회 + 장르 페치 + 페이징
     @Query("SELECT DISTINCT m FROM MovieInfoEntity m LEFT JOIN FETCH m.movieGenres mg LEFT JOIN FETCH mg.genre")
     Page<MovieInfoEntity> findAllWithGenres(Pageable pageable);
+
+    @Query("SELECT DISTINCT m FROM MovieInfoEntity m LEFT JOIN FETCH m.movieGenres mg LEFT JOIN FETCH mg.genre")
+    List<MovieInfoEntity> findAllWithGenresMovies();
 
     // 제목 포함 검색 + 페이징
     Page<MovieInfoEntity> findByTitleContainingIgnoreCase(String title, Pageable pageable);

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { ImageWithFallback } from "../imageFallback/ImageWithFallback";
-import { Movie } from "../../pages/RankingPage";
+import { Movie } from "@/services/movies";
 
 interface AdminVotesTabProps {
   token: string;
@@ -39,41 +39,42 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   // -------------------- 전체 영화 데이터 불러오기 --------------------
   useEffect(() => {
-    (async () => {
-      try {
-        setLoadingMovies(true);
-        const res = await fetch("/api/searchMovie?page=0&limit=1000");
-        if (!res.ok) throw new Error("영화 데이터 조회 실패");
-        const raw = await res.json();
-        const dataArray: any[] = Array.isArray(raw) ? raw : Array.isArray(raw.content) ? raw.content : [];
+  (async () => {
+    try {
+      setLoadingMovies(true);
+      const res = await fetch("/api/searchMovie?page=1&limit=1000");
+      const json = await res.json();
+      console.log("API 응답:", json); // 확인용
 
-        const mapped: Movie[] = dataArray
-          .filter((m) => m.posterPath && m.title)
-          .map((m) => ({
-            id: m.movieIdx,
-            movieIdx: String(m.movieIdx),
-            tmdbMovieId: m.tmdbMovieId ?? "",
-            title: m.title,
-            poster: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : "",
-            year: m.releaseDate?.split("-")[0] ?? "",
-            genres: m.genre ? m.genre.split(",") : [],
-            genre: m.genre ?? "",
-            rating: m.voteAverage ?? 0,
-            runtime: m.runtime ?? 0,
-            description: m.overview ?? "",
-            director: m.director ?? "",
-            rank: 0,
-            voteCount: 0,
-          }));
+      // data가 배열인지 확인, 아니라면 객체 안에서 배열 꺼내기
+      const data: any[] = Array.isArray(json) ? json : json.data ?? [];
 
-        setAllMovies(mapped);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingMovies(false);
-      }
-    })();
-  }, []);
+      const mapped: Movie[] = data
+        .filter((m) => m.posterPath)
+        .map((m) => ({
+          movieIdx: Number(m.movieIdx), // number 타입
+          id: Number(m.movieIdx),
+          title: m.title,
+          overview: m.overview ?? "",
+          posterUrl: m.posterPath ? `https://image.tmdb.org/t/p/w500${m.posterPath}` : undefined,
+          backdropUrl: undefined,
+          genres: m.genre ? m.genre.split(",") : [],
+          runtime: m.runtime ?? undefined,
+          releaseDate: m.releaseDate ?? undefined,
+          voteAverage: m.voteAverage ?? undefined,
+          voteCount: m.voteCount ?? undefined,
+          posterPath: m.posterPath,
+          director: m.director ?? "", // director 없으면 빈 문자열
+        }));
+
+      setAllMovies(mapped);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMovies(false);
+    }
+  })();
+}, []);
 
   // -------------------- MovieVote 리스트 불러오기 --------------------
   const fetchMovieVotes = async () => {
@@ -117,12 +118,12 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   // -------------------- 검색 & 필터링 --------------------
   const filteredMovies = useMemo(() => {
-    return allMovies.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(movieSearchQuery.toLowerCase()) ||
-        movie.director.toLowerCase().includes(movieSearchQuery.toLowerCase())
-    );
-  }, [allMovies, movieSearchQuery]);
+  return allMovies.filter(
+    (movie) =>
+      movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (movie.director?.toLowerCase() ?? "").includes(searchQuery.toLowerCase())
+  );
+}, [allMovies, searchQuery]);
 
   const pagedMovies = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
@@ -237,26 +238,26 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
                 </Button>
               </div>
 
-              {/* VS 선택 카드 */}
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <div
-                  className={`text-center cursor-pointer ${
-                    selecting === "movie1" ? "ring-4 ring-yellow-400 rounded-xl" : ""
-                  }`}
-                  onClick={() => setSelecting("movie1")}
-                >
-                  {vsMovie1 ? (
-                    <img
-                      src={vsMovie1.poster}
-                      className="w-48 h-64 object-cover rounded-xl border-4 border-yellow-400"
-                    />
-                  ) : (
-                    <div className="w-48 h-64 bg-gray-200 flex items-center justify-center rounded-xl">
-                      무비1 선택
-                    </div>
-                  )}
-                  <p className="mt-2 font-semibold">무비1</p>
-                </div>
+          {/* VS 선택 카드 */}
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div
+              className={`text-center cursor-pointer ${
+                selecting === "movie1" ? "ring-4 ring-yellow-400 rounded-xl" : ""
+              }`}
+              onClick={() => setSelecting("movie1")}
+            >
+              {vsMovie1 ? (
+  <img
+    src={vsMovie1.posterUrl ?? ""}
+    className="w-48 h-64 object-cover rounded-xl border-4 border-yellow-400"
+  />
+) : (
+  <div className="w-48 h-64 bg-gray-200 rounded-xl flex items-center justify-center">
+    무비1 선택
+  </div>
+)}
+              <p className="mt-2 font-semibold">무비1</p>
+            </div>
 
                 {/* VS 텍스트 */}
                 <div className="text-2xl font-bold flex-shrink-0 self-center">VS</div>
@@ -287,23 +288,31 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
                 </Button>
               </div>
 
-              {/* 전체 영화 카드 */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {pagedMovies.map((movie) => (
-                  <div
-                    key={movie.movieIdx}
-                    className={`cursor-pointer relative rounded-lg overflow-hidden border ${
-                      vsMovie1?.movieIdx === movie.movieIdx || vsMovie2?.movieIdx === movie.movieIdx
-                        ? "border-yellow-500 shadow-lg"
-                        : "border-gray-300"
-                    }`}
-                    onClick={() => handleCardClick(movie)}
-                  >
-                    <ImageWithFallback src={movie.poster} alt={movie.title} className="w-full h-64 object-cover" />
-                    <h3 className="mt-2 font-semibold text-gray-800 line-clamp-1">{movie.title}</h3>
-                  </div>
-                ))}
-              </div>
+          {/* 전체 영화 카드 */}
+          {loadingMovies ? (
+            <LoadingSpinner />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {pagedMovies.map((movie) => (
+                <div
+                  key={movie.movieIdx}
+                  className={`cursor-pointer relative rounded-lg overflow-hidden border ${
+                    vsMovie1?.movieIdx === movie.movieIdx || vsMovie2?.movieIdx === movie.movieIdx
+                      ? "border-yellow-500 shadow-lg"
+                      : "border-gray-300"
+                  }`}
+                  onClick={() => handleCardClick(movie)}
+                >
+                  <ImageWithFallback
+  src={movie.posterUrl ?? ""}
+  alt={movie.title}
+  className="w-full h-64 object-cover"
+/>
+                  <h3 className="mt-2 font-semibold text-gray-800 line-clamp-1">{movie.title}</h3>
+                </div>
+              ))}
+            </div>
+          )}
 
               {/* 페이지 네비게이션 */}
               <div className="flex justify-center gap-2 mt-4">
