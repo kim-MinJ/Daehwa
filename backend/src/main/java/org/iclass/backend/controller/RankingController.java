@@ -1,21 +1,26 @@
 package org.iclass.backend.controller;
 
-import lombok.RequiredArgsConstructor;
-import org.iclass.backend.repository.MovieVoteRepository;
-import org.iclass.backend.entity.MovieInfoEntity;
+import java.util.Map;
+
+import org.iclass.backend.dto.MovieVoteDto;
+import org.iclass.backend.repository.UsersRepository;
 import org.iclass.backend.service.MovieVoteService;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+import org.iclass.backend.service.RankingService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
+import lombok.RequiredArgsConstructor;
 
-@CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/api/movie")
+@RequestMapping("/api/movies")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 public class RankingController {
 
     private final UsersRepository usersRepository;
@@ -27,6 +32,7 @@ public class RankingController {
     public ResponseEntity<?> getTrendingMovies() {
         return ResponseEntity.ok(rankingService.getTrendingMovies());
     }
+
     /** ✅ 버튼 클릭 시 vote_count +1 */
     @PostMapping("/vote")
     public ResponseEntity<?> vote(

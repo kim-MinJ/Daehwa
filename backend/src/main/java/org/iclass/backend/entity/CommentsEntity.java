@@ -2,6 +2,8 @@ package org.iclass.backend.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,6 +40,7 @@ public class CommentsEntity {
 
     @ManyToOne
     @JoinColumn(name = "review_idx", nullable = false)
+    @JsonBackReference
     private ReviewEntity review;
 
     @Column(nullable = false, length = 255)
@@ -50,4 +53,5 @@ public class CommentsEntity {
     @Column(name = "update_at")
     @Builder.Default
     private LocalDateTime updateAt = LocalDateTime.now();
+
 }

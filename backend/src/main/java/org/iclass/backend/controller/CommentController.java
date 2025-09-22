@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.iclass.backend.dto.CommentsDto;
-import org.iclass.backend.entity.CommentsEntity;
 import org.iclass.backend.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,35 +29,51 @@ public class CommentController {
 
   // 특정 리뷰의 댓글 목록 조회
   @GetMapping("/{reviewId}/comments")
-  public List<CommentsEntity> getComments(@PathVariable Long reviewId) {
-    return commentService.getCommentsByReview(reviewId);
+  public List<CommentsDto> getComments(@PathVariable Long reviewId) {
+    return commentService.getCommentsByReview(reviewId).stream()
+        .map(CommentsDto::of) // Entity → DTO 변환
+        .toList();
   }
 
   // 댓글 작성
   @PostMapping("/{reviewId}/comments")
-  public CommentsEntity addComment(
+  public CommentsDto addComment(
       @PathVariable Long reviewId,
       @RequestBody CommentsDto dto,
-      @AuthenticationPrincipal UserDetails userDetails) { // ✅ UserDetails로 받음
-
-    String username = userDetails.getUsername(); // 로그인한 사용자 아이디
-    return commentService.addComment(reviewId, username, dto);
+      @AuthenticationPrincipal UserDetails userDetails) {
+    String userId = userDetails.getUsername();
+    String username = userDetails.getUsername();
+    return commentService.addComment(reviewId, username, userId, dto);
   }
 
-  // 댓글 삭제
+  // 단일 댓글 삭제
   @DeleteMapping("/comments/{commentId}")
   public void deleteComment(@PathVariable Long commentId) {
     commentService.deleteComment(commentId);
   }
 
+  // 특정 사용자가 작성한 모든 댓글 하드 삭제
+  @DeleteMapping("/user/{userId}/comments")
+  public void deleteCommentsByUser(@PathVariable String userId) {
+    commentService.hardDeleteCommentsByUser(userId);
+  }
+
+  // 특정 리뷰에 달린 모든 댓글 하드 삭제
+  @DeleteMapping("/{reviewId}/comments/all")
+  public void deleteCommentsByReview(@PathVariable Long reviewId) {
+    commentService.hardDeleteCommentsByReview(reviewId);
+  }
+
+  // 모든 댓글 조회
   @GetMapping("/comments")
   public List<CommentsDto> getAllComments() {
     return commentService.getAllComments().stream()
-        .map(CommentsDto::of) // DTO로 변환
+        .map(CommentsDto::of)
         .toList();
   }
 
-  @PutMapping("/{commentIdx}")
+  // 댓글 수정
+  @PutMapping("/comments/{commentIdx}")
   public ResponseEntity<?> updateCommentContent(
       @PathVariable Long commentIdx,
       @RequestBody Map<String, String> body) {

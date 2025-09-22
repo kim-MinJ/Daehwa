@@ -18,14 +18,14 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
   void deleteAllByUser(UsersEntity user);
 
   // 영화별 리뷰 개수, 합계, 평균 조회 (isBlind = 0)
-  @Query("SELECT COALESCE(AVG(r.rating), 0) FROM ReviewEntity r " +
-      "WHERE r.movie.movieIdx = :movieId AND r.isBlind = 0")
+  @Query("SELECT COALESCE(AVG(r.rating), 0) FROM ReviewEntity r WHERE r.movie.movieIdx = :movieId AND r.isBlind = 0")
   Optional<Double> findAvgRatingByMovie(@Param("movieId") Long movieId);
 
   List<ReviewEntity> findAllByOrderByCreatedAtDesc();
 
   List<ReviewEntity> findAllByUserOrderByCreatedAtDesc(UsersEntity user);
 
-  Optional<ReviewEntity> findByReviewIdx(Long reviewIdx); // 단건 조회
+  Optional<ReviewEntity> findByReviewIdx(Long reviewIdx);
 
+  List<ReviewEntity> findByMovie_MovieIdx(Long movieIdx);
 }
