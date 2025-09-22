@@ -152,7 +152,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
 
   const handleMovieClick = (movie: Movie) => {
     if (!movie) return;
-    navigate(`/movie/${movie.movieIdx}`, { gitte: { movie } });
+    navigate(`/movie/${movie.movieIdx}`, { state: { movie } });
   };
 
   // ✅ 트렌딩 영화 로드
@@ -225,6 +225,14 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
         const res = await axios.get(`http://localhost:8080/api/vote/history/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+        // ✅ 최신 날짜순으로 정렬
+        const sorted = [...res.data].sort((a, b) => {
+        // 백엔드 DTO에 startDate 있으면 그걸 사용
+        const dateA = new Date(a.startDate || 0).getTime();
+        const dateB = new Date(b.startDate || 0).getTime();
+        return dateB - dateA; // 최신순
+      });
+
         setVoteHistory(res.data);
       } catch (err) {
         console.error("투표 기록 불러오기 실패:", err);
@@ -357,49 +365,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
 
       <div className="max-w-7xl mx-auto px-8 lg:px-16 py-8">
 
-         {/* === 내가 참여한 VS 기록 === */}
-        <div className="mb-12">
-          <div className="bg-gradient-to-b from-gray-100/80 to-gray-200/60 rounded-2xl shadow-lg p-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">내가 참여한 VS 기록</h3>
-            {voteHistory.length === 0 ? (
-              <p className="text-gray-500 text-center">아직 투표한 대결이 없습니다.</p>
-            ) : (
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-                {voteHistory.map((vs) => (
-                  <div
-                    key={vs.vsIdx}
-                    className="flex items-center justify-between bg-white rounded-lg shadow p-4 hover:shadow-md transition"
-                  >
-                    <div className="flex-1">
-                      <p className="text-gray-700 font-semibold">{vs.daysAgo}</p>
-                      <p className="text-sm text-gray-500">
-                        {vs.movie1Title} vs {vs.movie2Title}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div
-                        className={`text-sm ${
-                          vs.votedMovieId === vs.movie1Id ? "font-bold text-red-600" : "text-gray-500"
-                        }`}
-                      >
-                        {vs.movie1Title} ({vs.movie1Percentage}%)
-                      </div>
-                      <span className="text-gray-400 font-semibold">VS</span>
-                      <div
-                        className={`text-sm ${
-                          vs.votedMovieId === vs.movie2Id ? "font-bold text-blue-600" : "text-gray-500"
-                        }`}
-                      >
-                        {vs.movie2Title} ({vs.movie2Percentage}%)
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
+         
         {/* VS 섹션 */}
         <div className="mb-12">
           <div className="bg-gray-100/50 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-200/30">
@@ -591,29 +557,49 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
           </div>
         </div>
 
-        {/* 투표 안내 */}
-        <div className="mt-8 text-center">
-          {!hasVoted ? (
-            <div className="bg-blue-600/20 rounded-xl p-4 inline-block border border-blue-500/30">
-              <p className="text-blue-600">
-                🗳️{" "}
-                <span className="font-semibold">
-                  어떤 영화가 더 좋았나요? 투표해주세요!
-                </span>
-              </p>
-            </div>
-          ) : (
-            <div className="bg-green-600/20 rounded-xl p-4 inline-block border border-green-500/30">
-              <p className="text-green-600">
-                ✅ <span className="font-semibold">투표가 완료되었습니다!</span>
-              </p>
-              <p className="text-green-500 text-sm mt-1">
-                투표는 매주 월요일 초기화됩니다
-              </p>
-            </div>
-          )}
+          {/* === 내가 참여한 VS 기록 === */}
+        <div className="mb-12">
+          <div className="bg-gradient-to-b from-gray-100/80 to-gray-200/60 rounded-2xl shadow-lg p-6">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">내가 참여한 VS 기록</h3>
+            {voteHistory.length === 0 ? (
+              <p className="text-gray-500 text-center">아직 투표한 대결이 없습니다.</p>
+            ) : (
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+                {voteHistory.map((vs, idx) => (
+                  <div
+                    key={`${vs.vsIdx}-${idx}`}
+                    className="flex items-center justify-between bg-white rounded-lg shadow p-4 hover:shadow-md transition"
+                  >
+                    <div className="flex-1">
+                      <p className="text-gray-700 font-semibold">{vs.daysAgo}</p>
+                      <p className="text-sm text-gray-500">
+                        {vs.movie1Title} vs {vs.movie2Title}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div
+                        className={`text-sm ${
+                          vs.votedMovieId === vs.movie1Id ? "font-bold text-red-600" : "text-gray-500"
+                        }`}
+                      >
+                        {vs.movie1Title} ({vs.movie1Percentage}%)
+                      </div>
+                      <span className="text-gray-400 font-semibold">VS</span>
+                      <div
+                        className={`text-sm ${
+                          vs.votedMovieId === vs.movie2Id ? "font-bold text-blue-600" : "text-gray-500"
+                        }`}
+                      >
+                        {vs.movie2Title} ({vs.movie2Percentage}%)
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <br />
+
 
         {/* 박스오피스 TOP 10 */}
         <div className="mb-12">
