@@ -21,6 +21,7 @@ import ChatBot from "./components/public/ChatBot";
 import ErrorProvider from "./hooks/ErrorContext";
 import DetailReviewPage from "./pages/DetailReviewPage";
 import { FeelingProvider } from "./context/FeelingContext";
+import { GlobalFeelingModal } from "@/components/GlobalFeelingModal";
 
 function AppContent() {
   const location = useLocation();
@@ -87,6 +88,8 @@ export default function App() {
         </div>
         </ErrorProvider>
       </BrowserRouter>
+      {/* ✅ 모든 페이지에서 공통으로 표시되는 모달 */}
+      <GlobalFeelingModal />
     </FeelingProvider>
   );
 }
