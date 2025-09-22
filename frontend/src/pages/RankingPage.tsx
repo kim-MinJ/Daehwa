@@ -152,7 +152,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
 
   const handleMovieClick = (movie: Movie) => {
     if (!movie) return;
-    navigate(`/movies/${movie.movieIdx}`, { state: { movie } });
+    navigate(`/movie/${movie.movieIdx}`, { gitte: { movie } });
   };
 
   // ✅ 트렌딩 영화 로드
