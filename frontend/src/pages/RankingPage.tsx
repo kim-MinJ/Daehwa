@@ -12,6 +12,7 @@ import {
   Crown,
   Medal,
   Filter,
+  Flag,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
@@ -109,6 +110,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
   const [activeVsList, setActiveVsList] = useState<any[]>([]);
   const [selectedVsIdx, setSelectedVsIdx] = useState<number | null>(null);
   const [voteHistory, setVoteHistory] = useState<any[]>([]); // ✅ 유저 투표 기록
+  const [voteHistoryExpanded, setVoteHistoryExpanded] = useState(false);
 
   // TMDB 설정
   const TMDB_API_KEY = "302b783e860b19b6822ef0a445e7ae53";
@@ -186,37 +188,61 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
     fetchMovies();
   }, []);
 
-  // ✅ VS 대결 로드
-  useEffect(() => {
-    const fetchActiveVs = async () => {
-      try {
-        const res = await axios.get("http://localhost:8080/api/vs/versus");
-        const vsList = res.data;
+ // ✅ VS 대결 로드
+useEffect(() => {
+  const fetchActiveVs = async () => {
+    try {
+      // 1️⃣ API 호출
+      const res = await axios.get("http://localhost:8080/api/vs/versus");
 
-        if (vsList.length > 0) {
-          const firstVs = vsList[0];
-          const topPoster = await fetchPosterFromTMDB(
-            firstVs.topMovie.title,
-            firstVs.topMovie.year
-          );
-          const secondPoster = await fetchPosterFromTMDB(
-            firstVs.secondMovie.title,
-            firstVs.secondMovie.year
-          );
+      // 2️⃣ 전체 응답 데이터 확인
+      console.log("전체 VS 리스트:", res.data);
 
-          setTopMovie({ ...firstVs.topMovie, poster: topPoster });
-          setSecondMovie({ ...firstVs.secondMovie, poster: secondPoster });
-          setSelectedVsIdx(firstVs.vsIdx);
-        }
+      const vsList = res.data;
 
-        setActiveVsList(vsList);
-      } catch (err) {
-        console.error("VS 영화 로드 실패:", err);
+      if (vsList.length > 0) {
+        const firstVs = vsList[0];
+
+        // 3️⃣ 첫 번째 VS 항목 확인
+        console.log("첫 번째 VS 항목:", firstVs);
+
+        // 4️⃣ topMovie / secondMovie 세부 확인
+        const topMovieData = firstVs.topMovie;
+        const secondMovieData = firstVs.secondMovie;
+
+        console.log("첫 번째 VS - topMovie:", topMovieData);
+        console.log("첫 번째 VS - secondMovie:", secondMovieData);
+
+        // 5️⃣ API에서 posterPath가 존재하면 바로 URL 구성
+        const topPoster = topMovieData.posterPath
+          ? `https://image.tmdb.org/t/p/w500${topMovieData.posterPath}`
+          : "/fallback.png";
+
+        const secondPoster = secondMovieData.posterPath
+          ? `https://image.tmdb.org/t/p/w500${secondMovieData.posterPath}`
+          : "/fallback.png";
+
+        // 6️⃣ 상태 업데이트
+        setTopMovie({ ...topMovieData, poster: topPoster });
+        setSecondMovie({ ...secondMovieData, poster: secondPoster });
+        setSelectedVsIdx(firstVs.vsIdx);
+
+        // 7️⃣ 포스터까지 포함한 상태 확인
+        console.log("topMovie 상태:", { ...topMovieData, poster: topPoster });
+        console.log("secondMovie 상태:", { ...secondMovieData, poster: secondPoster });
       }
-    };
 
-    fetchActiveVs();
-  }, []);
+      // 8️⃣ 전체 VS 리스트 상태 확인
+      setActiveVsList(vsList);
+      console.log("activeVsList 상태:", vsList);
+    } catch (err) {
+      console.error("VS 영화 로드 실패:", err);
+    }
+  };
+
+  fetchActiveVs();
+}, []);
+
 
     useEffect(() => {
     if (!userId) return;
@@ -396,10 +422,10 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
                           />
                         </div>
                         <div className="absolute -top-3 -left-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
-                            <Crown className="h-6 w-6 text-white" />
-                          </div>
-                        </div>
+  <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+    <Flag className="h-6 w-6 text-white" />
+  </div>
+</div>
                       </div>
                       <div className="w-48 h-28 flex flex-col justify-between">
                         <div>
@@ -468,10 +494,10 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
                           />
                         </div>
                         <div className="absolute -top-3 -left-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center shadow-lg">
-                            <Medal className="h-6 w-6 text-white" />
-                          </div>
-                        </div>
+  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+    <Flag className="h-6 w-6 text-white" />
+  </div>
+</div>
                       </div>
                       <div className="w-48 h-28 flex flex-col justify-between">
                         <div>
@@ -561,47 +587,67 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
         </div>
 
           {/* === 내가 참여한 VS 기록 === */}
-        <div className="mb-12">
-          <div className="bg-gradient-to-b from-gray-100/80 to-gray-200/60 rounded-2xl shadow-lg p-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">내가 참여한 VS 기록</h3>
-            {voteHistory.length === 0 ? (
-              <p className="text-gray-500 text-center">아직 투표한 대결이 없습니다.</p>
-            ) : (
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-                {voteHistory.map((vs, idx) => (
-                  <div
-                    key={`${vs.vsIdx}-${idx}`}
-                    className="flex items-center justify-between bg-white rounded-lg shadow p-4 hover:shadow-md transition"
-                  >
-                    <div className="flex-1">
-                      <p className="text-gray-700 font-semibold">{vs.daysAgo}</p>
-                      <p className="text-sm text-gray-500">
-                        {vs.movie1Title} vs {vs.movie2Title}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div
-                        className={`text-sm ${
-                          vs.votedMovieId === vs.movie1Id ? "font-bold text-red-600" : "text-gray-500"
-                        }`}
-                      >
-                        {vs.movie1Title} ({vs.movie1Percentage}%)
-                      </div>
-                      <span className="text-gray-400 font-semibold">VS</span>
-                      <div
-                        className={`text-sm ${
-                          vs.votedMovieId === vs.movie2Id ? "font-bold text-blue-600" : "text-gray-500"
-                        }`}
-                      >
-                        {vs.movie2Title} ({vs.movie2Percentage}%)
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+<div className="mb-12">
+  <div className="bg-gradient-to-b from-gray-100/80 to-gray-200/60 rounded-2xl shadow-lg p-6 relative">
+    <h3 className="text-2xl font-bold text-gray-800 mb-4">내가 참여한 VS 기록</h3>
+
+    {voteHistory.length === 0 ? (
+      <p className="text-gray-500 text-center">아직 투표한 대결이 없습니다.</p>
+    ) : (
+      <>
+        {/* 펼치기/접기 버튼 우측 상단 */}
+        {voteHistory.length > 5 && (
+          <div className="absolute top-6 right-6">
+            <button
+              onClick={() => setVoteHistoryExpanded(!voteHistoryExpanded)}
+              className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+            >
+              {voteHistoryExpanded ? "접기 ▲" : "펼치기 ▼"}
+            </button>
           </div>
+        )}
+
+        <div
+          className={`space-y-4 overflow-y-auto transition-all duration-500 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200`}
+          style={{
+            maxHeight: voteHistoryExpanded ? "1000px" : "384px", // 384px ≈ max-h-96
+          }}
+        >
+          {voteHistory.map((vs, idx) => (
+            <div
+              key={`${vs.vsIdx}-${idx}`}
+              className="flex items-center justify-between bg-white rounded-lg shadow p-4 hover:shadow-md transition"
+            >
+              <div className="flex-1">
+                <p className="text-gray-700 font-semibold">{vs.daysAgo}</p>
+                <p className="text-sm text-gray-500">
+                  {vs.movie1Title} vs {vs.movie2Title}
+                </p>
+              </div>
+              <div className="flex items-center gap-6">
+                <div
+                  className={`text-sm ${
+                    vs.votedMovieId === vs.movie1Id ? "font-bold text-red-600" : "text-gray-500"
+                  }`}
+                >
+                  {vs.movie1Title} ({vs.movie1Percentage}%)
+                </div>
+                <span className="text-gray-400 font-semibold">VS</span>
+                <div
+                  className={`text-sm ${
+                    vs.votedMovieId === vs.movie2Id ? "font-bold text-blue-600" : "text-gray-500"
+                  }`}
+                >
+                  {vs.movie2Title} ({vs.movie2Percentage}%)
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+      </>
+    )}
+  </div>
+</div>
 
 
         {/* 박스오피스 TOP 선정작 */}
@@ -851,20 +897,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
                         />
                       </div>
                     </div>
-                    <div className="bg-white/80 rounded-lg p-4 border border-gray-300 shadow-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">작품 수</span>
-                        <span className="text-sm font-bold text-purple-600">
-                          {genreCount}편
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-300 rounded-full h-2">
-                        <div
-                          className="bg-purple-500 h-2 rounded-full"
-                          style={{ width: `${Math.min((genreCount / 20) * 100, 100)}%` }}
-                        />
-                      </div>
-                    </div>
+                    
                     <div className="bg-white/80 rounded-lg p-4 border border-gray-300 shadow-sm">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-600">최고 평점</span>
@@ -876,6 +909,20 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
                         <div
                           className="bg-purple-500 h-2 rounded-full"
                           style={{ width: `${Math.min((genreBest / 10) * 100, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="bg-white/80 rounded-lg p-4 border border-gray-300 shadow-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-600">작품 수</span>
+                        <span className="text-sm font-bold text-purple-600">
+                          {genreCount}편
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-300 rounded-full h-2">
+                        <div
+                          className="bg-purple-500 h-2 rounded-full"
+                          style={{ width: `${Math.min((genreCount / 20) * 100, 100)}%` }}
                         />
                       </div>
                     </div>
@@ -894,7 +941,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
               리뷰 점수를 종합하여 산정
             </p>
             <p className="text-gray-600 text-sm">
-              매일 오전 6시에 업데이트됩니다.
+              매일 오전 0시에 업데이트됩니다.
             </p>
           </div>
         </div>

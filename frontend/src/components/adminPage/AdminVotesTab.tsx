@@ -35,6 +35,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
   const [roundSelectOpen, setRoundSelectOpen] = useState(false);
   const [selectedRound, setSelectedRound] = useState(1);
   const [maxRound, setMaxRound] = useState(1);
+  const [warning, setWarning] = useState<string | null>(null);
   const PAGE_SIZE = 12;
 
   // -------------------- 전체 영화 데이터 불러오기 --------------------
@@ -108,7 +109,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
     if (!voteSearchQuery) return visibleMovieVotes;
     const q = voteSearchQuery.toLowerCase().replace(/\s/g, "");
     return visibleMovieVotes.filter((mv: any) => {
-      const vsString = `${mv.vsIdx}-${mv.vsRound}-${mv.pair}`.replace(/\s/g, "");
+      const vsString = `${mv.vsRound}-${mv.pair}`.replace(/\s/g, "");
       const movie1Title = mv.movieVs1?.title?.toLowerCase() ?? "";
       const movie2Title = mv.movieVs2?.title?.toLowerCase() ?? "";
       return movie1Title.includes(q) || movie2Title.includes(q) || vsString.includes(q);
@@ -131,11 +132,20 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
   // -------------------- VS 선택 --------------------
   const handleCardClick = (movie: Movie) => {
-    if (!vsMovie1) return setVsMovie1(movie);
-    if (!vsMovie2) return setVsMovie2(movie);
-    if (selecting === "movie1") return setVsMovie1(movie);
-    if (selecting === "movie2") return setVsMovie2(movie);
-  };
+  // 이미 선택된 영화면 경고
+  if ((vsMovie1 && vsMovie1.movieIdx === movie.movieIdx) ||
+      (vsMovie2 && vsMovie2.movieIdx === movie.movieIdx)) {
+    setWarning("⚠️ 같은 영화는 선택할 수 없습니다!");
+    return;
+  }
+
+  setWarning(null); // 정상 선택 시 경고 제거
+
+  if (!vsMovie1) return setVsMovie1(movie);
+  if (!vsMovie2) return setVsMovie2(movie);
+  if (selecting === "movie1") return setVsMovie1(movie);
+  if (selecting === "movie2") return setVsMovie2(movie);
+};
 
   const handleApply = async () => {
     if (!vsMovie1 || !vsMovie2) return;
@@ -238,6 +248,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
               </div>
 
               {/* VS 선택 카드 */}
+              {warning && <p className="text-red-600 font-semibold mb-2">{warning}</p>}
               <div className="flex items-center justify-center gap-4 mb-6">
                 <div
                   className={`text-center cursor-pointer ${
@@ -328,7 +339,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
               <Search className="h-4 w-4 text-gray-500" />
               <input
                 type="text"
-                placeholder="영화 제목 또는 vsIdx-회차-순번으로 검색"
+                placeholder="영화 제목 또는 회차-순번으로 검색"
                 value={voteSearchQuery}
                 onChange={(e) => setVoteSearchQuery(e.target.value)}
                 className="border p-2 rounded w-full"
@@ -343,7 +354,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
                 <table className="w-full border-collapse text-center">
                   <thead>
                     <tr className="border-b bg-gray-100">
-                      <th className="p-2">번호-회차-순번</th>
+                      <th className="p-2">회차-순번</th>
                       <th className="p-2">Movie 1</th>
                       <th className="p-2">Movie 2</th>
                       <th className="p-2">Start Date</th>
@@ -359,7 +370,7 @@ export default function AdminVotesTab({ token, onApplyVsMovies }: AdminVotesTabP
 
                       return (
                         <tr key={mv.vsIdx} className="border-b">
-                          <td className="p-2">{mv.vsIdx} - {mv.vsRound} - {mv.pair}</td>
+                          <td className="p-2">{mv.vsRound} - {mv.pair}</td>
                           <td className="p-2 text-center">
                             <div className="flex flex-col items-center">
                               <ImageWithFallback
