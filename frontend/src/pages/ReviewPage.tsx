@@ -281,65 +281,30 @@ export default function ReviewPage() {
   const [directors, setDirectors] = useState<string[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
 
-  const STAR_COUNT = 5;
+  const STAR_COUNT = 10;
 
-  // 1️⃣ 단순 표시용 별 (반별 가능)
   const renderStars = (rating: number, size: 'sm' | 'lg' = 'sm') => {
-    const stars = [];
-    for (let i = 1; i <= STAR_COUNT; i++) {
-      const starValue = i * 2; // 별 하나 = 2점
-      let fillClass = "text-gray-300";
-      let isHalf = false;
-
-      if (rating >= starValue) {
-        fillClass = "fill-yellow-400 text-yellow-400"; // 꽉 찬 별
-      } else if (rating >= starValue - 1) {
-        isHalf = true; // 반별
-      }
-
-      stars.push(
-        <span key={i} className={`relative ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`}>
-          <Star className={`${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} ${fillClass}`} />
-          {isHalf && (
-            <Star
-              className={`${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} fill-yellow-400 text-yellow-400 absolute top-0 left-0`}
-              style={{ clipPath: "inset(0 50% 0 0)" }}
-            />
-          )}
-        </span>
-      );
-    }
-    return stars;
+    return Array.from({ length: STAR_COUNT }, (_, i) => (
+      <Star
+        key={i}
+        className={`${size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'} ${
+          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+        }`}
+      />
+    ));
   };
 
-// 2️⃣ 클릭 평가용 별 (0.5점 단위)
-const renderRatingStars = (rating: number, onRatingChange?: (rating: number) => void) => {
-  const stars = [];
-  for (let i = 1; i <= STAR_COUNT; i++) {
-    const starValue = i * 2; // 2점 단위
-    const isFull = rating >= starValue;
-    const isHalf = rating >= starValue - 1 && rating < starValue;
-
-    stars.push(
-      <span key={i} className="relative cursor-pointer">
-        <Star
-          className={`h-6 w-6 transition-colors ${
-            isFull ? 'text-yellow-400 fill-current' : 'text-gray-300'
-          }`}
-          onClick={() => onRatingChange && onRatingChange(starValue)}
-        />
-        {isHalf && (
-          <Star
-            className="h-6 w-6 fill-yellow-400 text-yellow-400 absolute top-0 left-0"
-            style={{ clipPath: "inset(0 50% 0 0)" }}
-            onClick={() => onRatingChange && onRatingChange(starValue - 1)}
-          />
-        )}
-      </span>
-    );
-  }
-  return stars;
-};
+  const renderRatingStars = (rating: number, onRatingChange?: (rating: number) => void) => {
+    return Array.from({ length: STAR_COUNT }, (_, i) => (
+      <Star
+        key={i}
+        className={`h-6 w-6 cursor-pointer transition-colors ${
+          i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300 hover:text-yellow-200'
+        }`}
+        onClick={() => onRatingChange && onRatingChange(i + 1)}
+      />
+    ));
+  };
 
   useEffect(() => {
     axios
@@ -575,54 +540,9 @@ const handleDeleteReview = async (reviewIdx: number) => {
                 <div className="space-y-6">
                   <div>
                     <label className="block font-medium text-black mb-3">평점</label>
-                    <div className="flex gap-1 relative">
-                      {Array.from({ length: 5 }, (_, i) => {
-                        const starIndex = i + 1;
-                        const isFull = userRating >= starIndex * 2;
-                        const isHalf = userRating === starIndex * 2 - 1;
-
-                        return (
-                          <div key={i} className="relative w-6 h-6">
-                            {/* 클릭 영역: 왼쪽 절반 */}
-                            <button
-                              type="button"
-                              className="absolute left-0 top-0 w-1/2 h-full z-20"
-                              onClick={() => setUserRating(starIndex * 2 - 1)}
-                            />
-                            {/* 클릭 영역: 오른쪽 절반 */}
-                            <button
-                              type="button"
-                              className="absolute right-0 top-0 w-1/2 h-full z-10"
-                              onClick={() => setUserRating(starIndex * 2)}
-                            />
-
-                            {/* 별 기본 회색 */}
-                            <Star className="h-6 w-6 text-gray-300 pointer-events-none" />
-
-                            {/* 반별 */}
-                            {isHalf && (
-                              <Star
-                                className="h-6 w-6 text-yellow-400 fill-current absolute top-0 left-0 pointer-events-none"
-                                style={{ clipPath: "inset(0 50% 0 0)" }}
-                              />
-                            )}
-
-                            {/* 꽉 찬 별 */}
-                            {isFull && (
-                              <Star
-                                className="h-6 w-6 text-yellow-400 fill-current absolute top-0 left-0 pointer-events-none"
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {userRating > 0 && (
-                      <p className="text-sm text-gray-600 mt-2">{userRating}점을 주셨네요!</p>
-                    )}
+                    <div className="flex gap-1">{renderRatingStars(userRating, setUserRating)}</div>
+                    {userRating > 0 && <p className="text-sm text-gray-600 mt-2">{userRating}점을 주셨네요!</p>}
                   </div>
-
 
                   <div>
                     <label className="block font-medium text-black mb-3">내용</label>

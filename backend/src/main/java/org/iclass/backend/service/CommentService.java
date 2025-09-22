@@ -27,10 +27,9 @@ public class CommentService {
     return commentsRepository.findByReviewReviewIdx(reviewId);
   }
 
-  public CommentsEntity addComment(Long reviewId, String userId, CommentsDto dto) {
+  public CommentsDto addComment(Long reviewId, String userId, String username, CommentsDto dto) {
     ReviewEntity review = reviewRepository.findById(reviewId)
         .orElseThrow(() -> new RuntimeException("리뷰가 존재하지 않습니다."));
-
     UsersEntity user = usersRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("유저가 존재하지 않습니다."));
 
@@ -39,8 +38,8 @@ public class CommentService {
         .user(user)
         .content(dto.getContent())
         .build();
-
-    return commentsRepository.save(comment);
+    CommentsEntity saved = commentsRepository.save(comment);
+    return CommentsDto.of(saved);
   }
 
   @Transactional
@@ -50,14 +49,29 @@ public class CommentService {
     comment.setContent(content);
   }
 
+  @Transactional
   public void deleteComment(Long commentId) {
     commentsRepository.deleteById(commentId);
+  }
+
+  @Transactional
+  public void hardDeleteCommentsByUser(String userId) {
+    UsersEntity user = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자 없음"));
+    commentsRepository.deleteAllByUser(user);
+  }
+
+  @Transactional
+  public void hardDeleteCommentsByReview(Long reviewId) {
+    ReviewEntity review = reviewRepository.findById(reviewId)
+        .orElseThrow(() -> new RuntimeException("리뷰 없음"));
+    commentsRepository.deleteAllByReview(review);
   }
 
   public List<CommentsEntity> getAllComments() {
     return commentsRepository.findAll();
   }
-  
+
   public List<CommentsEntity> getCommentsByUser(String userId) {
     UsersEntity user = usersRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("사용자 없음"));

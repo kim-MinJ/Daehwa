@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,13 +17,13 @@ import org.iclass.backend.entity.MovieInfoEntity;
 import org.iclass.backend.entity.MovieVoteEntity;
 import org.iclass.backend.entity.MovieVsEntity;
 import org.iclass.backend.entity.UsersEntity;
-import org.iclass.backend.repository.MovieCrewRepository;
 import org.iclass.backend.repository.MovieInfoRepository;
-import org.iclass.backend.repository.MovieVoteRepository;
 import org.iclass.backend.repository.MovieVSRepository;
+import org.iclass.backend.repository.MovieVoteRepository;
 import org.iclass.backend.repository.UsersRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 
 @Service

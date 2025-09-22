@@ -1,5 +1,6 @@
 package org.iclass.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,11 +15,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
+
+  private final CommentService commentService;
 
   private final ReviewRepository reviewRepository;
   private final UsersRepository usersRepository;
@@ -28,6 +32,9 @@ public class ReviewService {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     String userId = auth.getName(); // JWT subject (username)
 
+    if (user == null) {
+      throw new RuntimeException("로그인이 필요합니다.");
+    }
     // 🔑 DB에서 유저 엔티티 조회
     UsersEntity users = usersRepository.findByUserId(userId)
         .orElseThrow(() -> new RuntimeException("User not found"));
@@ -44,6 +51,12 @@ public class ReviewService {
 
     // DTO 반환
     return ReviewDto.of(saved);
+  }
+
+  public ReviewDto getReviewByIdx(Long reviewIdx) {
+    return reviewRepository.findById(reviewIdx)
+        .map(ReviewDto::of)
+        .orElseThrow(() -> new RuntimeException("Review not found"));
   }
 
   // 리뷰 전체 조회
@@ -76,17 +89,54 @@ public class ReviewService {
   }
 
   // 🔹 리뷰 삭제
-  public void deleteReview(Long reviewIdx) {
+  @Transactional
+  public void deleteReview(Long reviewIdx, String userId) {
     ReviewEntity review = reviewRepository.findById(reviewIdx)
-        .orElseThrow(() -> new RuntimeException("Review not found"));
+        .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+
+    UsersEntity user = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+    // ✅ 본인 or 관리자만 삭제 가능
+    if (!review.getUser().getUserId().equals(userId)
+        && !"admin".equalsIgnoreCase(user.getRole())) {
+      throw new RuntimeException("본인 또는 관리자만 리뷰를 삭제할 수 있습니다.");
+    }
+
+    // ✅ 리뷰 삭제 전에 댓글 모두 삭제
+    commentService.hardDeleteCommentsByReview(reviewIdx);
+
+    // ✅ 리뷰 삭제 (중복 삭제 제거)
     reviewRepository.delete(review);
   }
 
   // 🔹 리뷰 단건 조회
-  public ReviewDto getReviewByIdx(Long reviewIdx) {
-    ReviewEntity entity = reviewRepository.findByReviewIdx(reviewIdx)
+  public List<ReviewDto> getReviewsByMovieIdx(Long movieIdx) {
+    return reviewRepository.findByMovie_MovieIdx(movieIdx).stream()
+        .map(ReviewDto::of)
+        .toList();
+  }
+
+  // 리뷰 수정
+  @Transactional
+  public ReviewDto updateReview(Long reviewIdx, ReviewDto reviewDto, String userId) {
+    ReviewEntity review = reviewRepository.findById(reviewIdx)
         .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
-    return ReviewDto.of(entity);
+
+    UsersEntity user = usersRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+    // 본인 or 관리자만 수정 가능
+    if (!review.getUser().getUserId().equals(userId) && !"admin".equalsIgnoreCase(user.getRole())) {
+      throw new RuntimeException("본인 또는 관리자만 리뷰를 수정할 수 있습니다.");
+    }
+
+    review.setContent(reviewDto.getContent());
+    review.setRating(reviewDto.getRating());
+    review.setUpdateAt(LocalDateTime.now());
+
+    ReviewEntity saved = reviewRepository.save(review);
+    return ReviewDto.of(saved);
   }
 
 }
