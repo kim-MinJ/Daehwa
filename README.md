@@ -1,5 +1,7 @@
 # Studio Sotongplz
 
+# 조장 : 🌟김민재🌟
+
 ## 채택 기술
 #### forntend : React.js, TypeScript, Tailwind
 #### backedn : Spring Boot, JPA
