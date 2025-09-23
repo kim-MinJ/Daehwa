@@ -12,6 +12,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "../components/ui/dropdown-menu";
+import { getStoredUserId } from "@/components/utils/storageUtils";
+
 interface Movie {
   movieIdx: number;
   tmdbMovieId: number;
@@ -35,7 +37,7 @@ export interface Review {
   createdAt: string;
   updateAt: string;
   isBlind: number;
-
+  username: string;
   movieTitle: string;
   moviePoster: string;
   directors?: string[];
@@ -47,6 +49,7 @@ interface Comment {
   userId: string;
   content: string;
   createdAt: string;
+  username: string;
 }
 
 function CommentMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
@@ -193,12 +196,12 @@ const handleDeleteComment = async (commentIdx: number) => {
             {comments.map((c) => (
   <div key={c.commentIdx} className="bg-gray-100 p-2 rounded-md">
     <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-      <span>{c.userId}</span>
+      <span>{c.username}</span>
       <div className="flex items-center gap-2">
         <span>{new Date(c.createdAt).toLocaleDateString()}</span>
         
         {/* 로그인 유저와 동일할 때만 수정/삭제 메뉴 */}
-        {c.userId === localStorage.getItem("userId") && (
+        {String(c.userId) === getStoredUserId() && (
            <CommentMenu
               onEdit={() => handleEditComment(c)}
               onDelete={() => handleDeleteComment(c.commentIdx)}
@@ -320,11 +323,12 @@ export default function ReviewPage() {
                 `/api/movies/${movieRes.data.tmdbMovieId}/directors`
               );
               const genresRes = await axios.get(`/api/movies/${review.movieIdx}/genres`);
+              const uniqueDirectors = Array.from(new Set(directorsRes.data));
               return {
                 ...review,
                 movieTitle: movieRes.data.title,
                 moviePoster: movieRes.data.posterPath,
-                directors: directorsRes.data,
+                directors: uniqueDirectors,
                 genres: genresRes.data,
               };
             } catch (err) {
@@ -357,15 +361,21 @@ export default function ReviewPage() {
   if (!todayMovie) return;
 
   // 감독 정보
-  axios.get<string[]>(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+  axios
+  .get<{ name: string; tmdbMovieId: number }[]>(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   })
-  .then(res => {
-    // 중복 제거
-    const uniqueDirectors = Array.from(new Set(res.data));
-    setDirectors(uniqueDirectors);
-  })
-  .catch(console.error);
+   .then((res) => {
+      // 문자열 배열, 객체 배열 모두 대응
+      const names = res.data.map((d: any) =>
+        typeof d === "string" ? d : d.name
+      );
+
+      // 중복 제거
+      const uniqueDirectors = [...new Set(names)];
+      setDirectors(uniqueDirectors);
+    })
+    .catch(console.error);
 
   // 장르 정보
   axios.get<string[]>(`/api/movies/${todayMovie.movieIdx}/genres`, {
@@ -624,9 +634,9 @@ const handleDeleteReview = async (reviewIdx: number) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <span className="font-semibold text-black">{review.userId}</span>
+                        <span className="font-semibold text-black">{review.username}</span>
                       </div>
-                      {review.userId === localStorage.getItem("userId") && (
+                      {String(review.userId) === getStoredUserId() && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button

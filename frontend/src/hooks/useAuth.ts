@@ -56,16 +56,28 @@ const login = async (userId: string, password: string, rememberMe: boolean = fal
   }
 
   const data = await res.json();
-  
+  console.log("📌 로그인 응답:", data);
+console.log("📌 저장될 userId:", data.userId, "username:", data.username);
   if (rememberMe) {
     // localStorage: 브라우저를 닫아도 유지
     localStorage.setItem("token", data.token);
+    localStorage.setItem("userId", data.userId);
+    localStorage.setItem("username", data.username);
   } else {
     // sessionStorage: 브라우저 세션 동안만 유지
     sessionStorage.setItem("token", data.token);
+    sessionStorage.setItem("userId", data.userId);
+    sessionStorage.setItem("username", data.username);
   }
 
   setToken(data.token);
+   setUserInfo({
+    userId: data.userId,
+    username: data.username,
+    role: data.role,
+    regDate: data.regDate,
+    status: data.status,
+  });
 };
 
   const register = async (userId: string, username: string, password: string) => {

@@ -32,7 +32,17 @@ public interface MovieInfoRepository extends JpaRepository<MovieInfoEntity, Long
     Page<MovieInfoEntity> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
     // 랜덤 영화 조회 (native query 그대로)
-    @Query(value = "SELECT * FROM MOVIE_INFO ORDER BY DBMS_RANDOM.VALUE FETCH FIRST 1 ROWS ONLY", nativeQuery = true)
+    @Query(value = """
+    SELECT *
+    FROM (
+        SELECT * 
+        FROM MOVIE_INFO
+        ORDER BY POPULARITY DESC  -- 인기도 기준 정렬
+        FETCH FIRST 30 ROWS ONLY   -- 상위 30개
+    )
+    ORDER BY DBMS_RANDOM.VALUE
+    FETCH FIRST 1 ROWS ONLY
+    """, nativeQuery = true)
     MovieInfoEntity findRandomMovie();
 
     // 연도 범위 조회 + 페이징

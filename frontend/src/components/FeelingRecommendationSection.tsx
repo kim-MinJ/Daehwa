@@ -8,6 +8,8 @@ import type { UiMovie } from "@/types/uiMovie";
 import { useFeeling } from "@/context/FeelingContext";
 import { normalizeFeeling } from "@/components/utils/FeelingDictionary";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MovieCard } from "@/pages/MainPage";
+import { SectionCarousel } from "./mainPage/SectionCarousel";
 
 // 🔹 감정 멘트
 export const FEELING_MENTIONS: Record<string, string> = {
@@ -62,45 +64,45 @@ function SkeletonList({ count }: { count: number }) {
   );
 }
 
-// 🔹 개별 영화 카드
-const MovieCard = React.memo(function MovieCard({
-  movie,
-  onClick,
-}: {
-  movie: UiMovie;
-  onClick: (m: UiMovie) => void;
-}) {
-  const handleClick = useCallback(() => onClick(movie), [movie, onClick]);
+// // 🔹 개별 영화 카드
+// const MovieCard = React.memo(function MovieCard({
+//   movie,
+//   onClick,
+// }: {
+//   movie: UiMovie;
+//   onClick: (m: UiMovie) => void;
+// }) {
+//   const handleClick = useCallback(() => onClick(movie), [movie, onClick]);
 
-  return (
-    <div
-      className="group cursor-pointer flex-shrink-0 relative"
-      onClick={handleClick}
-    >
-      <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
-        <ImageWithFallback
-          src={getPosterUrl(movie.poster, "w500")}
-          alt={movie.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
-          <div className="font-semibold text-sm line-clamp-1">
-            {movie.title}
-          </div>
-          <div className="flex items-center gap-1 text-xs mt-1">
-            <Star className="h-3 w-3" />
-            <span>{(movie.rating ?? 0).toFixed(1)}</span>
-            <span>•</span>
-            <span>{movie.year}년</span>
-          </div>
-          <div className="mt-1 text-[11px] opacity-90">
-            {movie.genre ?? "기타"}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-});
+//   return (
+//     <div
+//       className="group cursor-pointer flex-shrink-0 relative"
+//       onClick={handleClick}
+//     >
+//       <div className="w-48 aspect-[2/3] rounded-lg overflow-hidden relative transition-transform duration-300 group-hover:scale-105">
+//         <ImageWithFallback
+//           src={getPosterUrl(movie.poster, "w500")}
+//           alt={movie.title}
+//           className="w-full h-full object-cover"
+//         />
+//         <div className="absolute bottom-2 left-2 right-2 bg-black/50 text-white text-xs p-2 rounded-md flex flex-col">
+//           <div className="font-semibold text-sm line-clamp-1">
+//             {movie.title}
+//           </div>
+//           <div className="flex items-center gap-1 text-xs mt-1">
+//             <Star className="h-3 w-3" />
+//             <span>{(movie.rating ?? 0).toFixed(1)}</span>
+//             <span>•</span>
+//             <span>{movie.year}년</span>
+//           </div>
+//           <div className="mt-1 text-[11px] opacity-90">
+//             {movie.genre ?? "기타"}
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// });
 
 export function FeelingRecommendationSection({
   onMovieClick,
@@ -182,67 +184,61 @@ export function FeelingRecommendationSection({
 
   return (
     <div>
-      {/* 타이틀 */}
-      <div className="flex flex-col mb-6">
-        <div className="flex items-center gap-3">
+  {/* 추천 영화 리스트 */}
+  {selectedFeeling && (
+    feelingLoading ? (
+      <SkeletonList count={10} />
+    ) : (
+      <SectionCarousel
+        title={
           <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
             당신만을 위한 추천
           </h2>
+        }
+        subtitle={
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-pink-500 font-semibold cursor-pointer">
+                  {FEELING_MENTIONS[selectedFeeling] ?? ""}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                className="p-4 bg-gradient-to-br from-pink-50 to-white border border-pink-200 
+                           shadow-xl rounded-xl flex gap-2 flex-wrap max-w-[280px]"
+              >
+                {feelings.map((f) => {
+                  const isSelected = selectedFeeling === f;
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => setSelectedFeeling(f)}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition
+                        ${
+                          isSelected
+                            ? "bg-pink-500 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-pink-100"
+                        }`}
+                    >
+                      {f}
+                    </button>
+                  );
+                })}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
+        movies={feelingMovies}
+        onClick={onMovieClick}
+        renderMovie={(movie) => (
+          <MovieCard key={movie.id} movie={movie} onClick={onMovieClick} />
+        )}
+      />
+    )
+  )}
+</div>
 
-          {/* 감정 멘트 + 말풍선 */}
-          {selectedFeeling && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-pink-500 font-semibold cursor-pointer">
-                    {FEELING_MENTIONS[selectedFeeling] ?? ""}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="bottom"
-                  className="p-4 bg-gradient-to-br from-pink-50 to-white border border-pink-200 
-                             shadow-xl rounded-xl flex gap-2 flex-wrap max-w-[280px]"
-                >
-                  {feelings.map((f) => {
-                    const isSelected = selectedFeeling === f;
-                    return (
-                      <button
-                        key={f}
-                        onClick={() => setSelectedFeeling(f)}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition
-                          ${
-                            isSelected
-                              ? "bg-pink-500 text-white"
-                              : "bg-gray-100 text-gray-700 hover:bg-pink-100"
-                          }`}
-                      >
-                        {f}
-                      </button>
-                    );
-                  })}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-      </div>
 
-      {/* 추천 영화 리스트 */}
-      {selectedFeeling && (
-        <HorizontalScrollList>
-          {feelingLoading ? (
-            <SkeletonList count={10} />
-          ) : (
-            feelingMovies.map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                onClick={onMovieClick}
-              />
-            ))
-          )}
-        </HorizontalScrollList>
-      )}
-    </div>
   );
 }

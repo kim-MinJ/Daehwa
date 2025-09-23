@@ -28,6 +28,7 @@ public class CommentsDto {
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
+     private String username;
 
     // ✅ Entity → DTO 변환
     public static CommentsDto of(CommentsEntity entity) {
@@ -38,6 +39,7 @@ public class CommentsDto {
                 .content(entity.getContent())
                 .createdAt(entity.getCreatedAt())
                 .updateAt(entity.getUpdateAt())
+                .username(entity.getUser().getUsername())
                 .build();
     }
 
@@ -51,5 +53,13 @@ public class CommentsDto {
                 .createdAt(this.createdAt)
                 .updateAt(this.updateAt)
                 .build();
+    }
+
+    public static CommentsDto fromEntity(CommentsEntity comment) {
+    return CommentsDto.builder()
+            .commentIdx(comment.getCommentIdx())
+            .content(comment.getContent())
+            .username(comment.getUser().getUsername()) // ✅ UsersEntity.username 꺼내오기
+            .build();
     }
 }

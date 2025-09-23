@@ -161,7 +161,7 @@ export default function RankingPage({ onMovieClick, onNavigation }: RankingPageP
  useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/api/movies/trending");
+        const res = await axios.get("/api/movies/trending");
         const movieRes: Movie[] = res.data.map((m: any, idx: number) => ({
           id: m.movieIdx ? m.movieIdx.toString() : m.tmdbMovieId.toString(),
           movieIdx: m.movieIdx ? m.movieIdx.toString() : m.tmdbMovieId.toString(),
@@ -193,7 +193,7 @@ useEffect(() => {
   const fetchActiveVs = async () => {
     try {
       // 1️⃣ API 호출
-      const res = await axios.get("http://localhost:8080/api/vs/versus");
+      const res = await axios.get("/api/vs/versus");
 
       // 2️⃣ 전체 응답 데이터 확인
       console.log("전체 VS 리스트:", res.data);
@@ -248,7 +248,7 @@ useEffect(() => {
     if (!userId) return;
     const fetchVoteHistory = async () => {
       try {
-        const res = await axios.get(`http://localhost:8080/api/vote/history/${userId}`, {
+        const res = await axios.get(`/api/vote/history/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
         // ✅ 최신 날짜순으로 정렬
@@ -290,7 +290,7 @@ useEffect(() => {
   if (!movie || !selectedVsIdx) return;
 
   try {
-    await axios.post("http://localhost:8080/api/movies/vote", null, {
+    await axios.post("/api/movies/vote", null, {
       params: {
         movieId: movie.movieIdx,
         userId: currentUser.userId,
@@ -305,7 +305,7 @@ useEffect(() => {
     setHasVoted(true);
 
     const historyRes = await axios.get(
-    `http://localhost:8080/api/vote/history/${userId}`,
+    `/api/vote/history/${userId}`,
     { headers: { Authorization: `Bearer ${token}` } }
    );
     setVoteHistory(historyRes.data);
