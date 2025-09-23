@@ -34,6 +34,7 @@ export const FEELING_SYNONYMS: Record<string, string> = {
   // 흥분 계열
   "신나": "흥분됨",
   "흥분된다": "흥분됨",
+  "흥분": "흥분됨",
   "흥분됨": "흥분됨",
   "쫄깃": "흥분됨",
   "짜릿짜릿": "흥분됨",

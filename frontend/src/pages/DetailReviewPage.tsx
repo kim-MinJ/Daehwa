@@ -313,6 +313,16 @@ export default function DetailReviewPage() {
 }, [movieId]);
   /* 리뷰 등록 */
   const handleSubmitReview = async () => {
+    const token = localStorage.getItem("token");
+  if (!token) {
+    alert("로그인 후 등록할 수 있습니다.");
+    return;
+  }
+
+  if (!newReview.trim() || userRating === 0) {
+    alert("리뷰 내용과 별점을 입력해주세요.");
+    return;
+  }
   try {
     const res = await axios.post(
       "/api/reviews",
@@ -349,6 +359,7 @@ export default function DetailReviewPage() {
     setIsBlind(false);
   } catch (err) {
     console.error(err);
+    alert("리뷰 등록에 실패했습니다.");
   }
 };
 

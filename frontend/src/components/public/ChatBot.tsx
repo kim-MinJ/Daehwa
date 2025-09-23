@@ -52,23 +52,38 @@ const ChatBot = () => {
 
   // ✅ 로그인 유저 대화 이력 불러오기
   useEffect(() => {
-    if (token && userId) {
-      axios
-        .get(`http://localhost:8080/api/chat/history/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-          const history = res.data.map((m: any, idx: number) => ({
-            id: "h-" + idx,
-            text: m.content,
-            isUser: m.role === "user",
-            timestamp: new Date(m.createdAt),
-          }));
-          setMessages((prev) => [...prev, ...history]);
-        })
-        .catch(() => console.warn("이전 대화 불러오기 실패"));
-    }
-  }, [isOpen]);
+  if (isOpen && token && userId) {
+    axios
+      .get(`http://localhost:8080/api/chat/history/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        const history = res.data.map((m: any, idx: number) => ({
+          id: "h-" + idx,
+          text: m.content,
+          isUser: m.role === "user",
+          timestamp: new Date(m.createdAt),
+        }));
+
+        setMessages((prev) => {
+          const merged = [
+            ...prev,
+            ...history,
+          ];
+
+          // 중복 제거
+          const unique = merged.filter(
+            (m, idx, self) =>
+              idx === self.findIndex((x) => x.text === m.text && x.timestamp.getTime() === m.timestamp.getTime())
+          );
+
+          // 시간순 정렬
+          return unique.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        });
+      })
+      .catch(() => console.warn("이전 대화 불러오기 실패"));
+  }
+}, [isOpen, token, userId]);
 
   // ✅ 메시지 전송
   const handleSendMessage = async () => {
