@@ -8,9 +8,9 @@ import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SectionProps {
-  title: string;
+  title: React.ReactNode;
   movies: UiMovie[];
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   onClick: (m: UiMovie) => void;
   badge?: string;
   rank?: boolean;
@@ -42,10 +42,12 @@ export const SectionCarousel = ({
     <div className="relative">
       {/* 제목 + 버튼 */}
       <div className="flex items-center justify-between mb-2">
-        <div>
-          <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">{title}</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-900">{title}</h2>
           {subtitle && (
-            <p className="text-sm lg:text-base font-semibold text-gray-700">{subtitle}</p>
+            <span className="text-sm lg:text-base font-bold text-gray-700">
+              {subtitle}
+            </span>
           )}
         </div>
         <div className="flex gap-2">

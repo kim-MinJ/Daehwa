@@ -54,7 +54,7 @@ const ChatBot = () => {
   useEffect(() => {
   if (isOpen && token && userId) {
     axios
-      .get(`http://localhost:8080/api/chat/history/${userId}`, {
+      .get(`/api/chat/history/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -125,7 +125,7 @@ Object.keys(FEELING_SYNONYMS).forEach((key) => {
     // 일반 대화 → 백엔드
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8080/api/chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

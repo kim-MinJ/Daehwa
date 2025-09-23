@@ -16,7 +16,7 @@
 
 
   // 🔹 MovieCard 컴포넌트
-  function MovieCard({ movie, onClick }: { movie: UiMovie; onClick: (m: UiMovie) => void }) {
+  export function MovieCard({ movie, onClick }: { movie: UiMovie; onClick: (m: UiMovie) => void }) {
     const koreanGenres = movie.genre
       .split(",")
       .map((g) => genreMap[g.trim()] || g.trim())

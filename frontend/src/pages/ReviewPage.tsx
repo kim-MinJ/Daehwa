@@ -357,12 +357,19 @@ export default function ReviewPage() {
   if (!todayMovie) return;
 
   // 감독 정보
-  axios.get<string[]>(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+  axios
+  .get<{ name: string; tmdbMovieId: number }[]>(`/api/movies/${todayMovie.tmdbMovieId}/directors`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   })
   .then(res => {
-    // 중복 제거
-    const uniqueDirectors = Array.from(new Set(res.data));
+    // tmdbMovieId 기준으로 중복 제거
+    const uniqueDirectorsMap = new Map<number, string>();
+    res.data.forEach(director => {
+      if (!uniqueDirectorsMap.has(director.tmdbMovieId)) {
+        uniqueDirectorsMap.set(director.tmdbMovieId, director.name);
+      }
+    });
+    const uniqueDirectors = Array.from(uniqueDirectorsMap.values());
     setDirectors(uniqueDirectors);
   })
   .catch(console.error);
