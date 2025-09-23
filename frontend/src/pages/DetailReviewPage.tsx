@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Star, Edit3, MoreHorizontal } from "lucide-react";
+import { Star, MoreHorizontal } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Textarea } from "../components/ui/textarea";
@@ -12,6 +12,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "../components/ui/dropdown-menu";
+
+import { getStoredUser } from "@/components/utils/storageUtils";
 
 interface Movie {
   movieIdx: number;
@@ -58,22 +60,24 @@ function CommentAccordion({
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
+  const { userId, token } = getStoredUser();
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && token) {
       axios
         .get(`/api/review/${reviewId}/comments`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => setComments(res.data))
         .catch(console.error);
     }
-  }, [isOpen, reviewId]);
+  }, [isOpen, reviewId, token]);
 
   const handleDeleteComment = async (commentIdx: number) => {
     if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
     try {
       await axios.delete(`/api/review/comments/${commentIdx}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setComments((prev) => prev.filter((c) => c.commentIdx !== commentIdx));
     } catch (err) {
@@ -83,7 +87,6 @@ function CommentAccordion({
   };
 
   const handleSubmitComment = async () => {
-    const token = localStorage.getItem("token");
     if (!token) {
       alert("로그인 후 이용 가능합니다.");
       return;
@@ -135,7 +138,7 @@ function CommentAccordion({
                   <span>{c.userId}</span>
                   <div className="flex items-center gap-2">
                     <span>{new Date(c.createdAt).toLocaleDateString()}</span>
-                    {c.userId === localStorage.getItem("userId") && (
+                    {c.userId === userId && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="h-6 w-6 flex items-center justify-center rounded hover:bg-gray-200 text-gray-600">
@@ -179,9 +182,7 @@ function CommentAccordion({
                               `/api/review/comments/${c.commentIdx}`,
                               { content: editedCommentContent },
                               {
-                                headers: {
-                                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                                },
+                                headers: { Authorization: `Bearer ${token}` },
                               }
                             );
                             setComments((prev) =>
@@ -245,6 +246,8 @@ export default function DetailReviewPage() {
 
   const [showSpoilers, setShowSpoilers] = useState(false);
 
+  const { userId, token } = getStoredUser();
+
   const STAR_COUNT = 10;
   const renderStars = (rating: number) =>
     Array.from({ length: STAR_COUNT }, (_, i) => (
@@ -267,108 +270,117 @@ export default function DetailReviewPage() {
       />
     ));
 
-  /* 영화 정보 */
+  /* 영화 정보 + 리뷰 목록 */
   useEffect(() => {
-  axios
-    .get(`/api/movie/${movieId}`)
-    .then((res) => {
-      setMovie(res.data);
-      return Promise.all([
-        axios.get(`/api/movies/${res.data.tmdbMovieId}/directors`),
-        axios.get(`/api/movies/${res.data.movieIdx}/genres`),
-      ]);
-    })
-    .then(([directorsRes, genresRes]) => {
-      setDirectors(directorsRes.data);
-      setGenres(genresRes.data);
-    })
-    .catch(console.error);
+    axios
+      .get(`/api/movie/${movieId}`)
+      .then((res) => {
+        setMovie(res.data);
+        return Promise.all([
+          axios.get(`/api/movies/${res.data.tmdbMovieId}/directors`),
+          axios.get(`/api/movies/${res.data.movieIdx}/genres`),
+        ]);
+      })
+      .then(([directorsRes, genresRes]) => {
+        const uniqueDirectors = Array.isArray(directorsRes.data)
+          ? [...new Set(directorsRes.data.map((d: any) => (typeof d === "string" ? d : d.name)))]
+          : [];
+        setDirectors(uniqueDirectors);
+        setGenres(genresRes.data);
+      })
+      .catch(console.error);
 
-  // 리뷰 목록 + 영화 정보 합치기
-  axios
-    .get(`/api/reviews?movieIdx=${movieId}`)
-    .then(async (res) => {
-      const reviewsData = await Promise.all(
-        res.data.map(async (review: Review) => {
-          try {
-            const movieRes = await axios.get(`/api/movie/${review.movieIdx}`);
-            const directorsRes = await axios.get(`/api/movies/${movieRes.data.tmdbMovieId}/directors`);
-            const genresRes = await axios.get(`/api/movies/${review.movieIdx}/genres`);
-            return {
-              ...review,
-              movieTitle: movieRes.data.title,
-              moviePoster: movieRes.data.posterPath,
-              directors: directorsRes.data,
-              genres: genresRes.data,
-            };
-          } catch (err) {
-            console.error("리뷰용 영화정보 불러오기 실패", err);
-            return review;
-          }
-        })
-      );
-      setReviews(reviewsData);
-    })
-    .catch(console.error);
-}, [movieId]);
+    axios
+      .get(`/api/reviews?movieIdx=${movieId}`)
+      .then(async (res) => {
+        const reviewsData = await Promise.all(
+          res.data.map(async (review: Review) => {
+            try {
+              const movieRes = await axios.get(`/api/movie/${review.movieIdx}`);
+              const directorsRes = await axios.get(`/api/movies/${movieRes.data.tmdbMovieId}/directors`);
+              const genresRes = await axios.get(`/api/movies/${review.movieIdx}/genres`);
+
+              const uniqueDirectors = Array.isArray(directorsRes.data)
+                ? [...new Set(directorsRes.data.map((d: any) => (typeof d === "string" ? d : d.name)))]
+                : [];
+
+              return {
+                ...review,
+                movieTitle: movieRes.data.title,
+                moviePoster: movieRes.data.posterPath,
+                directors: uniqueDirectors,
+                genres: genresRes.data,
+              };
+            } catch (err) {
+              console.error("리뷰용 영화정보 불러오기 실패", err);
+              return review;
+            }
+          })
+        );
+        setReviews(reviewsData);
+      })
+      .catch(console.error);
+  }, [movieId]);
+
   /* 리뷰 등록 */
   const handleSubmitReview = async () => {
-    const token = localStorage.getItem("token");
-  if (!token) {
-    alert("로그인 후 등록할 수 있습니다.");
-    return;
-  }
+    if (!token) {
+      alert("로그인 후 등록할 수 있습니다.");
+      return;
+    }
+    if (!newReview.trim() || userRating === 0) {
+      alert("리뷰 내용과 별점을 입력해주세요.");
+      return;
+    }
+    try {
+      const res = await axios.post(
+        "/api/reviews",
+        {
+          movieIdx: movieId,
+          rating: userRating,
+          content: newReview,
+          isBlind: isBlind ? 1 : 0,
+          createdAt: new Date().toISOString(),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-  if (!newReview.trim() || userRating === 0) {
-    alert("리뷰 내용과 별점을 입력해주세요.");
-    return;
-  }
-  try {
-    const res = await axios.post(
-      "/api/reviews",
-      {
-        movieIdx: movieId,
-        rating: userRating,
-        content: newReview,
-        isBlind: isBlind ? 1 : 0,
-        createdAt: new Date().toISOString(),
-      },
-      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-    );
+      const created = res.data;
 
-    const created = res.data;
+      const [movieRes, directorsRes, genresRes] = await Promise.all([
+        axios.get(`/api/movie/${created.movieIdx}`),
+        axios.get(`/api/movies/${movie?.tmdbMovieId}/directors`),
+        axios.get(`/api/movies/${movieId}/genres`),
+      ]);
 
-    // 영화 정보 API 다시 호출해서 합치기
-    const [movieRes, directorsRes, genresRes] = await Promise.all([
-      axios.get(`/api/movie/${created.movieIdx}`),
-      axios.get(`/api/movies/${movie?.tmdbMovieId}/directors`),
-      axios.get(`/api/movies/${movieId}/genres`),
-    ]);
+      const uniqueDirectors = Array.isArray(directorsRes.data)
+        ? [...new Set(directorsRes.data.map((d: any) => (typeof d === "string" ? d : d.name)))]
+        : [];
 
-    const newReviewObj: Review = {
-      ...created,
-      movieTitle: movieRes.data.title,
-      moviePoster: movieRes.data.posterPath,
-      directors: directorsRes.data,
-      genres: genresRes.data,
-    };
+      const newReviewObj: Review = {
+        ...created,
+        movieTitle: movieRes.data.title,
+        moviePoster: movieRes.data.posterPath,
+        directors: uniqueDirectors,
+        genres: genresRes.data,
+      };
 
-    setReviews((prev) => [newReviewObj, ...prev]);
-    setNewReview("");
-    setUserRating(0);
-    setIsBlind(false);
-  } catch (err) {
-    console.error(err);
-    alert("리뷰 등록에 실패했습니다.");
-  }
-};
+      setReviews((prev) => [newReviewObj, ...prev]);
+      setNewReview("");
+      setUserRating(0);
+      setIsBlind(false);
+    } catch (err) {
+      console.error(err);
+      alert("리뷰 등록에 실패했습니다.");
+    }
+  };
 
   /* 리뷰 삭제 */
   const handleDeleteReview = async (reviewIdx: number) => {
     if (!window.confirm("리뷰를 삭제하시겠습니까?")) return;
     try {
       await axios.delete(`/api/reviews/${reviewIdx}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setReviews((prev) => prev.filter((r) => r.reviewIdx !== reviewIdx));
     } catch (err) {
@@ -416,12 +428,12 @@ export default function DetailReviewPage() {
         <h2 className="text-xl font-bold mb-4">리뷰 작성</h2>
         <div className="flex gap-1 mb-3">{renderRatingStars(userRating, setUserRating)}</div>
         <Textarea
-  value={newReview}
-  onChange={(e) => setNewReview(e.target.value)}
-  placeholder="솔직한 리뷰를 작성해주세요."
-  rows={4}
-  className="border border-gray-300 rounded-md p-2"
-/>
+          value={newReview}
+          onChange={(e) => setNewReview(e.target.value)}
+          placeholder="솔직한 리뷰를 작성해주세요."
+          rows={4}
+          className="border border-gray-300 rounded-md p-2"
+        />
         <div className="flex items-center gap-2 mt-2">
           <input
             type="checkbox"
@@ -455,7 +467,7 @@ export default function DetailReviewPage() {
               key={review.reviewIdx}
               className="bg-white rounded-xl p-6 shadow border border-gray-200"
             >
-            <div className="flex gap-4 mb-4">
+              <div className="flex gap-4 mb-4">
                 {/* 포스터 */}
                 <div className="w-16 h-20 rounded-lg overflow-hidden shadow">
                   <ImageWithFallback
@@ -468,7 +480,9 @@ export default function DetailReviewPage() {
                 {/* 영화 정보 */}
                 <div className="flex-1">
                   <h3 className="font-bold text-lg">{review.movieTitle}</h3>
-                  <p className="text-sm text-gray-600">감독: {review.directors?.join(", ") || "정보 없음"}</p>
+                  <p className="text-sm text-gray-600">
+                    감독: {review.directors?.join(", ") || "정보 없음"}
+                  </p>
                   <div className="flex gap-2 flex-wrap mt-1">
                     {review.genres?.length ? (
                       review.genres.map((g) => (
@@ -484,7 +498,7 @@ export default function DetailReviewPage() {
               </div>
               <div className="flex justify-between items-center mb-2">
                 <span className="font-semibold">{review.userId}</span>
-                {review.userId === localStorage.getItem("userId") && (
+                {review.userId === userId && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="h-8 w-8 hover:bg-gray-200 rounded">
@@ -520,65 +534,62 @@ export default function DetailReviewPage() {
               </div>
 
               {editingReviewId === review.reviewIdx ? (
-  <div className="space-y-3">
-    {/* ⭐ 별점 수정 */}
-    <div className="flex items-center gap-2">
-      {renderRatingStars(userRating, setUserRating)}
-      <span className="ml-2 text-sm text-gray-600">{userRating} 점</span>
-    </div>
+                <div className="space-y-3">
+                  {/* ⭐ 별점 수정 */}
+                  <div className="flex items-center gap-2">
+                    {renderRatingStars(userRating, setUserRating)}
+                    <span className="ml-2 text-sm text-gray-600">{userRating} 점</span>
+                  </div>
 
-    {/* 리뷰 내용 수정 */}
-    <Textarea
-      value={editedReviewContent}
-      onChange={(e) => setEditedReviewContent(e.target.value)}
-      rows={3}
-    />
-    <div className="flex gap-2 mt-2">
-      <Button
-        className="bg-red-600"
-        onClick={async () => {
-          try {
-            await axios.patch(
-              `/api/reviews/${review.reviewIdx}`,
-              {
-                content: editedReviewContent,
-                rating: userRating,                // ✅ 수정한 별점 반영
-                updateAt: new Date().toISOString() // ✅ 수정 시점 저장
-              },
-              { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-            );
-            setReviews((prev) =>
-              prev.map((r) =>
-                r.reviewIdx === review.reviewIdx
-                  ? { ...r, content: editedReviewContent, rating: userRating }
-                  : r
-              )
-            );
-            setEditingReviewId(null);
-          } catch (err) {
-            console.error(err);
-          }
-        }}
-      >
-        확인
-      </Button>
-      <Button
-        variant="outline"
-        onClick={() => setEditingReviewId(null)}
-      >
-        취소
-      </Button>
-    </div>
-  </div>
-  ) : (
-    <p
-      className={`text-gray-800 mb-2 ${
-        hidden ? "blur-sm select-none pointer-events-none" : ""
-      }`}
-    >
-      {review.content}
-    </p>
-  )}
+                  {/* 리뷰 내용 수정 */}
+                  <Textarea
+                    value={editedReviewContent}
+                    onChange={(e) => setEditedReviewContent(e.target.value)}
+                    rows={3}
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      className="bg-red-600"
+                      onClick={async () => {
+                        try {
+                          await axios.patch(
+                            `/api/reviews/${review.reviewIdx}`,
+                            {
+                              content: editedReviewContent,
+                              rating: userRating,
+                              updateAt: new Date().toISOString(),
+                            },
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          );
+                          setReviews((prev) =>
+                            prev.map((r) =>
+                              r.reviewIdx === review.reviewIdx
+                                ? { ...r, content: editedReviewContent, rating: userRating }
+                                : r
+                            )
+                          );
+                          setEditingReviewId(null);
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                    >
+                      확인
+                    </Button>
+                    <Button variant="outline" onClick={() => setEditingReviewId(null)}>
+                      취소
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p
+                  className={`text-gray-800 mb-2 ${
+                    hidden ? "blur-sm select-none pointer-events-none" : ""
+                  }`}
+                >
+                  {review.content}
+                </p>
+              )}
               {/* 댓글 */}
               <CommentAccordion
                 reviewId={review.reviewIdx}

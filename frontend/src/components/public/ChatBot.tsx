@@ -110,7 +110,7 @@ const ChatBot = () => {
           timestamp: new Date(),
           type: "options",
         },
-      ]);
+      ]); 
       return;
     }
 

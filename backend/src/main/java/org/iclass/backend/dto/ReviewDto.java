@@ -31,6 +31,7 @@ public class ReviewDto {
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
     private Integer isBlind; // 0: off, 1: on
+    private String username;
 
     // ✅ Entity → DTO 변환
     public static ReviewDto of(ReviewEntity entity) {
@@ -44,7 +45,7 @@ public class ReviewDto {
                 .createdAt(entity.getCreatedAt())
                 .updateAt(entity.getUpdateAt())
                 .isBlind(entity.getIsBlind())
-
+                .username(entity.getUser().getUsername())
                 .build();
     }
 
@@ -61,4 +62,13 @@ public class ReviewDto {
                 .isBlind(this.isBlind)
                 .build();
     }
+
+    public static ReviewDto fromEntity(ReviewEntity review) {
+    return ReviewDto.builder()
+            .reviewIdx(review.getReviewIdx())
+            .content(review.getContent())
+            .rating(review.getRating())
+            .username(review.getUser().getUsername()) // ✅ UsersEntity.username 꺼내오기
+            .build();
+}
 }

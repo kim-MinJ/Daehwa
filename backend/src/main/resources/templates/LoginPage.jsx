@@ -13,10 +13,23 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, password }),
       });
+
+          console.log("📡 로그인 응답 status:", response.status);
+
       if (!response.ok) throw new Error("로그인 실패");
 
       const data = await response.json();
+
+      
+      // ✅ 디버깅 로그
+      console.log("📌 로그인 응답 전체:", data);
+      console.log("📌 서버에서 내려온 userId:", data.userId, "typeof:", typeof data.userId);
+      console.log("📌 서버에서 내려온 username:", data.username);
+
+      // ✅ localStorage 저장
       localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", String(data.userId));   // 👈 추가
+    localStorage.setItem("username", data.username);       // 👈 필요시 추가
       alert("로그인 성공!");
       window.location.href = "/"; // 메인 페이지로 이동
     } catch (err) {
