@@ -3,6 +3,8 @@ import { Movie, Credits } from "@/types/movie";
 import { genreMap } from "@/constants/genres";
 import { getPosterUrl } from "@/utils/getPosterUrl";
 import { DetailCard, DetailCardProps } from "./DetailCard";
+import { ImageWithFallback } from "@/components/imageFallback/ImageWithFallback"; // ✅ 추가
+
 
 interface Props {
   movie: Movie;
@@ -84,7 +86,7 @@ export function DetailCardWrapper({ movie, credits, movieIdx, token }: Props) {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
             {castTop.map((p) => (
               <div key={p.id} className="flex items-center gap-3">
-                <img
+                 <ImageWithFallback
                   src={p.photo}
                   alt={p.name}
                   className="h-10 w-10 rounded-full object-cover border border-gray-200"
